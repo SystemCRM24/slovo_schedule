@@ -34,8 +34,8 @@ class BX24Wrapper {
          * Проверка загрузки стандартной библиотеки Битрикс24.
          * <script src="//api.bitrix24.com/api/v1/"></script>
          */
-        if (! window.BX24) {
-            throw "Can't find BX24 libary! See https://dev.1c-bitrix.ru/rest_help/js_library/index.php";
+        if (!window.BX24) {
+            console.error("Can't find BX24 libary! See https://dev.1c-bitrix.ru/rest_help/js_library/index.php");
         }
 
         /**
@@ -50,7 +50,8 @@ class BX24Wrapper {
          *
          * @type {function}
          */
-        this.progress = percent => {};
+        this.progress = percent => {
+        };
 
         /**
          * Максимальное число запросов к API в секунду (не более 2-х).
@@ -99,7 +100,7 @@ class BX24Wrapper {
         let calls = [];
 
         for (let item of items) {
-            calls.push([ method, item ]);
+            calls.push([method, item]);
         }
 
         return calls;
@@ -163,7 +164,7 @@ class BX24Wrapper {
                 let total = result.total();
                 this.progress(total > 0 ? Math.round(100 * data.length / total) : 100);
 
-                if (! result.more()) {
+                if (!result.more()) {
                     return resolve(data);
                 }
 
@@ -189,7 +190,7 @@ class BX24Wrapper {
      *
      * @see https://dev.1c-bitrix.ru/rest_help/js_library/rest/callMethod.php BX24.callMethod
      */
-    async *fetchList(method, params = {}, dataExtractor = null, idKey = 'ID') {
+    async* fetchList(method, params = {}, dataExtractor = null, idKey = 'ID') {
         params.order = params.order || {};
         params.filter = params.filter || {};
         params.start = -1;
@@ -198,8 +199,8 @@ class BX24Wrapper {
             counter = 0,
             total = 0;
 
-        params.order[ idKey ] = 'ASC';
-        params.filter[ moreIdKey ] = 0;
+        params.order[idKey] = 'ASC';
+        params.filter[moreIdKey] = 0;
 
         this.progress(0);
 
@@ -207,7 +208,7 @@ class BX24Wrapper {
             let data = await this.callMethod(method, params, dataExtractor),
                 result = this.lastResult;
 
-            if (params.filter[ moreIdKey ] === 0) {
+            if (params.filter[moreIdKey] === 0) {
                 total = result.total();
             }
 
@@ -220,11 +221,11 @@ class BX24Wrapper {
 
             yield data;
 
-            if (! result.more()) {
+            if (!result.more()) {
                 break;
             }
 
-            params.filter[ moreIdKey ] = data[ data.length - 1 ][ idKey ];
+            params.filter[moreIdKey] = data[data.length - 1][idKey];
 
         } while (true);
     }
@@ -266,7 +267,7 @@ class BX24Wrapper {
                     data = {};
 
                     for (let key of Object.keys(results)) {
-                        let result = results[ key ];
+                        let result = results[key];
 
                         if (result.status != 200 || result.error()) {
                             if (!haltOnError && result.error()) {
@@ -276,7 +277,7 @@ class BX24Wrapper {
                             return reject(`${result.error()} (callBatch ${result.query.method}: ${result.query.data})`);
                         }
 
-                        data[ key ] = dataExtractor ? dataExtractor(result.data()) : result.data();
+                        data[key] = dataExtractor ? dataExtractor(result.data()) : result.data();
                     }
                 }
 
@@ -299,7 +300,7 @@ class BX24Wrapper {
      * @see https://dev.1c-bitrix.ru/rest_help/js_library/rest/callBatch.php BX24.callBatch
      */
     async callLongBatch(calls, haltOnError = true, dataExtractor = null) {
-        if (! Array.isArray(calls)) {
+        if (!Array.isArray(calls)) {
             throw "Parameter 'calls' must be an array.";
         }
 
@@ -323,7 +324,7 @@ class BX24Wrapper {
                 break;
             }
 
-        } while(true);
+        } while (true);
 
         return data;
     }
@@ -339,8 +340,8 @@ class BX24Wrapper {
      *
      * @see https://dev.1c-bitrix.ru/rest_help/js_library/rest/callBatch.php BX24.callBatch
      */
-    async *callLargeBatch(calls, haltOnError = true, dataExtractor = null) {
-        if (! Array.isArray(calls)) {
+    async* callLargeBatch(calls, haltOnError = true, dataExtractor = null) {
+        if (!Array.isArray(calls)) {
             throw "Parameter 'calls' must be an array.";
         }
 
@@ -366,7 +367,7 @@ class BX24Wrapper {
                 break;
             }
 
-        } while(true);
+        } while (true);
     }
 
     /**
