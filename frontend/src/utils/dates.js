@@ -5,8 +5,9 @@
  */
 export function getDateRange(fromDate, toDate) {
     let range = [];
-    for (let currentDate = new Date(fromDate); fromDate <= toDate; currentDate.setDate(currentDate.getDate() + 1)) {
-        range.push(currentDate)
+    for (let currentDate = new Date(fromDate); currentDate <= toDate; currentDate.setDate(currentDate.getDate() + 1)) {
+        range.push(new Date(currentDate))
+        console.log(range);
     }
     return range
 }
