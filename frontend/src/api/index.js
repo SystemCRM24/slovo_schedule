@@ -9,6 +9,7 @@ class APIClient {
 
 
     /**
+     * This method is mocked for a while
      @param {Date} fromDate - начало промежутка дат
      @param {Date} toDate - конец промежутка дат
      @returns object - объект рсаписания на указанный промежуток врмеени
@@ -34,6 +35,10 @@ class APIClient {
         }
     }
 
+    /**
+     * This method is mocked fpr a while
+     * @returns {Promise<[{specCodes: string[], name: string}>}
+     */
     async getSpecialists() {
         // mock for a while
         return [
