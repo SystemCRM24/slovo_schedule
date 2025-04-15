@@ -4,7 +4,7 @@ import BX24Wrapper from "./bx24Wrapper.js";
 
 class APIClient {
     constructor() {
-        this.bx = BX24Wrapper();
+        this.bx = new BX24Wrapper();
     }
 
 
