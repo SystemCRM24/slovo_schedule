@@ -1,5 +1,5 @@
 import React, {Suspense, useEffect, useState} from 'react';
-import {Table} from "react-bootstrap";
+import {Spinner, Table} from "react-bootstrap";
 import apiClient from "../../api/";
 
 const Schedule = ({fromDate, toDate}) => {
@@ -13,14 +13,26 @@ const Schedule = ({fromDate, toDate}) => {
 
     useEffect(() => {
         (async () => {
-            console.log('effect call');
-            setSchedule(await apiClient.getSchedule(fromDate, toDate));
+            if (fromDate && toDate) {
+                setSchedule(await apiClient.getSchedule(fromDate, toDate));
+            }
         })();
     }, [fromDate, toDate]);
+
+    const header = schedule && Object.keys(schedule).map(elem => {
+        const specialistCodes = specialists[elem];
+        let additionalText = specialistCodes.length > 0 ? `- ${specialistCodes.join(', ')}` : '';
+        return (
+            <th scope="col" style={{width: 400}}>{elem + additionalText}</th>
+        );
+    });
+
     return (
-        <Suspense fallback={<div>Loading</div>}>
-            {(fromDate && toDate) ? JSON.stringify(schedule) : "Заполните даты для отображения расписания"}
-            <Table bordered responsive>
+        <Suspense fallback={<Spinner animation={"grow"} />}>
+            <Table bordered responsive className={'mt-3'} style={{width: "200%"}}>
+                <thead>
+                {header}
+                </thead>
             </Table>
         </Suspense>
     );

@@ -12,10 +12,12 @@ function App() {
         console.log(dates);
     }
     return (
-        <Container fluid>
-            <DateRangePicker onChange={onDatesChange} dates={dates}/>
+        <>
+            <Container fluid>
+                <DateRangePicker onChange={onDatesChange} dates={dates}/>
+            </Container>
             <Schedule {...dates} />
-        </Container>
+        </>
     )
 }
 

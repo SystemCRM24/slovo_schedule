@@ -37,7 +37,7 @@ class APIClient {
 
     /**
      * This method is mocked fpr a while
-     * @returns {Promise<[{specCodes: string[], name: string}>}
+     * @returns {Promise<{string: string[]}>}
      */
     async getSpecialists() {
         // mock for a while
