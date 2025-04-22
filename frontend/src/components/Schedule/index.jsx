@@ -1,11 +1,14 @@
 import React, {Suspense, useEffect, useState, useMemo} from 'react';
 import {Spinner, Table} from "react-bootstrap";
+
+import DaySchedule from '../DaySchedule';
 import apiClient from "../../api/";
 
 
 const Schedule = ({fromDate, toDate}) => {
     const [specialists, setSpecialists] = useState([]);
     const [schedule, setSchedule] = useState({});
+    const [workSchedule, setWorkSchedule] = useState({});
 
     useEffect(() => {
         (async () => {
@@ -16,11 +19,15 @@ const Schedule = ({fromDate, toDate}) => {
     useEffect(() => {
         (async () => {
             if (fromDate && toDate) {
-                setSchedule(await apiClient.getSchedule(fromDate, toDate));
+                const [scheduleData, workScheduleData] = await Promise.all([
+                    apiClient.getSchedule(fromDate, toDate),
+                    apiClient.getWorkSchedule(fromDate, toDate)
+                ]);
+                setSchedule(scheduleData);
+                setWorkSchedule(workScheduleData);
             }
         })();
     }, [fromDate, toDate]);
-
 
     const headers = useMemo(
         () => {
@@ -41,8 +48,6 @@ const Schedule = ({fromDate, toDate}) => {
         [specialists]
     );
 
-    console.log(schedule);
-
     const rows = useMemo(
         () => {
             const rows = [];
@@ -55,13 +60,18 @@ const Schedule = ({fromDate, toDate}) => {
                 row.push((
                     <td>{dayOfWeek}<br/>{date}</td>
                 ));
-                row.push(...Array(Object.keys(specialists).length).fill((<td></td>)))
+                for ( const specialist of Object.keys(specialists) ) {
+                    const scheduleOfDay = schedule[specialist]?.[start];
+                    const workScheduleOfDay = workSchedule[specialist]?.[start];
+                    const cell = (<DaySchedule schedule={scheduleOfDay} workSchedule={workScheduleOfDay}></DaySchedule>);
+                    row.push(cell)
+                }
                 rows.push((<tr style={style}>{row}</tr>))
                 start.setDate(start.getDate() + 1);
             }
             return rows;
         },
-        [fromDate, toDate, specialists, schedule]
+        [fromDate, toDate, specialists, schedule, workSchedule]
     );
 
     return Object.keys(schedule).length ? (
