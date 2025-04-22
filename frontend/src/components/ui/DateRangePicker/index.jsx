@@ -10,7 +10,7 @@ const DateRangePicker = ({dates, onChange}) => {
                 <Form.Control type="date" name="fromDate" id="fromDate" onChange={onChange}/>
             </div>
             <div>
-                <label htmlFor="fromDate">До:</label>
+                <label htmlFor="toDate">До:</label>
                 <Form.Control type="date" name="toDate" id="toDate" onChange={onChange} min={getISODate(dates.fromDate)}/>
             </div>
         </div>
