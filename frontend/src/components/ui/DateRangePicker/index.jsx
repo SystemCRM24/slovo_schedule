@@ -4,13 +4,13 @@ import {getISODate} from "../../../utils/dates.js";
 
 const DateRangePicker = ({dates, onChange}) => {
     return (
-        <div>
+        <div className={'d-flex flex-column gap-3'}>
             <div>
-                <label htmlFor="fromDate">От:</label>
+                <label htmlFor="fromDate" className={'mb-1'}>От:</label>
                 <Form.Control type="date" name="fromDate" id="fromDate" onChange={onChange}/>
             </div>
             <div>
-                <label htmlFor="toDate">До:</label>
+                <label htmlFor="toDate" className={'mb-1'}>До:</label>
                 <Form.Control
                     type="date"
                     name="toDate"
