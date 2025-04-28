@@ -1,0 +1,25 @@
+.interval {
+    font-size: smaller;
+    transition: .35s;
+}
+
+.interval:not(.status-na):hover {
+    opacity: .5;
+}
+
+.status-free {
+    background-color: #AEFFAE;
+}
+
+.status-booked {
+    background-color: yellow;
+}
+
+.status-confirmed {
+    background-color: #AEE9FF;
+}
+
+.status-na {
+    color: rgb(108, 117, 125);
+    pointer-events: none;
+}

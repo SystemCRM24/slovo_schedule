@@ -9,9 +9,13 @@ class APIClient {
 
     /**
      * This method is mocked for a while
+     @async
      @param {Date} fromDate - начало промежутка дат
      @param {Date} toDate - конец промежутка дат
-     @returns object - объект расписания занятий по сотрудникам
+     @returns {Promise<Object<string, Object<Date, Array<{
+      start: Date, end: Date, patient: {name: string, type: string}, status: "booked" | "confirmed" | "free" | "na"
+      }>>>>}
+     объект расписания занятий по сотрудникам
      */
     async getSchedule(fromDate, toDate) {
         /**
@@ -25,21 +29,56 @@ class APIClient {
          *                 patient: {
          *                     name: "Егорова Я.""
          *                     type: "L"
-         *                 }
+         *                 },
+         *                 status: "booked",
          *             },
          *         ]
          *     }
          * }
          */
-        return {};
+        // MUST BE DELETED LATER
+        const tmpVisitationStartDate1 = new Date(fromDate);
+        const tmpVisitationStartDate2 = new Date(fromDate);
+        const tmpVisitationEndDate1 = new Date(fromDate);
+        const tmpVisitationEndDate2 = new Date(fromDate);
+        tmpVisitationStartDate1.setHours(9);
+        tmpVisitationEndDate1.setHours(9, 30);
+        tmpVisitationStartDate2.setHours(18, 30);
+        tmpVisitationEndDate2.setHours(19)
+        return {
+            "Ходырева Н.":
+                {
+                    [fromDate]: [
+                        {
+                            start: tmpVisitationStartDate1,
+                            end: tmpVisitationEndDate1,
+                            patient: {
+                                name: "Тестовый П.",
+                                type: "ABA",
+                            },
+                            status: "booked"  // booked / confirmed / free / na,
+                        },
+                        {
+                            start: tmpVisitationStartDate2,
+                            end: tmpVisitationEndDate2,
+                            patient: {
+                                name: "Тестовый2 П.",
+                                type: "ABA",
+                            },
+                            status: 'confirmed',
+                        }
+                    ],
+                },
+        };
     }
 
 
     /**
      * This method is mocked for a while
+     @async
      @param {Date} fromDate - начало промежутка дат
      @param {Date} toDate - конец промежутка дат
-     @returns object - Возвращает объект на указаный промежуток времени, где описан рабочий график сотрудников.
+     @returns Promise<object> - Возвращает объект на указаный промежуток времени, где описан рабочий график сотрудников.
      */
     async getWorkSchedule(fromDate, toDate) {
         /**
@@ -67,7 +106,7 @@ class APIClient {
             const dateRange = getDateRange(fromDate, toDate)
             for (const specialist of specialists) {
                 schedule[specialist] = {};
-                // strange mock for a while, i know, excuse moi
+                // strange mock for a while, i know, excusez-moi, mon ami :)
                 for (const date of dateRange) {
                     if (date.getTime() !== toDate.getTime()) {
                         const start1 = new Date(date);
@@ -99,7 +138,8 @@ class APIClient {
 
     /**
      * This method is mocked fpr a while
-     * @returns {Promise<{string: {}}>}
+     @async
+     @returns {Promise<{string: {id: string|number, departments: string[]}}>}
      */
     async getSpecialists() {
         // mock for a while

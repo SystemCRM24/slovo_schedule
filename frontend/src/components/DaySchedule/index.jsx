@@ -14,7 +14,7 @@ const DaySchedule = ({specialist, date}) => {
             <div className={'d-flex flex-column align-items-center justify-content-center h-100 w-100'}>
                 {
                     workSchedule.length > 0 ?
-                        <WorkingIntervals schedule={schedule} workSchedule={workSchedule}/>
+                        <WorkingIntervals schedule={schedule} workSchedule={workSchedule} specialist={specialist}/>
                         :
                         <EmptyWorkSchedule specialist={specialist}/>
                 }

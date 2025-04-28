@@ -5,11 +5,11 @@ import {Container} from "react-bootstrap";
 import Schedule from "./components/Schedule/index.jsx";
 import {WorkScheduleContext} from "./contexts/WorkSchedule/context.js";
 import {ScheduleContext} from "./contexts/Schedule/context.js";
+import {WorkScheduleContextProvider} from "./contexts/WorkSchedule/provider.jsx";
+import {ScheduleContextProvider} from "./contexts/Schedule/provider.jsx";
 
 function App() {
     const [dates, setDates] = useState({fromDate: undefined, toDate: undefined});
-    const [schedule, setSchedule] = useState({});
-    const [workSchedule, setWorkSchedule] = useState({});
     const onDatesChange = e => {
         const dateType = e.target.name;
         setDates({...dates, [dateType]: e.target.valueAsDate,});
@@ -19,11 +19,11 @@ function App() {
             <Container fluid>
                 <DateRangePicker onChange={onDatesChange} dates={dates}/>
             </Container>
-            <WorkScheduleContext.Provider value={[workSchedule, setWorkSchedule]}>
-                <ScheduleContext.Provider value={[schedule, setSchedule]}>
+            <WorkScheduleContextProvider schedule={{}}>
+                <ScheduleContextProvider schedule={{}}>
                     <Schedule {...dates} />
-                </ScheduleContext.Provider>
-            </WorkScheduleContext.Provider>
+                </ScheduleContextProvider>
+            </WorkScheduleContextProvider>
         </>
     )
 }

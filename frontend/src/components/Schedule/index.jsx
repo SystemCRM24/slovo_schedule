@@ -57,7 +57,7 @@ const Schedule = ({fromDate, toDate}) => {
         () => {
             const rows = [];
             let currentDate = new Date(fromDate);
-            const style = {height: '300px'};
+            const style = {height: '800px'};
             while (currentDate <= toDate) {
                 const row = [];
                 const dayOfWeek = currentDate.toLocaleString('ru-RU', {weekday: 'long'});
@@ -81,7 +81,7 @@ const Schedule = ({fromDate, toDate}) => {
         <WorkScheduleContext.Provider value={[workSchedule, setWorkSchedule]}>
             <ScheduleContext.Provider value={[schedule, setSchedule]}>
                 <Suspense fallback={<Spinner animation={"grow"}/>}>
-                    <Table bordered responsive className={'mt-3'} style={{minWidth: "200%"}}>
+                    <Table bordered responsive className={'mt-3'} style={{width: `${30 * specialists.length}%`}}>
                         <thead>
                         <tr>
                             <th scope="col" style={{width: 200}}/>
