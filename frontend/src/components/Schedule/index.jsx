@@ -3,12 +3,16 @@ import {Spinner, Table} from "react-bootstrap";
 
 import DaySchedule from '../DaySchedule';
 import apiClient from "../../api/";
+import {WorkScheduleContext} from "../../contexts/WorkSchedule/context.js";
+import {ScheduleContext} from "../../contexts/Schedule/context.js";
+import {useScheduleContext} from "../../contexts/Schedule/provider.jsx";
+import {useWorkScheduleContext} from "../../contexts/WorkSchedule/provider.jsx";
 
 
 const Schedule = ({fromDate, toDate}) => {
     const [specialists, setSpecialists] = useState([]);
-    const [schedule, setSchedule] = useState({});
-    const [workSchedule, setWorkSchedule] = useState({});
+    const [schedule, setSchedule] = useScheduleContext();
+    const [workSchedule, setWorkSchedule] = useWorkScheduleContext();
 
     useEffect(() => {
         (async () => {
@@ -32,12 +36,13 @@ const Schedule = ({fromDate, toDate}) => {
     const headers = useMemo(
         () => {
             const headers = [];
-            for ( const [name, attr] of Object.entries(specialists) ) {
+            for (const [name, attr] of Object.entries(specialists)) {
                 const codes = attr.departments.join(', ');
                 headers.push((
-                    <th 
-                        scope="col" 
+                    <th
+                        scope="col"
                         style={{width: 400, whiteSpace: 'pre-wrap'}}
+                        key={name}
                     >
                         {name + '\n' + codes}
                     </th>
@@ -51,44 +56,46 @@ const Schedule = ({fromDate, toDate}) => {
     const rows = useMemo(
         () => {
             const rows = [];
-            let start = new Date(fromDate);
-            const style = {height: '200px'};
-            while ( start <= toDate ) {
+            let currentDate = new Date(fromDate);
+            const style = {height: '300px'};
+            while (currentDate <= toDate) {
                 const row = [];
-                const dayOfWeek = start.toLocaleString('ru-RU', {weekday: 'long'});
-                const date = start.toLocaleDateString();
+                const dayOfWeek = currentDate.toLocaleString('ru-RU', {weekday: 'long'});
+                const date = currentDate.toLocaleDateString();
                 row.push((
-                    <td>{dayOfWeek}<br/>{date}</td>
+                    <th scope={'row'} key={date}>{dayOfWeek}<br/>{date}</th>
                 ));
-                for ( const specialist of Object.keys(specialists) ) {
-                    const scheduleOfDay = schedule[specialist]?.[start];
-                    const workScheduleOfDay = workSchedule[specialist]?.[start];
-                    const cell = (<DaySchedule schedule={scheduleOfDay} workSchedule={workScheduleOfDay}></DaySchedule>);
+                for (const specialist of Object.keys(specialists)) {
+                    const cell = (
+                        <DaySchedule key={`${specialist}_${date}`} specialist={specialist} date={new Date(currentDate)}/>);
                     row.push(cell)
                 }
-                rows.push((<tr style={style}>{row}</tr>))
-                start.setDate(start.getDate() + 1);
+                rows.push((<tr style={style} key={`row_${date}`}>{row}</tr>))
+                currentDate.setDate(currentDate.getDate() + 1);
             }
             return rows;
         },
-        [fromDate, toDate, specialists, schedule, workSchedule]
+        [fromDate, toDate, specialists]
     );
-
-    return Object.keys(schedule).length ? (
-        <Suspense fallback={<Spinner animation={"grow"} />}>
-            <Table bordered responsive className={'mt-3'} style={{minWidth: "200%"}}>
-                <thead>
-                    <tr>
-                        <th scope="col" style={{width: 200}} />
-                        {headers}
-                    </tr>
-                </thead>
-                <tbody>
-                    {rows}
-                </tbody>
-            </Table>
-        </Suspense>
-    ) : <></>;
+    return (fromDate && toDate) && (
+        <WorkScheduleContext.Provider value={[workSchedule, setWorkSchedule]}>
+            <ScheduleContext.Provider value={[schedule, setSchedule]}>
+                <Suspense fallback={<Spinner animation={"grow"}/>}>
+                    <Table bordered responsive className={'mt-3'} style={{minWidth: "200%"}}>
+                        <thead>
+                        <tr>
+                            <th scope="col" style={{width: 200}}/>
+                            {headers}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {rows}
+                        </tbody>
+                    </Table>
+                </Suspense>
+            </ScheduleContext.Provider>
+        </WorkScheduleContext.Provider>
+    );
 };
 
 export default React.memo(Schedule);

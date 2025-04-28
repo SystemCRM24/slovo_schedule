@@ -11,7 +11,14 @@ const DateRangePicker = ({dates, onChange}) => {
             </div>
             <div>
                 <label htmlFor="toDate">До:</label>
-                <Form.Control type="date" name="toDate" id="toDate" onChange={onChange} min={getISODate(dates.fromDate)}/>
+                <Form.Control
+                    type="date"
+                    name="toDate"
+                    id="toDate"
+                    onChange={onChange}
+                    min={getISODate(dates.fromDate)}
+                    disabled={!dates.fromDate}
+                />
             </div>
         </div>
     );

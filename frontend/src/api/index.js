@@ -11,13 +11,13 @@ class APIClient {
      * This method is mocked for a while
      @param {Date} fromDate - начало промежутка дат
      @param {Date} toDate - конец промежутка дат
-     @returns object - Возвращает объект на указаный промежуток времени, где описана занятость сотрудников.
+     @returns object - объект расписания занятий по сотрудникам
      */
-    async getWorkSchedule(fromDate, toDate) {
+    async getSchedule(fromDate, toDate) {
         /**
-         * Структура объекта: 
+         * Структура объекта:
          * {
-         *     "Гарькуша И.А.": {
+         *     "Гарькуша И.": {
          *         <строка даты в iso-формате для описания дня>: [
          *             {
          *                 start: <строка даты в iso-формате>,
@@ -39,11 +39,11 @@ class APIClient {
      * This method is mocked for a while
      @param {Date} fromDate - начало промежутка дат
      @param {Date} toDate - конец промежутка дат
-     @returns object - объект рсаписания на указанный промежуток врмеени
+     @returns object - Возвращает объект на указаный промежуток времени, где описан рабочий график сотрудников.
      */
-    async getSchedule(fromDate, toDate) {
+    async getWorkSchedule(fromDate, toDate) {
         /**
-         * Структура объекта: 
+         * Структура объекта:
          * {
          *     "Гарькуша И.А.": {
          *         <строка даты в iso-формате для описания дня>: [
@@ -58,17 +58,39 @@ class APIClient {
         if (fromDate < toDate) {
             let schedule = {};
             const specialists = [
-                'Борзенкова Т.Н.', 'Федькович С.А.', 'Гарькуша И.А.',
-                'Дорошева Т.П.', 'Мамедова Т.И.', 'Вагизов С.С.',
-                'Шлык В.С', 'Мазницкая А.Д', 'Швец А.А.', 'Липина А.В.',
-                'Позова О.В.'
-            ];
+                "Ходырева Н.", "Мазницкая А.", "Железнова М.",
+                "Исмагилова С.", "Вагизов С.", "Александра Ш.",
+                "Слесь И.", "Шлык В.", "Статина Е.",
+                "Федькович С.", "Гарькуша И.", "Мамедова Т.",
+                "Дорошева Т.", "Липина А."
+            ]
             const dateRange = getDateRange(fromDate, toDate)
             for (const specialist of specialists) {
                 schedule[specialist] = {};
-                // mock for a while
+                // strange mock for a while, i know, excuse moi
                 for (const date of dateRange) {
-                    schedule[specialist][date] = {};
+                    if (date.getTime() !== toDate.getTime()) {
+                        const start1 = new Date(date);
+                        const start2 = new Date(date);
+                        const end1 = new Date(date);
+                        const end2 = new Date(date);
+                        start1.setHours(9, 0);
+                        start2.setHours(12, 30);
+                        end1.setHours(11, 30);
+                        end2.setHours(19, 0);
+                        schedule[specialist][date] = [
+                            {
+                                start: start1,
+                                end: end1
+                            },
+                            {
+                                start: start2,
+                                end: end2
+                            }
+                        ];
+                    } else {
+                        schedule[specialist][date] = [];
+                    }
                 }
             }
             return schedule;
@@ -83,113 +105,113 @@ class APIClient {
         // mock for a while
         return {
             "Ходырева Н.": {
-                 "id": "8",
-                 "departments": [
-                     "ABA",
-                     "d"
-                 ]
+                "id": "8",
+                "departments": [
+                    "ABA",
+                    "d"
+                ]
             },
             "Мазницкая А.": {
-                 "id": "9",
-                 "departments": [
-                     "НДГ",
-                     "СИ"
-                 ]
+                "id": "9",
+                "departments": [
+                    "НДГ",
+                    "СИ"
+                ]
             },
             "Железнова М.": {
-                 "id": "11",
-                 "departments": [
-                     "NP"
-                 ]
+                "id": "11",
+                "departments": [
+                    "NP"
+                ]
             },
             "Исмагилова С.": {
-                 "id": "12",
-                 "departments": [
-                     "R"
-                 ]
+                "id": "12",
+                "departments": [
+                    "R"
+                ]
             },
             "Вагизов С.": {
-                 "id": "13",
-                 "departments": [
-                     "НДГ"
-                 ]
+                "id": "13",
+                "departments": [
+                    "НДГ"
+                ]
             },
             "Александра Ш.": {
-                 "id": "15",
-                 "departments": [
-                     "НДГ",
-                     "СИ"
-                 ]
+                "id": "15",
+                "departments": [
+                    "НДГ",
+                    "СИ"
+                ]
             },
             "Слесь И.": {
-                 "id": "16",
-                 "departments": [
-                     "ABA",
-                     "d-ава"
-                 ]
+                "id": "16",
+                "departments": [
+                    "ABA",
+                    "d-ава"
+                ]
             },
             "Шлык В.": {
-                 "id": "17",
-                 "departments": [
-                     "NP",
-                     "НДГ"
-                 ]
+                "id": "17",
+                "departments": [
+                    "NP",
+                    "НДГ"
+                ]
             },
             "Статина Е.": {
-                 "id": "18",
-                 "departments": [
-                     "dNP",
-                     "NP",
-                     "КИТ"
-                 ]
+                "id": "18",
+                "departments": [
+                    "dNP",
+                    "NP",
+                    "КИТ"
+                ]
             },
             "Федькович С.": {
-                 "id": "19",
-                 "departments": [
-                     "ABA",
-                     "d",
-                     "L",
-                     "LM"
-                 ]
+                "id": "19",
+                "departments": [
+                    "ABA",
+                    "d",
+                    "L",
+                    "LM"
+                ]
             },
             "Гарькуша И.": {
-                 "id": "20",
-                 "departments": [
-                     "d",
-                     "dL",
-                     "L",
-                     "LM"
-                 ]
+                "id": "20",
+                "departments": [
+                    "d",
+                    "dL",
+                    "L",
+                    "LM"
+                ]
             },
             "Мамедова Т.": {
-                 "id": "21",
-                 "departments": [
-                     "d",
-                     "dL",
-                     "L",
-                     "LM",
-                     "Z"
-                 ]
+                "id": "21",
+                "departments": [
+                    "d",
+                    "dL",
+                    "L",
+                    "LM",
+                    "Z"
+                ]
             },
             "Дорошева Т.": {
-                 "id": "22",
-                 "departments": [
-                     "dL",
-                     "dNP",
-                     "L",
-                     "LM",
-                     "NP"
-                 ]
+                "id": "22",
+                "departments": [
+                    "dL",
+                    "dNP",
+                    "L",
+                    "LM",
+                    "NP"
+                ]
             },
             "Липина А.": {
-                 "id": "23",
-                 "departments": [
-                     "ABA"
-                 ]
+                "id": "23",
+                "departments": [
+                    "ABA"
+                ]
             }
         };
     }
 }
 
-const api = new APIClient();
-export default api;
+const apiClient = new APIClient();
+export default apiClient;

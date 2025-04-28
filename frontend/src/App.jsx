@@ -1,22 +1,29 @@
 import './App.css'
 import DateRangePicker from "./components/ui/DateRangePicker/index.jsx";
-import {useState} from "react";
+import React, {useState} from "react";
 import {Container} from "react-bootstrap";
 import Schedule from "./components/Schedule/index.jsx";
+import {WorkScheduleContext} from "./contexts/WorkSchedule/context.js";
+import {ScheduleContext} from "./contexts/Schedule/context.js";
 
 function App() {
-    const [dates, setDates] = useState({fromDate: undefined, toDate: undefined})
+    const [dates, setDates] = useState({fromDate: undefined, toDate: undefined});
+    const [schedule, setSchedule] = useState({});
+    const [workSchedule, setWorkSchedule] = useState({});
     const onDatesChange = e => {
         const dateType = e.target.name;
         setDates({...dates, [dateType]: e.target.valueAsDate,});
-        console.log(dates);
     }
     return (
         <>
             <Container fluid>
                 <DateRangePicker onChange={onDatesChange} dates={dates}/>
             </Container>
-            <Schedule {...dates} />
+            <WorkScheduleContext.Provider value={[workSchedule, setWorkSchedule]}>
+                <ScheduleContext.Provider value={[schedule, setSchedule]}>
+                    <Schedule {...dates} />
+                </ScheduleContext.Provider>
+            </WorkScheduleContext.Provider>
         </>
     )
 }
