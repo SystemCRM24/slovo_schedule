@@ -3,8 +3,6 @@ import DateRangePicker from "./components/ui/DateRangePicker/index.jsx";
 import React, {useState} from "react";
 import {Container} from "react-bootstrap";
 import Schedule from "./components/Schedule/index.jsx";
-import {WorkScheduleContext} from "./contexts/WorkSchedule/context.js";
-import {ScheduleContext} from "./contexts/Schedule/context.js";
 import {WorkScheduleContextProvider} from "./contexts/WorkSchedule/provider.jsx";
 import {ScheduleContextProvider} from "./contexts/Schedule/provider.jsx";
 

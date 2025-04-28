@@ -1,10 +1,13 @@
 import React, {useMemo} from 'react';
-import {useWorkScheduleContext} from "../../contexts/WorkSchedule/provider.jsx";
 import {getWorkingDayFromSchedule, getDatesDiffInMinutes, getWorkingIntervalsFromSchedules} from "../../utils/dates.js";
 import WorkingInterval from "../../WorkingInterval/index.jsx";
+import {useSpecialistContext} from "../../contexts/Specialist/provider.jsx";
+import useSchedules from "../../hooks/useSchedules.js";
 
-const WorkingIntervals = ({schedule, workSchedule, specialist}) => {
-    const [generalWorkSchedule] = useWorkScheduleContext();
+const WorkingIntervals = () => {
+    const {schedule, workSchedule, generalWorkSchedule}
+        = useSchedules();
+    const specialistId = useSpecialistContext();
     const workingDayDurationMinutes = useMemo(
         () => {
             const workingDay = getWorkingDayFromSchedule(generalWorkSchedule);
@@ -22,7 +25,6 @@ const WorkingIntervals = ({schedule, workSchedule, specialist}) => {
         },
         [schedule, workSchedule]
     );
-    console.log(intervals);
     return (
         <div className={'h-100 w-100'}>
             {intervals.map(interval => {
@@ -36,7 +38,7 @@ const WorkingIntervals = ({schedule, workSchedule, specialist}) => {
                         patientName={interval?.patient?.name}
                         patientType={interval?.patient?.type}
                         status={interval.status}
-                        key={`${interval.start}_${interval.end}_${specialist}`}
+                        key={`${interval.start}_${interval.end}_${specialistId}_working_interval_elem`}
                     />
                 );
             })}
@@ -44,4 +46,4 @@ const WorkingIntervals = ({schedule, workSchedule, specialist}) => {
     );
 }
 
-export default WorkingIntervals;
+export default React.memo(WorkingIntervals);

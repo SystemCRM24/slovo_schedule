@@ -1,22 +1,18 @@
 import WorkingIntervals from "../WorkingIntervals/index.jsx";
 import EmptyWorkSchedule from "../EmptyWorkSchedule/index.jsx";
 import React from "react";
-import {useWorkScheduleContext} from "../../contexts/WorkSchedule/provider.jsx";
-import {useScheduleContext} from "../../contexts/Schedule/provider.jsx";
+import useSchedules from "../../hooks/useSchedules.js";
 
-const DaySchedule = ({specialist, date}) => {
-    const [generalWorkSchedule] = useWorkScheduleContext();
-    const [generalSchedule] = useScheduleContext()
-    const workSchedule = generalWorkSchedule?.[specialist]?.[date] || [];
-    const schedule = generalSchedule?.[specialist]?.[date] || [];
+const DaySchedule = () => {
+    const {workSchedule} = useSchedules();
     return (
         <td className={'p-0'} style={{height: "inherit"}}>
             <div className={'d-flex flex-column align-items-center justify-content-center h-100 w-100'}>
                 {
                     workSchedule.length > 0 ?
-                        <WorkingIntervals schedule={schedule} workSchedule={workSchedule} specialist={specialist}/>
+                        <WorkingIntervals />
                         :
-                        <EmptyWorkSchedule specialist={specialist}/>
+                        <EmptyWorkSchedule />
                 }
             </div>
         </td>

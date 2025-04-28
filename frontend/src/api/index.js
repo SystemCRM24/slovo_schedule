@@ -12,7 +12,7 @@ class APIClient {
      @async
      @param {Date} fromDate - начало промежутка дат
      @param {Date} toDate - конец промежутка дат
-     @returns {Promise<Object<string, Object<Date, Array<{
+     @returns {Promise<Object<string|number, Object<Date, Array<{
       start: Date, end: Date, patient: {name: string, type: string}, status: "booked" | "confirmed" | "free" | "na"
       }>>>>}
      объект расписания занятий по сотрудникам
@@ -21,7 +21,7 @@ class APIClient {
         /**
          * Структура объекта:
          * {
-         *     "Гарькуша И.": {
+         *     "<id пользователя>: {
          *         <строка даты в iso-формате для описания дня>: [
          *             {
          *                 start: <строка даты в iso-формате>,
@@ -36,7 +36,7 @@ class APIClient {
          *     }
          * }
          */
-        // MUST BE DELETED LATER
+            // MUST BE DELETED LATER
         const tmpVisitationStartDate1 = new Date(fromDate);
         const tmpVisitationStartDate2 = new Date(fromDate);
         const tmpVisitationEndDate1 = new Date(fromDate);
@@ -46,7 +46,7 @@ class APIClient {
         tmpVisitationStartDate2.setHours(18, 30);
         tmpVisitationEndDate2.setHours(19)
         return {
-            "Ходырева Н.":
+            "8":
                 {
                     [fromDate]: [
                         {
@@ -78,13 +78,14 @@ class APIClient {
      @async
      @param {Date} fromDate - начало промежутка дат
      @param {Date} toDate - конец промежутка дат
-     @returns Promise<object> - Возвращает объект на указаный промежуток времени, где описан рабочий график сотрудников.
+     @returns {Promise<Object<string|number, Object<Date, Array<{start: Date, end: Date}>>>>}
+     объект на указаный промежуток времени, где описан рабочий график сотрудников.
      */
     async getWorkSchedule(fromDate, toDate) {
         /**
          * Структура объекта:
          * {
-         *     "Гарькуша И.А.": {
+         *     "<id пользователя >": {
          *         <строка даты в iso-формате для описания дня>: [
          *             {
          *                 start: <строка даты в iso-формате>,
@@ -97,11 +98,12 @@ class APIClient {
         if (fromDate < toDate) {
             let schedule = {};
             const specialists = [
-                "Ходырева Н.", "Мазницкая А.", "Железнова М.",
-                "Исмагилова С.", "Вагизов С.", "Александра Ш.",
-                "Слесь И.", "Шлык В.", "Статина Е.",
-                "Федькович С.", "Гарькуша И.", "Мамедова Т.",
-                "Дорошева Т.", "Липина А."
+                "8", "9",
+                "11", "12", "13",
+                "15", "16",
+                "17", "18", "19",
+                "20", "21", "22",
+                "23"
             ]
             const dateRange = getDateRange(fromDate, toDate)
             for (const specialist of specialists) {
@@ -137,76 +139,76 @@ class APIClient {
     }
 
     /**
-     * This method is mocked fpr a while
+     * This method is mocked for a while
      @async
-     @returns {Promise<{string: {id: string|number, departments: string[]}}>}
+     @returns {Promise<Object<string|int, {name: string, departments: string[]}>>}
      */
     async getSpecialists() {
         // mock for a while
         return {
-            "Ходырева Н.": {
-                "id": "8",
+            "8": {
+                "name": "Ходырева Н.",
                 "departments": [
                     "ABA",
                     "d"
                 ]
             },
-            "Мазницкая А.": {
-                "id": "9",
+            "9": {
+                "name": "Мазницкая А.",
                 "departments": [
                     "НДГ",
                     "СИ"
                 ]
             },
-            "Железнова М.": {
-                "id": "11",
+            "11": {
+                "name": "Железнова М.",
                 "departments": [
                     "NP"
                 ]
             },
-            "Исмагилова С.": {
-                "id": "12",
+            "12": {
+                "name": "Исмагилова С.",
                 "departments": [
                     "R"
                 ]
             },
-            "Вагизов С.": {
-                "id": "13",
+            "13": {
+                "name": "Вагизов С.",
                 "departments": [
                     "НДГ"
                 ]
             },
-            "Александра Ш.": {
-                "id": "15",
+            "15": {
+                "name": "Александра Ш.",
                 "departments": [
                     "НДГ",
                     "СИ"
                 ]
             },
-            "Слесь И.": {
-                "id": "16",
+            "16": {
+                "name": "Слесь И.",
                 "departments": [
                     "ABA",
                     "d-ава"
                 ]
             },
-            "Шлык В.": {
-                "id": "17",
+            "17": {
+                "name": "Шлык В.",
                 "departments": [
                     "NP",
                     "НДГ"
                 ]
             },
-            "Статина Е.": {
-                "id": "18",
+            "18": {
+                "name": "Статина Е.",
                 "departments": [
                     "dNP",
                     "NP",
                     "КИТ"
                 ]
             },
-            "Федькович С.": {
-                "id": "19",
+            "19": {
+                "name": "Федькович С.",
                 "departments": [
                     "ABA",
                     "d",
@@ -214,8 +216,8 @@ class APIClient {
                     "LM"
                 ]
             },
-            "Гарькуша И.": {
-                "id": "20",
+            "20": {
+                "name": "Гарькуша И.",
                 "departments": [
                     "d",
                     "dL",
@@ -223,8 +225,8 @@ class APIClient {
                     "LM"
                 ]
             },
-            "Мамедова Т.": {
-                "id": "21",
+            "21": {
+                "name": "Мамедова Т.",
                 "departments": [
                     "d",
                     "dL",
@@ -233,8 +235,8 @@ class APIClient {
                     "Z"
                 ]
             },
-            "Дорошева Т.": {
-                "id": "22",
+            "22": {
+                "name": "Дорошева Т.",
                 "departments": [
                     "dL",
                     "dNP",
@@ -243,13 +245,13 @@ class APIClient {
                     "NP"
                 ]
             },
-            "Липина А.": {
-                "id": "23",
+            "23": {
+                "name": "Липина А.",
                 "departments": [
                     "ABA"
                 ]
             }
-        };
+        }
     }
 }
 

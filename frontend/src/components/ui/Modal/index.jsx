@@ -7,11 +7,11 @@ export default function CustomModal({
     handlePrimaryBtnClick, 
     primaryBtnText, 
     title,
-    size = 'md',
+    size = 'xl',
     children
 }) {
     return (
-        <Modal show={show} onHide={handleClose} size={size}>
+        <Modal show={show} onHide={handleClose} size={size} centered>
             <Modal.Header closeButton>
                 <Modal.Title>{title}</Modal.Title>
             </Modal.Header>
