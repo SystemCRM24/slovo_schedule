@@ -17,8 +17,8 @@ import {useMemo} from "react";
  *       Расписания по конкретному пользователю и дате
  */
 export default () => {
-    const [generalWorkSchedule] = useWorkScheduleContext();
-    const [generalSchedule] = useScheduleContext()
+    const [generalWorkSchedule, setGeneralWorkSchedule] = useWorkScheduleContext();
+    const [generalSchedule, setGeneralSchedule] = useScheduleContext()
     const specialist = useSpecialistContext();
     const date = useDayContext();
     const workSchedule = useMemo(() => {
@@ -31,6 +31,8 @@ export default () => {
         workSchedule: workSchedule,
         schedule: schedule,
         generalWorkSchedule: generalWorkSchedule,
-        generalSchedule: generalSchedule
+        generalSchedule: generalSchedule,
+        setGeneralWorkSchedule: setGeneralWorkSchedule,
+        setGeneralSchedule: setGeneralSchedule
     };
 }

@@ -11,6 +11,11 @@ export function getDateRange(fromDate, toDate) {
     return range
 }
 
+/**
+ * @param {Date} date
+ * @returns {string} - строка даты в ISO формате
+ * @example "2025-01-01"
+ */
 export function getISODate(date) {
     return date && date.toISOString().split('T')[0];
 }
@@ -62,14 +67,41 @@ export function getDatesDiffInMinutes(dt1, dt2) {
  * расписание занятий по специалисту
  * @param {Array<{start: Date, end: Date}>} workSchedule
  * рабочий график специалиста на конкретную дату
+ * @param {{hours: number, minutes: number}} workingDayStart - данные о начале рабочего дня
+ * @param {{hours: number, minutes: number}} workingDayEnd - данные о конце рабочего дня
  * @returns {Array<
  * {start: Date, end: Date, patient: {name: string, type: string} | null, status: "booked" | "confirmed" | "free" | "na"}
  * >}
  * список свободных и занятых промежутков
  */
-export function getWorkingIntervalsFromSchedules(schedule, workSchedule) {
+export function getWorkingIntervalsFromSchedules(schedule, workSchedule, workingDayStart, workingDayEnd) {
     let intervals = [];
     const sortedWorkSchedule = workSchedule.sort(compareIntervalDates);
+    const workingDayStartDt = new Date(sortedWorkSchedule[0].start);
+    workingDayStartDt.setHours(workingDayStart.hours, workingDayStart.minutes);
+    const workingDayEndDt = new Date(sortedWorkSchedule[0].start);
+    workingDayEndDt.setHours(workingDayEnd.hours, workingDayEnd.minutes);
+    // если задан график работы и рабочий день не начинается в наиболее раннее возможное время, то добавляем
+    // недоступный промежуток с наиболее раннего времени по начало рабочего дня
+    // аналогично с концом рабочего дня
+    if (sortedWorkSchedule.length > 0) {
+        if (workingDayStartDt.getTime() !== sortedWorkSchedule[0].start.getTime()) {
+            intervals.push({
+                start: workingDayStartDt,
+                end: sortedWorkSchedule[0].start,
+                patient: null,
+                status: "na",
+            });
+        }
+        if (workingDayEndDt.getTime() !== sortedWorkSchedule[sortedWorkSchedule.length - 1].end.getTime()) {
+            intervals.push({
+                start: sortedWorkSchedule[sortedWorkSchedule.length - 1].end,
+                end: workingDayEndDt,
+                patient: null,
+                status: "na"
+            });
+        }
+    }
     for (const [index, workingInterval] of Object.entries(sortedWorkSchedule)) {
         // добавляем нерабочий интервал между рабочими промежутками
         if (index > 0) {
@@ -132,7 +164,30 @@ function compareIntervalDates(a, b) {
  * @example "09:00 - 09:30"
  */
 export function getIntervalTimeString(d1, d2) {
-    const startTime = d1.toLocaleTimeString().split(':').slice(0, -1).join(':');
-    const endTime = d2.toLocaleTimeString().split(':').slice(0, -1).join(':')
+    const startTime = getTimeStringFromDate(d1);
+    const endTime = getTimeStringFromDate(d2)
     return [startTime, endTime].join(' - ');
+}
+
+/**
+ *
+ * @param d {Date | null | undefined}
+ * @returns {string | undefined} строковое представление времени без секунд в 24-часовом формате
+ * @example "12:00"
+ */
+export function getTimeStringFromDate(d) {
+    return d ? d.toLocaleTimeString().split(':').slice(0, -1).join(':') : undefined;
+}
+
+/**
+ *
+ * @param {Date} date - дата без времени
+ * @param {number} hours - часы
+ * @param {number} minutes - минуты
+ * @returns {Date} объект даты с указанными часом и минутами
+ */
+export function getDateWithTime(date, hours, minutes) {
+    const newDate = new Date(date);
+    newDate.setHours(hours, minutes);
+    return newDate;
 }

@@ -23,6 +23,8 @@ const WorkingInterval = ({startDt, endDt, percentOfWorkingDay, status, patientNa
                     setShowModal(false)
                 }}
                 title={'Test'}
+                primaryBtnText={'Сохранить'}
+                handlePrimaryBtnClick={() => setShowModal(false)}
             >
                 Test
             </CustomModal>

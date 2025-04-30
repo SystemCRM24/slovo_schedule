@@ -5,25 +5,26 @@ export default function CustomModal({
     show,
     handleClose, 
     handlePrimaryBtnClick, 
-    primaryBtnText, 
+    primaryBtnText,
+    primaryBtnDisabled = true,
     title,
     size = 'xl',
     children
 }) {
     return (
         <Modal show={show} onHide={handleClose} size={size} centered>
-            <Modal.Header closeButton>
+            <Modal.Header closeButton style={{backgroundColor: "AEE9FF"}}>
                 <Modal.Title>{title}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 {children}
             </Modal.Body>
             <Modal.Footer>
-                <Button variant="secondary" onClick={handleClose}>
+                <Button variant="outline-dark" onClick={handleClose}>
                     Закрыть
                 </Button>
                 {(primaryBtnText && handlePrimaryBtnClick) &&
-                    <Button variant="primary" onClick={handlePrimaryBtnClick}>
+                    <Button variant="success" onClick={handlePrimaryBtnClick} disabled={primaryBtnDisabled}>
                         {primaryBtnText}
                     </Button>}
             </Modal.Footer>

@@ -21,9 +21,10 @@ const WorkingIntervals = () => {
     );
     const intervals = useMemo(
         () => {
-            return getWorkingIntervalsFromSchedules(schedule, workSchedule);
+            const workingDay = getWorkingDayFromSchedule(generalWorkSchedule);
+            return getWorkingIntervalsFromSchedules(schedule, workSchedule, workingDay.start, workingDay.end);
         },
-        [schedule, workSchedule]
+        [schedule, workSchedule, generalWorkSchedule]
     );
     return (
         <div className={'h-100 w-100'}>

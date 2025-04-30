@@ -4,3 +4,15 @@ th {
     font-size: 1.25rem;
     vertical-align: middle;
 }
+
+.modal-header {
+    background-color: #AEE9FF;
+}
+
+.modal-body, .modal-footer {
+    background-color: #DEE2E6;   
+}
+
+.modal-body {
+    color: black;
+}

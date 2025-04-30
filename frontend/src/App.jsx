@@ -14,7 +14,7 @@ function App() {
     }
     return (
         <>
-            <Container fluid>
+            <Container fluid className={'mt-2'}>
                 <DateRangePicker onChange={onDatesChange} dates={dates}/>
             </Container>
             <WorkScheduleContextProvider schedule={{}}>
