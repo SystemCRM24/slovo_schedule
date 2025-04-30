@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {Button} from "react-bootstrap";
-import AddWorkScheduleModal from "../../AddWorkScheduleModal/index.jsx";
+import AddWorkScheduleModal from "../AddWorkScheduleModal/index.jsx";
 
 const EmptyWorkSchedule = () => {
     const [showModal, setShowModal] = useState(false);

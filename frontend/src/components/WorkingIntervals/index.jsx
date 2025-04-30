@@ -1,6 +1,6 @@
 import React, {useMemo} from 'react';
 import {getWorkingDayFromSchedule, getDatesDiffInMinutes, getWorkingIntervalsFromSchedules} from "../../utils/dates.js";
-import WorkingInterval from "../../WorkingInterval/index.jsx";
+import WorkingInterval from "../WorkingInterval/index.jsx";
 import {useSpecialistContext} from "../../contexts/Specialist/provider.jsx";
 import useSchedules from "../../hooks/useSchedules.js";
 

@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import './WorkingInterval.css';
-import {getIntervalTimeString} from "../utils/dates.js";
-import CustomModal from "../components/ui/Modal/index.jsx";
+import {getIntervalTimeString} from "../../utils/dates.js";
+import EditWorkScheduleModal from "../EditWorkScheduleModal/index.jsx";
 
 const WorkingInterval = ({startDt, endDt, percentOfWorkingDay, status, patientName, patientType}) => {
     const [showModal, setShowModal] = useState(false);
@@ -17,17 +17,9 @@ const WorkingInterval = ({startDt, endDt, percentOfWorkingDay, status, patientNa
             <div>
                 {getIntervalTimeString(startDt, endDt)}
             </div>
-            <CustomModal
-                show={showModal}
-                handleClose={() => {
-                    setShowModal(false)
-                }}
-                title={'Test'}
-                primaryBtnText={'Сохранить'}
-                handlePrimaryBtnClick={() => setShowModal(false)}
-            >
-                Test
-            </CustomModal>
+            {status === "free" &&
+                <EditWorkScheduleModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt}/>
+            }
         </div>
     );
 };

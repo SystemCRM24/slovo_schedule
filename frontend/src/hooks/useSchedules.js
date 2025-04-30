@@ -13,7 +13,9 @@ import {useMemo} from "react";
  *       workSchedule: Array<{start: Date, end: Date},
  *       schedule: Array<{
  *       start: Date, end: Date, patient: {name: string, type: string}, status: "booked" | "confirmed" | "free" | "na"
- *       }>>}}
+ *       }>>,
+ *       setGeneralWorkSchedule: function,
+ *       setGeneralSchedule: function}}
  *       Расписания по конкретному пользователю и дате
  */
 export default () => {

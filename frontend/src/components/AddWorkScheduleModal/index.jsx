@@ -1,10 +1,10 @@
 import React, {useState} from 'react';
-import useSchedules from "../hooks/useSchedules.js";
-import CustomModal from "../components/ui/Modal/index.jsx";
-import {useDayContext} from "../contexts/Day/provider.jsx";
+import useSchedules from "../../hooks/useSchedules.js";
+import CustomModal from "../ui/Modal/index.jsx";
+import {useDayContext} from "../../contexts/Day/provider.jsx";
 import {Button, FormControl, InputGroup} from "react-bootstrap";
-import {getDateWithTime, getTimeStringFromDate, getWorkingIntervalsFromSchedules} from "../utils/dates.js";
-import {useSpecialistContext} from "../contexts/Specialist/provider.jsx";
+import {getDateWithTime, getTimeStringFromDate, isIntervalValid} from "../../utils/dates.js";
+import {useSpecialistContext} from "../../contexts/Specialist/provider.jsx";
 
 const AddWorkScheduleModal = ({show, setShow}) => {
     const {
@@ -12,19 +12,10 @@ const AddWorkScheduleModal = ({show, setShow}) => {
         setGeneralWorkSchedule,
     } = useSchedules();
     const date = useDayContext();
+    const specialistId = useSpecialistContext();
     const dayOfWeek = date.toLocaleString('ru-RU', {weekday: 'long'});
     const dateString = date.toLocaleDateString();
-    const specialistId = useSpecialistContext();
     const [workIntervals, setWorkIntervals] = useState([]);
-
-    /**
-     *
-     * @param {{start: Date, end: Date}} interval
-     * @returns {boolean}
-     */
-    const isIntervalValid = interval => {
-        return interval.start !== undefined && interval.end !== undefined && (interval.start < interval.end);
-    }
 
     const onTimeInputChange = async (idx, attrName, value) => {
         const newIntervals = workIntervals.map((interval, index) => {
@@ -110,7 +101,7 @@ const AddWorkScheduleModal = ({show, setShow}) => {
                             </InputGroup>
                             <Button
                                 variant={'danger'}
-                                name={'resetBtn'}
+                                name={'deleteBtn'}
                                 onClick={async () => await onRemoveButtonClick(idx)}
                             >
                                 X

@@ -115,7 +115,7 @@ export function getWorkingIntervalsFromSchedules(schedule, workSchedule, working
         const [startTimestamp, endTimestamp] = [
             workingInterval.start.getTime(), workingInterval.end.getTime()
         ];
-        // находим все интервалы внутри рабочего промежутка
+        // находим все занятия внутри рабочего промежутка
         const scheduleIntervalsInRange = schedule.filter(
             item => startTimestamp <= item.start.getTime() && item.end.getTime() <= endTimestamp
         ).sort(compareIntervalDates);
@@ -190,4 +190,13 @@ export function getDateWithTime(date, hours, minutes) {
     const newDate = new Date(date);
     newDate.setHours(hours, minutes);
     return newDate;
+}
+
+/**
+ *
+ * @param {{start: Date | undefined, end: Date | undefined}} interval
+ * @returns {boolean}
+ */
+export function isIntervalValid(interval) {
+    return interval.start !== undefined && interval.end !== undefined && (interval.start < interval.end);
 }
