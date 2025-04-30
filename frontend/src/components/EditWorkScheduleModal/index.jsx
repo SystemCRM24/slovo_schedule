@@ -1,4 +1,6 @@
 import React, {useCallback, useMemo} from 'react';
+import {Button, FormControl, InputGroup} from "react-bootstrap";
+
 import CustomModal from "../ui/Modal/index.jsx";
 import useSchedules from "../../hooks/useSchedules.js";
 import {useSpecialistContext} from "../../contexts/Specialist/provider.jsx";
@@ -30,7 +32,15 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
             handleClose={() => setShow(false)}
             title={`${specialistId} - ${dayOfWeek} ${dateString} ${getTimeStringFromDate(startDt)} - ${getTimeStringFromDate(endDt)}`}
         >
-
+            <div className={'d-flex justify-content-center w-100 mt-3'}>
+                <Button 
+                    variant={'success'} 
+                    name={'save'} 
+                    onClick={() => console.log(realInterval)}
+                >
+                    Добавить занятие
+                </Button>
+            </div>
         </CustomModal>
     );
 };

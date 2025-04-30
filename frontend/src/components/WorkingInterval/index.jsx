@@ -1,10 +1,13 @@
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import './WorkingInterval.css';
 import {getIntervalTimeString} from "../../utils/dates.js";
 import EditWorkScheduleModal from "../EditWorkScheduleModal/index.jsx";
+import EditAppointmentModal from '../EditAppointmentModal/index.jsx';
+
 
 const WorkingInterval = ({startDt, endDt, percentOfWorkingDay, status, patientName, patientType}) => {
     const [showModal, setShowModal] = useState(false);
+
     return (
         <div
             style={{height: `${percentOfWorkingDay}%`}}
@@ -20,6 +23,10 @@ const WorkingInterval = ({startDt, endDt, percentOfWorkingDay, status, patientNa
             {status === "free" &&
                 <EditWorkScheduleModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt}/>
             }
+            {(status === "booked" || status === 'confirmed') && 
+                <EditAppointmentModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt}/>
+            }
+
         </div>
     );
 };
