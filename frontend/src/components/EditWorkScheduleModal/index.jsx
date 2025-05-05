@@ -65,7 +65,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
         setNewSchedules([...newSchedules, {
             start: undefined,
             end: undefined,
-            patientName: undefined,
+            patientId: undefined,
             patientType: undefined,
             status: 'booked'
         }]);
@@ -93,18 +93,27 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                 end: item.end,
                 status: item.status,
                 code: item.patientType,
-                patient: item.patientName,
+                patient: item.patientId,
                 specialist: specialistId,
             }
         });
+        console.log(transformedNewSchedules);
         let tasks = [];
         for (const appointment of transformedNewSchedules) {
             tasks.push(apiClient.createAppointment(appointment));
         }
         const results = await Promise.all(tasks);
         for (const [index, sched] of Object.entries(results)) {
-            transformedNewSchedules[index].id = sched.id;
+            transformedNewSchedules[index] = {
+                ...transformedNewSchedules[index],
+                id: sched.id,
+                patient: {
+                    id: transformedNewSchedules[index].patient,
+                    type: transformedNewSchedules[index].code,
+                }
+            }
         }
+        console.log(transformedNewSchedules);
         setGeneralSchedule({
             ...generalSchedule,
             [specialistId]: {
@@ -181,12 +190,12 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                             </InputGroup>
                             <InputGroup hasValidation>
                                 <FormSelect
-                                    name={'patientName'}
-                                    isInvalid={['', null, undefined].includes(newSchedule.patientName)}
+                                    name={'patientId'}
+                                    isInvalid={['', null, undefined].includes(newSchedule.patientId)}
                                     onChange={async (e) => {
                                         await handleInputChange(e, idx);
                                     }}
-                                    value={newSchedule.patientName}
+                                    value={newSchedule.patientId}
                                 >
                                     <option disabled value={undefined} selected>Выберите пациента</option>
                                     {Object.entries(children).map(([childId, childName]) => {

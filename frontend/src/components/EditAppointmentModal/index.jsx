@@ -10,15 +10,22 @@ import {useChildrenContext} from "../../contexts/Children/provider.jsx";
 import apiClient, {constants} from "../../api/index.js";
 
 
-const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientName, patientType, status}) => {
-    const [appointment, setAppointment] = useState(
-        {status: status, patientName: patientName, patientType: patientType, start: startDt, end: endDt}
-    );
+const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, patientType, status}) => {
     const {specialistId, specialist} = useSpecialist();
+    const [appointment, setAppointment] = useState(
+        {
+            id: id, status: status, patientId: patientId, patientType: patientType, start: startDt, end: endDt,
+            specialist: specialistId,
+        }
+    );
     const {
         schedule, generalSchedule,
         setGeneralSchedule, workSchedule
     } = useSchedules();
+    const patients = useChildrenContext();
+    const patientName = useMemo(() => {
+        return patients?.[patientId];
+    }, [patientId, patients]);
     const day = useDayContext();
     const children = useChildrenContext();
     const dayOfWeek = day.toLocaleString('ru-RU', {weekday: 'long'});
@@ -66,7 +73,6 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientName, p
     const scheduleWithoutCurrentElem = useMemo(() => {
         return schedule.filter((value, index) => index !== recordIndex);
     }, [recordIndex, schedule]);
-    console.log(schedule, scheduleWithoutCurrentElem)
 
     const handleInputChange = async (e) => {
         let value;
@@ -87,29 +93,37 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientName, p
 
     const onSubmit = async () => {
         const newRecord = {
+            id: appointment.id,
             start: appointment.start,
             end: appointment.end,
-            patient: {
-                name: appointment.patientName,
-                type: appointment.patientType,
-            },
+            patient: appointment.patientId,
+            code: appointment.patientType,
             status: appointment.status,
         }
-        const newSchedule = schedule.map((item, index) => {
-            if (index === recordIndex) {
-                return newRecord
-            } else {
-                return item;
-            }
-        })
-        setGeneralSchedule({
-            ...generalSchedule,
-            [specialistId]: {
-                ...generalSchedule[specialistId],
-                [day]: newSchedule,
-            }
-        });
-        setShow(false);
+        const result = await apiClient.updateAppointment(id, newRecord);
+        if (result) {
+            const newSchedule = schedule.map((item, index) => {
+                if (index === recordIndex) {
+                    return {
+                        ...newRecord,
+                        patient: {
+                            id: appointment.patientId,
+                            type: appointment.patientType
+                        }
+                    }
+                } else {
+                    return item;
+                }
+            })
+            setGeneralSchedule({
+                ...generalSchedule,
+                [specialistId]: {
+                    ...generalSchedule[specialistId],
+                    [day]: newSchedule,
+                }
+            });
+            setShow(false);
+        }
     }
 
 
@@ -171,14 +185,14 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientName, p
                 </InputGroup>
                 <InputGroup hasValidation>
                     <FormSelect
-                        name={'patientName'}
-                        isInvalid={['', null, undefined].includes(appointment.patientName)}
+                        name={'patientId'}
+                        isInvalid={['', null, undefined].includes(appointment.patientId)}
                         onChange={async (e) => {
                             await handleInputChange(e);
                         }}
-                        value={appointment.patientName}
+                        value={appointment.patientId}
                     >
-                        {Object.entries(children).map((childId, childName) => {
+                        {Object.entries(children).map(([childId, childName]) => {
                             return (
                                 <option value={childId} key={`${day}_interval_${recordIndex}_${childId}`}>
                                     {childName}

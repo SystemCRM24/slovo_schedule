@@ -10,8 +10,7 @@ const WorkingInterval = ({id, startDt, endDt, percentOfWorkingDay, status, patie
     const [showModal, setShowModal] = useState(false);
     const patients = useChildrenContext();
     const patientName = useMemo(() => {
-        console.log(patients, patientId)
-        return patients?.[patientId]?.name
+        return patients?.[patientId]
     }, [patientId, patients]);
     return (
         <div
@@ -30,7 +29,7 @@ const WorkingInterval = ({id, startDt, endDt, percentOfWorkingDay, status, patie
             }
             {(status === "booked" || status === 'confirmed') &&
                 <EditAppointmentModal id={id} show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt}
-                                      patientName={patientName} patientType={patientType} status={status}/>
+                                      patientId={patientId} patientType={patientType} status={status}/>
             }
 
         </div>

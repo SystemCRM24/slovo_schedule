@@ -291,7 +291,7 @@ export function isScheduleValid(schedule, newSchedules, generalSchedule, workSch
 
 /**
  * @param {
- * {start: Date | undefined, end: Date | undefined, patientName: string | undefined, patientType: string | undefined}
+ * {start: Date | undefined, end: Date | undefined, patientId: string | undefined | Number, patientType: string | undefined}
  * } schedule - проверяемый объект занятия в расписании
  * @param {
  * Array<{start: Date | undefined, end: Date | undefined, patientName: string | undefined, patientType: string | undefined}>
@@ -305,7 +305,7 @@ export function isScheduleValid(schedule, newSchedules, generalSchedule, workSch
 export function isNewScheduleValid(schedule, newSchedules, generalSchedule, workSchedule) {
     const invalidPatientValues = ['', null, undefined];
     return isScheduleValid(schedule, newSchedules, generalSchedule, workSchedule) && !(
-        invalidPatientValues.includes(schedule.patientName) || invalidPatientValues.includes(schedule.patientType)
+        invalidPatientValues.includes(schedule.patientId) || invalidPatientValues.includes(schedule.patientType)
     );
 }
 
