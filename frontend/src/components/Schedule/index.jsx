@@ -60,7 +60,7 @@ const Schedule = ({fromDate, toDate}) => {
         () => {
             const rows = [];
             let currentDate = new Date(fromDate);
-            const style = {height: '800px'};
+            const style = {height: '1100px'};
             while (currentDate <= toDate) {
                 const row = [];
                 const dayOfWeek = currentDate.toLocaleString('ru-RU', {weekday: 'long'});

@@ -182,7 +182,7 @@ export function areIntervalsOverlapping(interval1, interval2) {
     const endD = interval1.end.getTime(); // 10:00
     const endDate = interval2.end.getTime(); // 10:15
     return (startD >= startDate && startD < endDate) ||
-       (startDate >= startD && startDate < endD);
+        (startDate >= startD && startDate < endD);
 }
 
 function compareIntervalDates(a, b) {
@@ -233,3 +233,80 @@ export function getDateWithTime(date, hours, minutes) {
 export function isIntervalValid(interval) {
     return interval.start !== undefined && interval.end !== undefined && (interval.start < interval.end);
 }
+
+/**
+ * @param {
+ * {start: Date | undefined, end: Date | undefined, patientName: string | undefined, patientType: string | undefined}
+ * } schedule - проверяемый объект занятия в расписании
+ * @param {
+ * Array<{start: Date | undefined, end: Date | undefined, patientName: string | undefined, patientType: string | undefined}>
+ *     } newSchedules - список всех новых занятий
+ * @param {Array<
+ * {start: Date, end: Date, patient: {name: string, type: string} | null, status: "booked" | "confirmed" | "free" | "na"}
+ * >} generalSchedule - текущее расписание занятий на день
+ * @param {{start: Date, end: Date} | Array<{start: Date, end: Date}>} workSchedule - текущее промежуток графика работы на день
+ * @returns {Boolean} валидный ли интервал
+ */
+export function isScheduleValid(schedule, newSchedules, generalSchedule, workSchedule) {
+    if (schedule.start !== undefined && schedule.end !== undefined) {
+        let inWorkTime;
+        // если нам пришел массив, то нужно проверить все промежутки
+        if (Array.isArray(workSchedule)) {
+            const intersections = workSchedule.map(
+                sched => {
+                    return schedule.start.getTime() >= sched.start.getTime() &&
+                        schedule.end.getTime() <= sched.end.getTime()
+                }
+            );
+            console.log(intersections);
+            inWorkTime = intersections.some(item => item === true);
+        } else {
+            inWorkTime = schedule.start.getTime() >= workSchedule.start.getTime() &&
+                        schedule.end.getTime() <= workSchedule.end.getTime()
+        }
+        if (!inWorkTime) {
+            console.log(schedule, 'not in work time')
+            return false;
+        }
+        const schedules = [newSchedules.filter(interval => isIntervalValid(interval)), generalSchedule];
+        for (const scheduleArr of schedules) {
+            const intervalsInRange = findScheduleIntervalsInRange(
+                scheduleArr, schedule.start.getTime(), schedule.end.getTime()
+            );
+            if (intervalsInRange.length > 0) {
+                console.log(schedule, 'intersects one of', scheduleArr);
+                return false;
+            }
+            for (const interval of scheduleArr) {
+                if (areIntervalsOverlapping(schedule, interval)) {
+                    console.log(schedule, 'overlapping', interval);
+                    return false;
+                }
+            }
+        }
+        console.info('everything ok with', schedule);
+        return true;
+    }
+}
+
+
+/**
+ * @param {
+ * {start: Date | undefined, end: Date | undefined, patientName: string | undefined, patientType: string | undefined}
+ * } schedule - проверяемый объект занятия в расписании
+ * @param {
+ * Array<{start: Date | undefined, end: Date | undefined, patientName: string | undefined, patientType: string | undefined}>
+ *     } newSchedules - список всех новых занятий
+ * @param {Array<
+ * {start: Date, end: Date, patient: {name: string, type: string} | null, status: "booked" | "confirmed" | "free" | "na"}
+ * >} generalSchedule - текущее расписание занятий на день
+ * @param {{start: Date, end: Date}} workSchedule - текущее промежуток графика работы на день
+ * @returns {Boolean} является ли новое занятие валидным
+ */
+export function isNewScheduleValid(schedule, newSchedules, generalSchedule, workSchedule) {
+    const invalidPatientValues = ['', null, undefined];
+    return isScheduleValid(schedule, newSchedules, generalSchedule, workSchedule) && !(
+        invalidPatientValues.includes(schedule.patientName) || invalidPatientValues.includes(schedule.patientType)
+    );
+}
+

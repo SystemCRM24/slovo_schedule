@@ -6,71 +6,10 @@ import {
     findScheduleIntervalsInRange,
     getDateWithTime,
     getTimeStringFromDate, areIntervalsOverlapping,
-    isIntervalValid
+    isIntervalValid, isNewScheduleValid, isScheduleValid
 } from "../../utils/dates.js";
 import {Button, FormControl, FormSelect, InputGroup} from "react-bootstrap";
 import useSpecialist from "../../hooks/useSpecialist.js";
-
-/**
- * @param {
- * {start: Date | undefined, end: Date | undefined, patientName: string | undefined, patientType: string | undefined}
- * } schedule - проверяемый объект занятия в расписании
- * @param {
- * Array<{start: Date | undefined, end: Date | undefined, patientName: string | undefined, patientType: string | undefined}>
- *     } newSchedules - список всех новых занятий
- * @param {Array<
- * {start: Date, end: Date, patient: {name: string, type: string} | null, status: "booked" | "confirmed" | "free" | "na"}
- * >} generalSchedule - текущее расписание занятий на день
- * @param {{start: Date, end: Date}} workSchedule - текущее промежуток графика работы на день
- * @returns {Boolean} валидный ли интервал
- */
-const isScheduleValid = (schedule, newSchedules, generalSchedule, workSchedule) => {
-    if (schedule.start !== undefined && schedule.end !== undefined) {
-        if (schedule.start.getTime() < workSchedule.start.getTime() || schedule.end.getTime() > workSchedule.end.getTime()) {
-            console.log(schedule, 'not in work time')
-            return false;
-        }
-        const schedules = [newSchedules.filter(interval => isIntervalValid(interval)), generalSchedule];
-        for (const scheduleArr of schedules) {
-            const intervalsInRange = findScheduleIntervalsInRange(
-                scheduleArr, schedule.start.getTime(), schedule.end.getTime()
-            );
-            if (intervalsInRange.length > 0) {
-                console.log(schedule, 'intersects one of', scheduleArr);
-                return false;
-            }
-            for (const interval of scheduleArr) {
-                if (areIntervalsOverlapping(schedule, interval)) {
-                    console.log(schedule, 'overlapping', interval);
-                    return false;
-                }
-            }
-        }
-        console.info('everything ok with', schedule);
-        return true;
-    }
-}
-
-
-/**
- * @param {
- * {start: Date | undefined, end: Date | undefined, patientName: string | undefined, patientType: string | undefined}
- * } schedule - проверяемый объект занятия в расписании
- * @param {
- * Array<{start: Date | undefined, end: Date | undefined, patientName: string | undefined, patientType: string | undefined}>
- *     } newSchedules - список всех новых занятий
- * @param {Array<
- * {start: Date, end: Date, patient: {name: string, type: string} | null, status: "booked" | "confirmed" | "free" | "na"}
- * >} generalSchedule - текущее расписание занятий на день
- * @param {{start: Date, end: Date}} workSchedule - текущее промежуток графика работы на день
- * @returns {Boolean} является ли новое занятие валидным
- */
-const isNewScheduleValid = (schedule, newSchedules, generalSchedule, workSchedule) => {
-    const invalidPatientValues = ['', null, undefined];
-    return isScheduleValid(schedule, newSchedules, generalSchedule, workSchedule) && !(
-        invalidPatientValues.includes(schedule.patientName) || invalidPatientValues.includes(schedule.patientType)
-    );
-}
 
 const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
     const [newSchedules, setNewSchedules] = useState([]);
@@ -104,10 +43,6 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
     const [realInterval, realIntervalIndex] = useMemo(() => {
         return [workSchedule.find(findIntervalPredicate), workSchedule.findIndex(findIntervalPredicate)]
     }, [workSchedule, findIntervalPredicate]);
-
-    const schedulesInRange = useMemo(() => {
-        return findScheduleIntervalsInRange(schedule, realInterval.start.getTime(), realInterval.end.getTime());
-    }, [realInterval, schedule]);
 
     const onTimeInputChange = async (idx, attrName, value) => {
         const newIntervals = newSchedules.map((schedule, index) => {

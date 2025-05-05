@@ -10,7 +10,7 @@ const WorkingInterval = ({startDt, endDt, percentOfWorkingDay, status, patientNa
 
     return (
         <div
-            style={{height: `${percentOfWorkingDay}%`}}
+            style={{height: `${percentOfWorkingDay}%`, fontSize: percentOfWorkingDay < 3 ? "8pt" : "small"}}
             className={`interval status-${status} d-flex flex-column align-items-center justify-content-center`}
             onClick={() => {
                 !showModal && setShowModal(true)
@@ -23,8 +23,9 @@ const WorkingInterval = ({startDt, endDt, percentOfWorkingDay, status, patientNa
             {status === "free" &&
                 <EditWorkScheduleModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt}/>
             }
-            {(status === "booked" || status === 'confirmed') && 
-                <EditAppointmentModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt}/>
+            {(status === "booked" || status === 'confirmed') &&
+                <EditAppointmentModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt}
+                                      patientName={patientName} patientType={patientType} status={status}/>
             }
 
         </div>
