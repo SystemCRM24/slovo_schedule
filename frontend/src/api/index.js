@@ -80,17 +80,27 @@ class APIClient {
      * @returns {Promise<Object.<string, string>>}
      */
     async getClients() {
+        const result = {};
+        const parseClient = (client) => {
+            result[client.ID] = client.NAME + (client.LAST_NAME ? ` ${client.LAST_NAME}` : '');
+        }
         const params = {
             filter: {TYPE_ID: "CLIENT"},
             order: {LAST_NAME: 'ASC', NAME: 'ASC'},
             select: ['ID', 'NAME', 'LAST_NAME']
         };
-        const response = await this.bx.callListMethod('crm.contact.list', params);
-        const result = {};
-        for (const client of response) {
-            const full_name = client.NAME + (client.LAST_NAME ? ` ${client.LAST_NAME}` : '');
-            result[client.ID] = full_name;
+        const firstResponse = await this.bx.callMethod('crm.contact.list', params);
+        firstResponse.forEach(parseClient);
+        let current = this.bx.lastResult.answer.next;
+        const total = this.bx.lastResult.answer.total;
+        const requests = [];
+        while ( current < total ) {
+            requests.push({...params, start: current});
+            current += 50;
         }
+        const calls = BX24Wrapper.createCalls('crm.contact.list', requests);
+        const response = await this.bx.callLongBatch(calls, false);
+        response.forEach(page => page.forEach(parseClient));
         return result;
     }
 
