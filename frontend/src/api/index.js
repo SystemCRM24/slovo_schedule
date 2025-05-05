@@ -2,7 +2,7 @@ import {getDateRange} from "../utils/dates.js";
 import BX24Wrapper from "./bx24Wrapper.js";
 
 
-const constants = {
+export const constants = {
     entityTypeId: {appointment: 1036, workSchedule: 1042},
     departments: {
         "28": "A", "26": "ABA", "40": "d", "24": "D 3,5+", "42": "d-ава", "23": "D1-3,5",
@@ -28,10 +28,10 @@ const constants = {
             statusById: {50: 'booked', 51: 'confirmed'},
             idByStatus: {'booked': 50, 'confirmed': 51},
             idByCode: {
-                "L": "52", "A": "53", "LM": "54", "R": "55", "D": "56", "СИ": "57", 
-                "НДГ": "58", "АБА": "59", "NP ИПР": "60", "NP  IQ": "61", "P": "62", "Z": "63", 
-                "КИТ": "64", "d": "65", "d-L": "66", "d-P": "67", "d-Z": "68", "d-НЭК": "69", "d-NP": "70", 
-                "d-Р": "71", "d-ABA": "72", "d-СИ": "73", "АВА-ИА": "74","АВА-Р": "75"
+                "L": "52", "A": "53", "LM": "54", "R": "55", "D": "56", "СИ": "57",
+                "НДГ": "58", "АБА": "59", "NP ИПР": "60", "NP  IQ": "61", "P": "62", "Z": "63",
+                "КИТ": "64", "d": "65", "d-L": "66", "d-P": "67", "d-Z": "68", "d-НЭК": "69", "d-NP": "70",
+                "d-Р": "71", "d-ABA": "72", "d-СИ": "73", "АВА-ИА": "74", "АВА-Р": "75"
             },
             codeById: {
                 "52": "L", "53": "A", "54": "LM", "55": "R", "56": "D", "57": "СИ",
@@ -66,7 +66,7 @@ class APIClient {
             {'@UF_DEPARTMENT': Object.keys(constants.departments)}
         );
         const specialists = {};
-        for ( const user of response ) {
+        for (const user of response) {
             const name = user['LAST_NAME'] + " " + user['NAME'].charAt(0) + ".";
             const userDepratments = user['UF_DEPARTMENT'] || [];
             const departments = userDepratments.map(d => constants.departments[d]);
@@ -87,7 +87,7 @@ class APIClient {
         };
         const response = await this.bx.callListMethod('crm.contact.list', params);
         const result = {};
-        for ( const client of response ) {
+        for (const client of response) {
             const full_name = client.NAME + (client.LAST_NAME ? ` ${client.LAST_NAME}` : '');
             result[client.ID] = full_name;
         }
@@ -97,21 +97,21 @@ class APIClient {
     /**
      @param {Date} from - начало промежутка дат
      @param {Date} to - конец промежутка дат
-     * Структура возвращаемого объекта:
-     * {
-     *   [id: string]: {            // Идентификатор специалиста
-     *     [date: Date]: Array<{    // День и массив с записями на прием
-     *       id: number,            // id смарт-процесса Расписания
-     *       start: Date,
-     *       end: Date,
-     *       patient: {
-     *           id: string,
-     *           type: string
-     *       },
-     *       status: string
-     *     }>
-     *   }
-     * }
+      * Структура возвращаемого объекта:
+      * {
+      *   [id: string]: {            // Идентификатор специалиста
+      *     [date: Date]: Array<{    // День и массив с записями на прием
+      *       id: number,            // id смарт-процесса Расписания
+      *       start: Date,
+      *       end: Date,
+      *       patient: {
+      *           id: string,
+      *           type: string
+      *       },
+      *       status: string
+      *     }>
+      *   }
+      * }
      @returns object - объект рсаписания на указанный промежуток врмеени
      */
     async getSchedules(from, to) {
@@ -125,12 +125,12 @@ class APIClient {
         }
         const response = await this.bx.callListMethod('crm.item.list', params);
         const schedule = {};
-        for ( const itemsObject of response ) {
-            for ( const appointment of itemsObject.items ) {
+        for (const itemsObject of response) {
+            for (const appointment of itemsObject.items) {
                 const specialistId = appointment.assignedById;
                 const start = new Date(appointment[constants.uf.appointment.start]);
                 const startOfDay = new Date(start);
-                // startOfDay.setHours(0, 0, 0, 0);
+                startOfDay.setHours(3, 0, 0, 0);
                 const end = new Date(appointment[constants.uf.appointment.end]);
                 const patientId = appointment[constants.uf.appointment.patient];
                 const patientTypeId = (appointment[constants.uf.appointment.code] || [''])[0];
@@ -162,7 +162,7 @@ class APIClient {
      * Структура возвращаемого объекта:
      * {
      *   [id: string]: {            // Идентификатор специалиста
-     *     [date: Date]: {          // 
+     *     [date: Date]: {          //
      *        id: string,           // id смарт-процесса Рабочего графика
      *        intervals: Array<{
      *          start: Date,
@@ -183,8 +183,8 @@ class APIClient {
         }
         const response = await this.bx.callListMethod('crm.item.list', params);
         const workSchedule = {};
-        for ( const items of response ) {
-            for ( const schedule of items.items ) {
+        for (const items of response) {
+            for (const schedule of items.items) {
                 const specialistData = workSchedule[schedule.assignedById] ??= {};
                 const date = new Date(schedule[constants.uf.workSchedule.date]);
                 // date.setHours(0, 0, 0, 0);
@@ -193,16 +193,16 @@ class APIClient {
                     intervals: []
                 };
                 const rawIntervals = schedule[constants.uf.workSchedule.intervals] || [];
-                for ( const interval of rawIntervals ) {
+                for (const interval of rawIntervals) {
                     const [start, end] = interval.split(":");
-                    data.intervals.push({ start: new Date(parseInt(start)), end: new Date(parseInt(end)) });
+                    data.intervals.push({start: new Date(parseInt(start)), end: new Date(parseInt(end))});
                 }
             }
         }
         return workSchedule;
     }
 
-    async getDeals(filter={}) {
+    async getDeals(filter = {}) {
         const deals = await this.bx.callListMethod('crm.deal.list', {'FILTER': filter});
         console.log(deals);
         return deals;
@@ -249,7 +249,7 @@ class APIClient {
 
     /**
      * Получение информации о элементе смарт-процесса - расписания
-     * @param {string} id 
+     * @param {string} id
      */
     async getAppointment(id) {
         return await this._getCrmItem(constants.entityTypeId.appointment, id);
@@ -282,7 +282,7 @@ class APIClient {
     /**
      * Удаляет запись о приеме
      * @param {string} id - ид записи (Расписания)
-     * @returns 
+     * @returns
      */
     async deleteAppointment(id) {
         return await this._deleteCrmItem(constants.entityTypeId.appointment, id);
@@ -336,13 +336,12 @@ class APIClient {
     /**
      * Удаляет запись о рабочем графике
      * @param {string} id - ид рабочего графика
-     * @returns 
+     * @returns
      */
     async deleteWorkSchedule(id) {
         return await this._deleteCrmItem(constants.entityTypeId.workSchedule, id);
     }
 }
-
 
 
 class APIClientMock {

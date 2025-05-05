@@ -7,9 +7,10 @@ import useSchedules from "../../hooks/useSchedules";
 import useSpecialist from "../../hooks/useSpecialist.js";
 import {getDateWithTime, getTimeStringFromDate, isIntervalValid, isScheduleValid} from "../../utils/dates.js";
 import {useChildrenContext} from "../../contexts/Children/provider.jsx";
+import apiClient, {constants} from "../../api/index.js";
 
 
-const EditAppointmentModal = ({show, setShow, startDt, endDt, patientName, patientType, status}) => {
+const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientName, patientType, status}) => {
     const [appointment, setAppointment] = useState(
         {status: status, patientName: patientName, patientType: patientType, start: startDt, end: endDt}
     );
@@ -33,7 +34,7 @@ const EditAppointmentModal = ({show, setShow, startDt, endDt, patientName, patie
     const [record, recordIndex] = useMemo(
         () => {
             let index = -1;
-            for (const record of schedule.intervals) {
+            for (const record of schedule) {
                 index++;
                 if (record.start.getTime() === startDt.getTime() && record.end.getTime() === endDt.getTime()) {
                     return [record, index];
@@ -46,21 +47,24 @@ const EditAppointmentModal = ({show, setShow, startDt, endDt, patientName, patie
 
     const onDeleteBtnClick = useCallback(
         () => {
-            setShow(false);
-            const newSchedule = schedule.filter((item, index) => index !== recordIndex);
-            setGeneralSchedule({
-                ...generalSchedule,
-                [specialistId]: {
-                    ...generalSchedule[specialistId],
-                    [day]: newSchedule,
-                }
-            })
+            (async () => {
+                await apiClient.deleteAppointment(id)
+                setShow(false);
+                const newSchedule = schedule.filter((item, index) => index !== recordIndex);
+                setGeneralSchedule({
+                    ...generalSchedule,
+                    [specialistId]: {
+                        ...generalSchedule[specialistId],
+                        [day]: newSchedule,
+                    }
+                })
+            })();
         },
-        [setShow, recordIndex, schedule, setGeneralSchedule, generalSchedule, specialistId]
+        [id, setShow, schedule, setGeneralSchedule, generalSchedule, specialistId, day, recordIndex]
     );
 
     const scheduleWithoutCurrentElem = useMemo(() => {
-        return schedule.intervals.filter((value, index) => index !== recordIndex);
+        return schedule.filter((value, index) => index !== recordIndex);
     }, [recordIndex, schedule]);
     console.log(schedule, scheduleWithoutCurrentElem)
 
@@ -192,7 +196,7 @@ const EditAppointmentModal = ({show, setShow, startDt, endDt, patientName, patie
                         }}
                         value={appointment.patientType}
                     >
-                        {specialist.departments.map(code => {
+                        {Object.entries(constants.listFieldValues.appointment.idByCode).map(([code, id]) => {
                             return (
                                 <option value={code} key={`${day}_interval_${recordIndex}_${code}_opt`}>
                                     {code}

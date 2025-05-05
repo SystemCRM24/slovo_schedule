@@ -3,11 +3,16 @@ import './WorkingInterval.css';
 import {getIntervalTimeString} from "../../utils/dates.js";
 import EditWorkScheduleModal from "../EditWorkScheduleModal/index.jsx";
 import EditAppointmentModal from '../EditAppointmentModal/index.jsx';
+import {useChildrenContext} from "../../contexts/Children/provider.jsx";
 
 
-const WorkingInterval = ({startDt, endDt, percentOfWorkingDay, status, patientName, patientType}) => {
+const WorkingInterval = ({id, startDt, endDt, percentOfWorkingDay, status, patientId, patientType}) => {
     const [showModal, setShowModal] = useState(false);
-
+    const patients = useChildrenContext();
+    const patientName = useMemo(() => {
+        console.log(patients, patientId)
+        return patients?.[patientId]?.name
+    }, [patientId, patients]);
     return (
         <div
             style={{height: `${percentOfWorkingDay}%`, fontSize: percentOfWorkingDay < 3 ? "8pt" : "small"}}
@@ -16,7 +21,7 @@ const WorkingInterval = ({startDt, endDt, percentOfWorkingDay, status, patientNa
                 !showModal && setShowModal(true)
             }}
         >
-            {patientName && <div className={'fw-bold'}>{patientName} {patientType}</div>}
+            {patientId && <div className={'fw-bold'}>{patientName} {patientType}</div>}
             <div>
                 {getIntervalTimeString(startDt, endDt)}
             </div>
@@ -24,7 +29,7 @@ const WorkingInterval = ({startDt, endDt, percentOfWorkingDay, status, patientNa
                 <EditWorkScheduleModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt}/>
             }
             {(status === "booked" || status === 'confirmed') &&
-                <EditAppointmentModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt}
+                <EditAppointmentModal id={id} show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt}
                                       patientName={patientName} patientType={patientType} status={status}/>
             }
 

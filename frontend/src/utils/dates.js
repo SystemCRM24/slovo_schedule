@@ -258,7 +258,6 @@ export function isScheduleValid(schedule, newSchedules, generalSchedule, workSch
                         schedule.end.getTime() <= sched.end.getTime()
                 }
             );
-            console.log(intersections);
             inWorkTime = intersections.some(item => item === true);
         } else {
             inWorkTime = schedule.start.getTime() >= workSchedule.start.getTime() &&
@@ -270,7 +269,6 @@ export function isScheduleValid(schedule, newSchedules, generalSchedule, workSch
         }
         const schedules = [newSchedules.filter(interval => isIntervalValid(interval)), generalSchedule];
         for (const scheduleArr of schedules) {
-            console.log(scheduleArr);
             const intervalsInRange = findScheduleIntervalsInRange(
                 scheduleArr, schedule.start.getTime(), schedule.end.getTime()
             );

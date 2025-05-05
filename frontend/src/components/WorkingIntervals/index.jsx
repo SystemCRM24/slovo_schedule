@@ -21,8 +21,9 @@ const WorkingIntervals = () => {
     );
     const intervals = useMemo(
         () => {
+            console.log(schedule);
             const workingDay = getWorkingDayFromSchedule(generalWorkSchedule);
-            return getWorkingIntervalsFromSchedules(schedule.intervals, workSchedule.intervals, workingDay.start, workingDay.end);
+            return getWorkingIntervalsFromSchedules(schedule, workSchedule.intervals, workingDay.start, workingDay.end);
         },
         [schedule, workSchedule, generalWorkSchedule]
     );
@@ -34,10 +35,11 @@ const WorkingIntervals = () => {
                 const percentOfWorkingDay = intervalDuration / workingDayDurationMinutes * 100;
                 return (
                     <WorkingInterval
+                        id={interval?.id}
                         startDt={interval.start}
                         endDt={interval.end}
                         percentOfWorkingDay={percentOfWorkingDay}
-                        patientName={interval?.patient?.name}
+                        patientId={interval?.patient?.id}
                         patientType={interval?.patient?.type}
                         status={interval.status}
                         key={`${interval.start}_${interval.end}_${specialistId}_working_interval_elem`}

@@ -11,7 +11,7 @@ import {
 import {Button, FormControl, FormSelect, InputGroup} from "react-bootstrap";
 import useSpecialist from "../../hooks/useSpecialist.js";
 import {useChildrenContext} from "../../contexts/Children/provider.jsx";
-import apiClient from "../../api/index.js";
+import apiClient, {constants} from "../../api/index.js";
 
 const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
     const [newSchedules, setNewSchedules] = useState([]);
@@ -26,7 +26,6 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
     const {specialist, specialistId} = useSpecialist();
     const date = useDayContext();
     const children = useChildrenContext();
-    console.log(children);
     const dayOfWeek = date.toLocaleString('ru-RU', {weekday: 'long'});
     const dateString = date.toLocaleDateString();
 
@@ -81,7 +80,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
             .map((newSchedule, idx) => {
                 const newSchedulesWithoutCurrentElem =
                     newSchedules.filter((item, index) => index !== idx);
-                return isNewScheduleValid(newSchedule, newSchedulesWithoutCurrentElem, schedule.intervals, realInterval);
+                return isNewScheduleValid(newSchedule, newSchedulesWithoutCurrentElem, schedule, realInterval);
             })
             .every(item => item === true);
     }, [newSchedules, realInterval, schedule]);
@@ -108,7 +107,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
             ...generalSchedule,
             [specialistId]: {
                 ...generalSchedule[specialistId],
-                [date]: {...schedule, intervals: [...schedule.intervals, ...transformedNewSchedules]}
+                [date]: {...schedule, intervals: [...schedule, ...transformedNewSchedules]}
             }
         });
     }
@@ -149,7 +148,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                                         !newSchedule.start ||
                                         (
                                             !!newSchedule.start
-                                            && !isScheduleValid(newSchedule, newSchedulesWithoutCurrentElem, schedule.intervals, realInterval)
+                                            && !isScheduleValid(newSchedule, newSchedulesWithoutCurrentElem, schedule, realInterval)
                                         )
                                     }
                                 />
@@ -173,7 +172,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                                         newSchedule.start !== undefined &&
                                         (
                                             !isIntervalValid(newSchedule) ||
-                                            !isScheduleValid(newSchedule, newSchedulesWithoutCurrentElem, schedule.intervals, realInterval)
+                                            !isScheduleValid(newSchedule, newSchedulesWithoutCurrentElem, schedule, realInterval)
                                         )
                                     }
                                 />
@@ -206,10 +205,10 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                                     }}
                                     value={newSchedule.patientType}
                                 >
-                                    <option disabled selected>Выберите код занятия</option>
-                                    {specialist.departments.map(code => {
+                                    <option disabled value={undefined} selected>Выберите услугу</option>
+                                    {Object.entries(constants.listFieldValues.appointment.idByCode).map(([code, id]) => {
                                         return (
-                                            <option value={code} key={`${date}_new_interval_${idx}_${code}_opt`}>
+                                            <option value={code} key={`${date}_interval_${idx}_${code}_opt`}>
                                                 {code}
                                             </option>
                                         );

@@ -27,7 +27,7 @@ export default () => {
         return generalWorkSchedule?.[specialist]?.[date] || {id: null, intervals: []};
     }, [generalWorkSchedule, specialist, date]);
     const schedule = useMemo(() => {
-        return generalSchedule?.[specialist]?.[date] || {id: null, intervals: []};
+        return generalSchedule?.[specialist]?.[date] || [];
     }, [generalSchedule, specialist, date]);
     return {
         workSchedule: workSchedule,
