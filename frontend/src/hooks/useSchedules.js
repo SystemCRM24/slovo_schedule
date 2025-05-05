@@ -24,10 +24,10 @@ export default () => {
     const specialist = useSpecialistContext();
     const date = useDayContext();
     const workSchedule = useMemo(() => {
-        return generalWorkSchedule?.[specialist]?.[date] || [];
+        return generalWorkSchedule?.[specialist]?.[date] || {id: null, intervals: []};
     }, [generalWorkSchedule, specialist, date]);
     const schedule = useMemo(() => {
-        return generalSchedule?.[specialist]?.[date] || [];
+        return generalSchedule?.[specialist]?.[date] || {id: null, intervals: []};
     }, [generalSchedule, specialist, date]);
     return {
         workSchedule: workSchedule,

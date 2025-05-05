@@ -9,7 +9,7 @@ const DaySchedule = () => {
         <td className={'p-0'} style={{height: "inherit"}}>
             <div className={'d-flex flex-column align-items-center justify-content-center h-100 w-100'}>
                 {
-                    workSchedule.length > 0 ?
+                    workSchedule?.intervals.length > 0 ?
                         <WorkingIntervals />
                         :
                         <EmptyWorkSchedule />

@@ -41,7 +41,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
     }, [startDt, endDt]);
 
     const [realInterval, realIntervalIndex] = useMemo(() => {
-        return [workSchedule.find(findIntervalPredicate), workSchedule.findIndex(findIntervalPredicate)]
+        return [workSchedule.intervals.find(findIntervalPredicate), workSchedule.intervals.findIndex(findIntervalPredicate)]
     }, [workSchedule, findIntervalPredicate]);
 
     const onTimeInputChange = async (idx, attrName, value) => {
@@ -87,7 +87,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
             .map((newSchedule, idx) => {
                 const newSchedulesWithoutCurrentElem =
                     newSchedules.filter((item, index) => index !== idx);
-                return isNewScheduleValid(newSchedule, newSchedulesWithoutCurrentElem, schedule, realInterval);
+                return isNewScheduleValid(newSchedule, newSchedulesWithoutCurrentElem, schedule.intervals, realInterval);
             })
             .every(item => item === true);
     }, [newSchedules, realInterval, schedule]);
@@ -150,7 +150,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                                         !newSchedule.start ||
                                         (
                                             !!newSchedule.start
-                                            && !isScheduleValid(newSchedule, newSchedulesWithoutCurrentElem, schedule, realInterval)
+                                            && !isScheduleValid(newSchedule, newSchedulesWithoutCurrentElem, schedule.intervals, realInterval)
                                         )
                                     }
                                 />
@@ -174,7 +174,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                                         newSchedule.start !== undefined &&
                                         (
                                             !isIntervalValid(newSchedule) ||
-                                            !isScheduleValid(newSchedule, newSchedulesWithoutCurrentElem, schedule, realInterval)
+                                            !isScheduleValid(newSchedule, newSchedulesWithoutCurrentElem, schedule.intervals, realInterval)
                                         )
                                     }
                                 />

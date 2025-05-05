@@ -32,6 +32,7 @@ const Schedule = ({fromDate, toDate}) => {
                     apiClient.getSchedules(fromDate, toDate),
                     apiClient.getWorkSchedules(fromDate, toDate)
                 ]);
+                console.log(workScheduleData);
                 setSchedule(scheduleData);
                 setWorkSchedule(workScheduleData);
             }
@@ -71,6 +72,7 @@ const Schedule = ({fromDate, toDate}) => {
                     <th scope={'row'} key={date}>{dayOfWeek}<br/>{date}</th>
                 ));
                 const scheduleDate = new Date(currentDate)
+                console.log(scheduleDate);
                 for (const specialistId of Object.keys(specialists)) {
                     const cell = (
                         <SpecialistContextProvider key={`${specialistId}_${date}_ctx`} specialist={specialistId}>

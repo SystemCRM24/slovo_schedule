@@ -5,6 +5,7 @@ import {useDayContext} from "../../contexts/Day/provider.jsx";
 import {Button, FormControl, InputGroup} from "react-bootstrap";
 import {getDateWithTime, getTimeStringFromDate, isIntervalValid} from "../../utils/dates.js";
 import {useSpecialistContext} from "../../contexts/Specialist/provider.jsx";
+import apiClient from "../../api/index.js";
 
 const AddWorkScheduleModal = ({show, setShow}) => {
     const {
@@ -40,13 +41,20 @@ const AddWorkScheduleModal = ({show, setShow}) => {
     }
 
     const onSumbit = async () => {
-        setGeneralWorkSchedule({
-            ...generalWorkSchedule,
-            [specialistId]: {
-                ...generalWorkSchedule[specialistId],
-                [date]: workIntervals
-            }
-        })
+        const result = await apiClient.createWorkSchedule({
+            specialist: specialistId,
+            date: date,
+            intervals: workIntervals,
+        });
+        if (result) {
+            setGeneralWorkSchedule({
+                ...generalWorkSchedule,
+                [specialistId]: {
+                    ...generalWorkSchedule[specialistId],
+                    [date]: workIntervals
+                }
+            });
+        }
     }
 
     return (
