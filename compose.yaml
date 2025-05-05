@@ -1,0 +1,9 @@
+services:
+  slovo-frontend:
+    build:
+      context: frontend/.
+    ports:
+      - "8010:8010"
+    environment:
+      - NODE_ENV=production
+    command: sh -c "npm run build && npm install -g serve && serve -s dist -l 8010"
