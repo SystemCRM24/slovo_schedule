@@ -3,23 +3,21 @@ import CustomModal from "../ui/Modal";
 import { Button } from "react-bootstrap";
 
 import { useDayContext } from "../../contexts/Day/provider";
-import { useScheduleContext } from "../../contexts/Schedule/provider";
-import { useSpecialistContext } from "../../contexts/Specialist/provider";
 import useSchedules from "../../hooks/useSchedules";
+import useSpecialist from "../../hooks/useSpecialist.js";
 
 
 const EditAppointmentModal = ({show, setShow, startDt, endDt}) => {
-    const specialist = useSpecialistContext();
-    const [schedule, setSchedule] = useScheduleContext();
-    const {generalSchedule, setGeneralSchedule} = useSchedules();
+    const {specialistId, specialist} = useSpecialist();
+    const {schedule, generalSchedule, setGeneralSchedule} = useSchedules();
     const day = useDayContext();
 
     const [record, recordIndex] = useMemo(
         () => {
             let index = -1;
-            for ( const record of schedule[specialist][day] ) {
+            for ( const record of schedule ) {
                 index++;
-                if ( record.start == startDt && record.end == endDt ) {
+                if ( record.start.getTime() === startDt.getTime() && record.end.getTime() === endDt.getTime() ) {
                     return [record, index];
                 }
             }
@@ -31,16 +29,18 @@ const EditAppointmentModal = ({show, setShow, startDt, endDt}) => {
     const onDeleteBtnClick = useCallback(
         () => {
             setShow(false);
-            const schedulesOfDay = schedule[specialist][day];
-            schedulesOfDay.splice(recordIndex, 1);
-            console.log(schedule);
-            setSchedule(schedule);
-            // setGeneralSchedule({
-            //     ...generalSchedule,
-                
-            // })
+            console.log(recordIndex);
+            const newSchedule = schedule.filter((item, index) => index !== recordIndex);
+            console.log(newSchedule);
+            setGeneralSchedule({
+                ...generalSchedule,
+                [specialistId]: {
+                    ...generalSchedule[specialistId],
+                    [day]: newSchedule,
+                }
+            })
         },
-        [setShow, day, schedule, specialist, recordIndex, setSchedule]
+        [setShow, recordIndex, schedule, setGeneralSchedule, generalSchedule, specialistId]
     );
 
     return (

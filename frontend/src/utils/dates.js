@@ -116,9 +116,7 @@ export function getWorkingIntervalsFromSchedules(schedule, workSchedule, working
             workingInterval.start.getTime(), workingInterval.end.getTime()
         ];
         // находим все занятия внутри рабочего промежутка
-        const scheduleIntervalsInRange = schedule.filter(
-            item => startTimestamp <= item.start.getTime() && item.end.getTime() <= endTimestamp
-        ).sort(compareIntervalDates);
+        const scheduleIntervalsInRange = findScheduleIntervalsInRange(schedule, startTimestamp, endTimestamp);
         let currentStartDt = new Date(startTimestamp);
         // формируем интервалы внутри рабочего промежутка
         for (const interval of scheduleIntervalsInRange) {
@@ -150,6 +148,41 @@ export function getWorkingIntervalsFromSchedules(schedule, workSchedule, working
         }
     }
     return intervals.sort(compareIntervalDates);
+}
+
+/**
+ * Функция поиска занятий в промежутке рабочего графика
+ * @param {Array<
+ * {start: Date, end: Date, patient: {name: string, type: string} | null, status: "booked" | "confirmed" | "free" | "na"}
+ * >} schedule
+ * расписание занятий по специалисту
+ * @param {number} startTimestamp - начало промежутка
+ * @param {number} endTimestamp - конец промежутка
+ * @returns {Array} - занятия внутри промежутка
+ */
+export function findScheduleIntervalsInRange(schedule, startTimestamp, endTimestamp) {
+    return schedule.filter(
+        item => startTimestamp <= item.start.getTime() && item.end.getTime() <= endTimestamp
+    ).sort(compareIntervalDates);
+}
+
+/**
+ *
+ * @param {
+ * {start: Date, end: Date, patient: {name: string, type: string} | null, status: "booked" | "confirmed" | "free" | "na"}
+ * } interval1
+ * @param {
+ * {start: Date, end: Date, patient: {name: string, type: string} | null, status: "booked" | "confirmed" | "free" | "na"}
+ * } interval2
+ * @returns {Boolean} - пересекаются ли временные промежутки
+ */
+export function areIntervalsOverlapping(interval1, interval2) {
+    const startD = interval1.start.getTime(); // 09:30
+    const startDate = interval2.start.getTime(); // 10:00
+    const endD = interval1.end.getTime(); // 10:00
+    const endDate = interval2.end.getTime(); // 10:15
+    return (startD >= startDate && startD < endDate) ||
+       (startDate >= startD && startDate < endD);
 }
 
 function compareIntervalDates(a, b) {

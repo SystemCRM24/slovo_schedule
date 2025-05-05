@@ -11,7 +11,7 @@ import {AllSpecialistsContextProvider} from "../../contexts/AllSpecialists/provi
 
 
 const Schedule = ({fromDate, toDate}) => {
-    const [specialists, setSpecialists] = useState([]);
+    const [specialists, setSpecialists] = useState({});
     const [schedule, setSchedule] = useScheduleContext();
     const [workSchedule, setWorkSchedule] = useWorkScheduleContext();
 
