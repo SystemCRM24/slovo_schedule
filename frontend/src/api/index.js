@@ -130,7 +130,7 @@ class APIClient {
                 const specialistId = appointment.assignedById;
                 const start = new Date(appointment[constants.uf.appointment.start]);
                 const startOfDay = new Date(start);
-                startOfDay.setHours(0, 0, 0, 0);
+                // startOfDay.setHours(0, 0, 0, 0);
                 const end = new Date(appointment[constants.uf.appointment.end]);
                 const patientId = appointment[constants.uf.appointment.patient];
                 const patientTypeId = (appointment[constants.uf.appointment.code] || [''])[0];
