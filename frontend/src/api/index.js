@@ -75,7 +75,24 @@ class APIClient {
         return specialists;
     }
 
-    async getClients() {}
+    /**
+     * Получение детей.
+     * @returns {Promise<Object.<string, string>>}
+     */
+    async getClients() {
+        const params = {
+            filter: {TYPE_ID: "CLIENT"},
+            order: {LAST_NAME: 'ASC', NAME: 'ASC'},
+            select: ['ID', 'NAME', 'LAST_NAME']
+        };
+        const response = await this.bx.callListMethod('crm.contact.list', params);
+        const result = {};
+        for ( const client of response ) {
+            const full_name = client.NAME + (client.LAST_NAME ? ` ${client.LAST_NAME}` : '');
+            result[client.ID] = full_name;
+        }
+        return result;
+    }
 
     /**
      @param {Date} from - начало промежутка дат
@@ -279,10 +296,11 @@ class APIClient {
      * @param {Array<{start: Date, end: Date}>} data.intervals - Интервалы, которые обозначают рабочее время
      */
     async createWorkSchedule(data) {
+        const intervals = data.intervals.map(i => `${i.start.getTime()}:${i.end.getTime()}`);
         const fields = {
             ASSIGNED_BY_ID: data.specialist,
             [constants.uf.workSchedule.date]: data.date,
-            [constants.uf.workSchedule.intervals]: data.intervals
+            [constants.uf.workSchedule.intervals]: intervals
         }
         const response = await this._createCrmItem(constants.entityTypeId.workSchedule, fields);
         return response.item;
@@ -305,10 +323,11 @@ class APIClient {
      * @param {Array<{start: Date, end: Date}>} data.intervals - Интервалы, которые обозначают рабочее время
      */
     async updateWorkSchedule(id, data) {
+        const intervals = data.intervals.map(i => `${i.start.getTime()}:${i.end.getTime()}`);
         const fields = {
             ASSIGNED_BY_ID: data.specialist,
             [constants.uf.workSchedule.date]: data.date,
-            [constants.uf.workSchedule.intervals]: data.intervals
+            [constants.uf.workSchedule.intervals]: intervals
         }
         const response = await this._updateCrmItem(constants.entityTypeId.workSchedule, id, fields);
         return response.item;
@@ -579,6 +598,7 @@ class APIClientMock {
     }
 }
 
-const apiClient = new APIClient();
 export const clientMock = new APIClientMock();
+
+const apiClient = new APIClient();
 export default apiClient;
