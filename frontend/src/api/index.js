@@ -315,7 +315,7 @@ class APIClient {
     }
 
     /**
-     * Обновляет элемент смарт-процесса - график
+     * Обновляет элемент смарт-процесса-график
      * @param {string} id - ид графика
      * @param {object} data - Объект графика
      * @param {string} data.specialist - ИД специалиста
