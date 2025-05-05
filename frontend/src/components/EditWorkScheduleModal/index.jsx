@@ -87,7 +87,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
 
     const handleSubmit = async () => {
         setShow(false);
-        const transformedNewSchedules = newSchedules.map(item => {
+        let transformedNewSchedules = newSchedules.map(item => {
             return {
                 start: item.start,
                 end: item.end,
@@ -102,12 +102,14 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
             tasks.push(apiClient.createAppointment(appointment));
         }
         const results = await Promise.all(tasks);
-        console.log(results);
+        for (const [index, sched] of Object.entries(results)) {
+            transformedNewSchedules[index].id = sched.id;
+        }
         setGeneralSchedule({
             ...generalSchedule,
             [specialistId]: {
                 ...generalSchedule[specialistId],
-                [date]: {...schedule, intervals: [...schedule, ...transformedNewSchedules]}
+                [date]: [...schedule, ...transformedNewSchedules],
             }
         });
     }

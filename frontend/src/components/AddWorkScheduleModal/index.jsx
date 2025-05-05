@@ -51,7 +51,7 @@ const AddWorkScheduleModal = ({show, setShow}) => {
                 ...generalWorkSchedule,
                 [specialistId]: {
                     ...generalWorkSchedule[specialistId],
-                    [date]: workIntervals
+                    [date]: {id: result?.id, intervals: workIntervals}
                 }
             });
         }
