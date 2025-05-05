@@ -10,6 +10,8 @@ import {
 } from "../../utils/dates.js";
 import {Button, FormControl, FormSelect, InputGroup} from "react-bootstrap";
 import useSpecialist from "../../hooks/useSpecialist.js";
+import {useChildrenContext} from "../../contexts/Children/provider.jsx";
+import apiClient from "../../api/index.js";
 
 const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
     const [newSchedules, setNewSchedules] = useState([]);
@@ -23,18 +25,10 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
     } = useSchedules();
     const {specialist, specialistId} = useSpecialist();
     const date = useDayContext();
-
+    const children = useChildrenContext();
+    console.log(children);
     const dayOfWeek = date.toLocaleString('ru-RU', {weekday: 'long'});
     const dateString = date.toLocaleDateString();
-
-    // temporary mock
-    const children = useMemo(() => {
-        return [
-            'Тестовый П.',
-            "Тестовый2 П.",
-            "Иванов. И."
-        ];
-    }, []);
 
     const findIntervalPredicate = useCallback((interval) => {
         return interval.start.getTime() <= startDt.getTime() && interval.end.getTime() >= endDt.getTime()
@@ -98,18 +92,23 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
             return {
                 start: item.start,
                 end: item.end,
-                patient: {
-                    name: item.patientName,
-                    type: item.patientType,
-                },
-                status: item.status
+                status: item.status,
+                code: item.patientType,
+                patient: item.patientName,
+                specialist: specialistId,
             }
         });
+        let tasks = [];
+        for (const appointment of transformedNewSchedules) {
+            tasks.push(apiClient.createAppointment(appointment));
+        }
+        const results = await Promise.all(tasks);
+        console.log(results);
         setGeneralSchedule({
             ...generalSchedule,
             [specialistId]: {
                 ...generalSchedule[specialistId],
-                [date]: [...schedule, ...transformedNewSchedules]
+                [date]: {...schedule, intervals: [...schedule.intervals, ...transformedNewSchedules]}
             }
         });
     }
@@ -187,13 +186,12 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                                         await handleInputChange(e, idx);
                                     }}
                                     value={newSchedule.patientName}
-                                    defaultValue={undefined}
                                 >
                                     <option disabled value={undefined} selected>Выберите пациента</option>
-                                    {children.map(child => {
+                                    {Object.entries(children).map(([childId, childName]) => {
                                         return (
-                                            <option value={child} key={`${date}_new_interval_${idx}_${child}`}>
-                                                {child}
+                                            <option value={childId} key={`${date}_new_interval_${idx}_${childId}`}>
+                                                {childName}
                                             </option>
                                         );
                                     })}
@@ -207,7 +205,6 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                                         await handleInputChange(e, idx);
                                     }}
                                     value={newSchedule.patientType}
-                                    defaultValue={undefined}
                                 >
                                     <option disabled selected>Выберите код занятия</option>
                                     {specialist.departments.map(code => {

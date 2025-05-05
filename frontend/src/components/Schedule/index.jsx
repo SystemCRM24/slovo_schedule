@@ -8,10 +8,12 @@ import {useWorkScheduleContext} from "../../contexts/WorkSchedule/provider.jsx";
 import {SpecialistContextProvider} from "../../contexts/Specialist/provider.jsx";
 import {DayContextProvider} from "../../contexts/Day/provider.jsx";
 import {AllSpecialistsContextProvider} from "../../contexts/AllSpecialists/provider.jsx";
+import {ChildrenContextProvider} from "../../contexts/Children/provider.jsx";
 
 
 const Schedule = ({fromDate, toDate}) => {
     const [specialists, setSpecialists] = useState({});
+    const [children, setChildren] = useState({})
     const [schedule, setSchedule] = useScheduleContext();
     const [workSchedule, setWorkSchedule] = useWorkScheduleContext();
 
@@ -19,9 +21,15 @@ const Schedule = ({fromDate, toDate}) => {
 
     useEffect(() => {
         (async () => {
-            const allSpecialists = await apiClient.getSpecialists();
+            const [allSpecialists, children] = await Promise.all(
+                [
+                    apiClient.getSpecialists(),
+                    apiClient.getClients()
+                ]
+            )
             console.log(allSpecialists);
             setSpecialists(allSpecialists);
+            setChildren(children);
         })();
     }, []);
 
@@ -32,7 +40,7 @@ const Schedule = ({fromDate, toDate}) => {
                     apiClient.getSchedules(fromDate, toDate),
                     apiClient.getWorkSchedules(fromDate, toDate)
                 ]);
-                console.log(workScheduleData);
+                console.log(scheduleData);
                 setSchedule(scheduleData);
                 setWorkSchedule(workScheduleData);
             }
@@ -72,7 +80,6 @@ const Schedule = ({fromDate, toDate}) => {
                     <th scope={'row'} key={date}>{dayOfWeek}<br/>{date}</th>
                 ));
                 const scheduleDate = new Date(currentDate)
-                console.log(scheduleDate);
                 for (const specialistId of Object.keys(specialists)) {
                     const cell = (
                         <SpecialistContextProvider key={`${specialistId}_${date}_ctx`} specialist={specialistId}>
@@ -115,17 +122,19 @@ const Schedule = ({fromDate, toDate}) => {
                 )}
             </ul>
             <AllSpecialistsContextProvider specialists={specialists}>
-                <Table bordered responsive className={'mt-3'} style={{minWidth: `250%`}}>
-                    <thead>
-                    <tr>
-                        <th scope="col" style={{width: 200}}/>
-                        {headers}
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {rows}
-                    </tbody>
-                </Table>
+                <ChildrenContextProvider childrenElements={children}>
+                    <Table bordered responsive className={'mt-3'} style={{minWidth: `250%`}}>
+                        <thead>
+                        <tr>
+                            <th scope="col" style={{width: 200}}/>
+                            {headers}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {rows}
+                        </tbody>
+                    </Table>
+                </ChildrenContextProvider>
             </AllSpecialistsContextProvider>
         </Suspense>
     );

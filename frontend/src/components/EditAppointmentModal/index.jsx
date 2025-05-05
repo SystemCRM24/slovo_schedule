@@ -6,6 +6,7 @@ import {useDayContext} from "../../contexts/Day/provider";
 import useSchedules from "../../hooks/useSchedules";
 import useSpecialist from "../../hooks/useSpecialist.js";
 import {getDateWithTime, getTimeStringFromDate, isIntervalValid, isScheduleValid} from "../../utils/dates.js";
+import {useChildrenContext} from "../../contexts/Children/provider.jsx";
 
 
 const EditAppointmentModal = ({show, setShow, startDt, endDt, patientName, patientType, status}) => {
@@ -18,6 +19,7 @@ const EditAppointmentModal = ({show, setShow, startDt, endDt, patientName, patie
         setGeneralSchedule, workSchedule
     } = useSchedules();
     const day = useDayContext();
+    const children = useChildrenContext();
     const dayOfWeek = day.toLocaleString('ru-RU', {weekday: 'long'});
     const dateString = day.toLocaleDateString();
 
@@ -31,7 +33,7 @@ const EditAppointmentModal = ({show, setShow, startDt, endDt, patientName, patie
     const [record, recordIndex] = useMemo(
         () => {
             let index = -1;
-            for (const record of schedule) {
+            for (const record of schedule.intervals) {
                 index++;
                 if (record.start.getTime() === startDt.getTime() && record.end.getTime() === endDt.getTime()) {
                     return [record, index];
@@ -58,17 +60,9 @@ const EditAppointmentModal = ({show, setShow, startDt, endDt, patientName, patie
     );
 
     const scheduleWithoutCurrentElem = useMemo(() => {
-        return schedule.filter((value, index) => index !== recordIndex);
+        return schedule.intervals.filter((value, index) => index !== recordIndex);
     }, [recordIndex, schedule]);
     console.log(schedule, scheduleWithoutCurrentElem)
-
-    const children = useMemo(() => {
-        return [
-            'Тестовый П.',
-            "Тестовый2 П.",
-            "Иванов. И."
-        ];
-    }, []);
 
     const handleInputChange = async (e) => {
         let value;
@@ -123,7 +117,7 @@ const EditAppointmentModal = ({show, setShow, startDt, endDt, patientName, patie
                 `${specialist.name} - ${patientName} ${patientType} ${dayOfWeek} ${dateString}
              ${getTimeStringFromDate(startDt)} - ${getTimeStringFromDate(endDt)}`
             }
-            primaryBtnDisabled={!isScheduleValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule)}
+            primaryBtnDisabled={!isScheduleValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals)}
             handlePrimaryBtnClick={onSubmit}
             primaryBtnText={'Сохранить'}
         >
@@ -143,7 +137,7 @@ const EditAppointmentModal = ({show, setShow, startDt, endDt, patientName, patie
                             !appointment.start ||
                             (
                                 !!appointment.start
-                                && !isScheduleValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule)
+                                && !isScheduleValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals)
                             )
                         }
                     />
@@ -166,7 +160,7 @@ const EditAppointmentModal = ({show, setShow, startDt, endDt, patientName, patie
                             appointment.start !== undefined &&
                             (
                                 !isIntervalValid(appointment) ||
-                                !isScheduleValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule)
+                                !isScheduleValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals)
                             )
                         }
                     />
@@ -180,10 +174,10 @@ const EditAppointmentModal = ({show, setShow, startDt, endDt, patientName, patie
                         }}
                         value={appointment.patientName}
                     >
-                        {children.map(child => {
+                        {Object.entries(children).map((childId, childName) => {
                             return (
-                                <option value={child} key={`${day}_interval_${recordIndex}_${child}`}>
-                                    {child}
+                                <option value={childId} key={`${day}_interval_${recordIndex}_${childId}`}>
+                                    {childName}
                                 </option>
                             );
                         })}
