@@ -240,8 +240,8 @@ class APIClient {
             [constants.uf.appointment.patient]: data.patient,
             [constants.uf.appointment.start]: data.start,
             [constants.uf.appointment.end]: data.end,
-            [constants.uf.appointment.status]: constants.listFieldValues.idByStatus[data.status],
-            [constants.uf.appointment.code]: constants.listFieldValues.idByCode[data.code]
+            [constants.uf.appointment.status]: constants.listFieldValues.appointment.idByStatus[data.status],
+            [constants.uf.appointment.code]: constants.listFieldValues.appointment.idByCode[data.code]
         };
         const response = await this._createCrmItem(constants.entityTypeId.appointment, fields);
         return response.item;
@@ -272,8 +272,8 @@ class APIClient {
             [constants.uf.appointment.patient]: data.patient,
             [constants.uf.appointment.start]: data.start,
             [constants.uf.appointment.end]: data.end,
-            [constants.uf.appointment.status]: constants.listFieldValues.idByStatus[data.status],
-            [constants.uf.appointment.code]: constants.listFieldValues.idByCode[data.code]
+            [constants.uf.appointment.status]: constants.listFieldValues.appointment.idByStatus[data.status],
+            [constants.uf.appointment.code]: constants.listFieldValues.appointment.idByCode[data.code]
         };
         const response = await this._updateCrmItem(constants.entityTypeId.appointment, id, fields);
         return response.item;
