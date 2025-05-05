@@ -31,7 +31,7 @@ export function getWorkingDayFromSchedule(schedule) {
     if (Object.keys(schedule).length > 0) {
         for (const specialistSchedule of Object.values(schedule)) {
             for (const specialistScheduleItems of Object.values(specialistSchedule)) {
-                for (const item of specialistScheduleItems) {
+                for (const item of specialistScheduleItems.intervals) {
                     const startHours = item.start.getHours()
                     const startMinutes = item.start.getMinutes();
                     const endHours = item.end.getHours();
@@ -270,6 +270,7 @@ export function isScheduleValid(schedule, newSchedules, generalSchedule, workSch
         }
         const schedules = [newSchedules.filter(interval => isIntervalValid(interval)), generalSchedule];
         for (const scheduleArr of schedules) {
+            console.log(scheduleArr);
             const intervalsInRange = findScheduleIntervalsInRange(
                 scheduleArr, schedule.start.getTime(), schedule.end.getTime()
             );

@@ -187,7 +187,7 @@ class APIClient {
             for ( const schedule of items.items ) {
                 const specialistData = workSchedule[schedule.assignedById] ??= {};
                 const date = new Date(schedule[constants.uf.workSchedule.date]);
-                date.setHours(0, 0, 0, 0);
+                // date.setHours(0, 0, 0, 0);
                 const data = specialistData[date] = {
                     id: schedule.id,
                     intervals: []
