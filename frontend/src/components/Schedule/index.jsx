@@ -2,7 +2,7 @@ import React, {Suspense, useEffect, useState, useMemo} from 'react';
 import {Spinner, Table} from "react-bootstrap";
 
 import DaySchedule from '../DaySchedule';
-import {apiClient} from "../../api/";
+import apiClient, {clientMock} from "../../api/";
 import {useScheduleContext} from "../../contexts/Schedule/provider.jsx";
 import {useWorkScheduleContext} from "../../contexts/WorkSchedule/provider.jsx";
 import {SpecialistContextProvider} from "../../contexts/Specialist/provider.jsx";
@@ -15,9 +15,13 @@ const Schedule = ({fromDate, toDate}) => {
     const [schedule, setSchedule] = useScheduleContext();
     const [workSchedule, setWorkSchedule] = useWorkScheduleContext();
 
+    // const apiClient = apiClient;
+
     useEffect(() => {
         (async () => {
-            setSpecialists(await apiClient.getSpecialists());
+            const allSpecialists = await apiClient.getSpecialists();
+            console.log(allSpecialists);
+            setSpecialists(allSpecialists);
         })();
     }, []);
 
@@ -25,14 +29,14 @@ const Schedule = ({fromDate, toDate}) => {
         (async () => {
             if (fromDate && toDate) {
                 const [scheduleData, workScheduleData] = await Promise.all([
-                    apiClient.getSchedule(fromDate, toDate),
-                    apiClient.getWorkSchedule(fromDate, toDate)
+                    apiClient.getSchedules(fromDate, toDate),
+                    apiClient.getWorkSchedules(fromDate, toDate)
                 ]);
                 setSchedule(scheduleData);
                 setWorkSchedule(workScheduleData);
             }
         })();
-    }, [fromDate, toDate]);
+    }, [fromDate, setSchedule, setWorkSchedule, toDate]);
 
     const headers = useMemo(
         () => {
