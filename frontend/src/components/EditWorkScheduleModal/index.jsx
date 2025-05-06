@@ -1,4 +1,4 @@
-import React, {useCallback, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import CustomModal from "../ui/Modal/index.jsx";
 import useSchedules from "../../hooks/useSchedules.js";
 import {useDayContext} from "../../contexts/Day/provider.jsx";
@@ -6,15 +6,17 @@ import {
     findScheduleIntervalsInRange,
     getDateWithTime,
     getTimeStringFromDate, areIntervalsOverlapping,
-    isIntervalValid, isNewScheduleValid, isScheduleValid
+    isIntervalValid, isNewScheduleValid, isNewScheduleIntervalValid, isNewWorkScheduleValid
 } from "../../utils/dates.js";
-import {Button, FormControl, FormSelect, InputGroup} from "react-bootstrap";
+import {Button, FormControl, FormSelect, InputGroup, Spinner} from "react-bootstrap";
 import useSpecialist from "../../hooks/useSpecialist.js";
 import {useChildrenContext} from "../../contexts/Children/provider.jsx";
 import apiClient, {constants} from "../../api/index.js";
 
 const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
     const [newSchedules, setNewSchedules] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [workInterval, setWorkInterval] = useState({start: startDt, end: endDt});
     const {
         generalSchedule,
         generalWorkSchedule,
@@ -37,6 +39,10 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
         return [workSchedule.intervals.find(findIntervalPredicate), workSchedule.intervals.findIndex(findIntervalPredicate)]
     }, [workSchedule, findIntervalPredicate]);
 
+    useEffect(() => {
+        setWorkInterval(realInterval);
+    }, [realInterval]);
+
     const onTimeInputChange = async (idx, attrName, value) => {
         const newIntervals = newSchedules.map((schedule, index) => {
             if (index === idx) {
@@ -46,6 +52,14 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
             }
         });
         setNewSchedules(newIntervals);
+    }
+
+    const handleIntervalChange = async (e) => {
+        const [hoursString, minutesString] = e.target.value.split(':');
+        const hours = parseInt(hoursString);
+        const minutes = parseInt(minutesString);
+        let value = getDateWithTime(date, hours, minutes);
+        setWorkInterval({...workInterval, [e.target.name]: value})
     }
 
     const handleInputChange = async (e, idx) => {
@@ -80,13 +94,19 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
             .map((newSchedule, idx) => {
                 const newSchedulesWithoutCurrentElem =
                     newSchedules.filter((item, index) => index !== idx);
-                return isNewScheduleValid(newSchedule, newSchedulesWithoutCurrentElem, schedule, realInterval);
+                return isNewScheduleValid(newSchedule, newSchedulesWithoutCurrentElem, schedule, workInterval);
             })
             .every(item => item === true);
     }, [newSchedules, realInterval, schedule]);
 
+    const isWorkScheduleValid = useMemo(() => {
+        const workScheduleWithoutCurrentInterval = workSchedule.intervals
+            .filter((value, index) => index !== realIntervalIndex);
+        return isNewWorkScheduleValid(workInterval, newSchedules, schedule, workScheduleWithoutCurrentInterval);
+    }, [newSchedules, realIntervalIndex, schedule, workInterval, workSchedule.intervals]);
+
     const handleSubmit = async () => {
-        setShow(false);
+        setLoading(true);
         let transformedNewSchedules = newSchedules.map(item => {
             return {
                 start: item.start,
@@ -97,7 +117,33 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                 specialist: specialistId,
             }
         });
-        console.log(transformedNewSchedules);
+        if (
+            realInterval.start.getTime() !== workInterval.start.getTime()
+            || realInterval.end.getTime() !== realInterval.getTime()
+        ) {
+            const newWorkIntervals = workSchedule.intervals.map((value, index) => {
+                if (index === realIntervalIndex) {
+                    return workInterval;
+                } else {
+                    return value;
+                }
+            });
+            const result = await apiClient.updateWorkSchedule(workSchedule.id, {
+                specialist: specialistId, date: date, intervals: newWorkIntervals
+            });
+            if (result) {
+                setGeneralWorkSchedule({
+                    ...generalWorkSchedule,
+                    [specialistId]: {
+                        ...generalWorkSchedule[specialistId],
+                        [date]: {
+                            id: workSchedule.id,
+                            intervals: newWorkIntervals
+                        }
+                    }
+                });
+            }
+        }
         let tasks = [];
         for (const appointment of transformedNewSchedules) {
             tasks.push(apiClient.createAppointment(appointment));
@@ -121,18 +167,52 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                 [date]: [...schedule, ...transformedNewSchedules],
             }
         });
+        setLoading(false);
+        setShow(false);
     }
 
     return (
         <CustomModal
             show={show}
             handleClose={() => setShow(false)}
-            title={`${specialist.name} - ${dayOfWeek} ${dateString} ${getTimeStringFromDate(startDt)} - ${getTimeStringFromDate(endDt)}`}
+            title={`${specialist.name} - ${dayOfWeek} ${dateString} ${getTimeStringFromDate(workInterval.start)}
+             - ${getTimeStringFromDate(workInterval.end)}`}
             handlePrimaryBtnClick={handleSubmit}
-            primaryBtnText={'Сохранить'}
-            primaryBtnDisabled={newSchedules.length === 0 || !areNewSchedulesValid}
+            primaryBtnText={loading ? <Spinner variant={'light'} size={'sm'} as={'span'}/> : 'Сохранить'}
+            primaryBtnDisabled={!areNewSchedulesValid || !isWorkScheduleValid || loading}
         >
             <div className="d-flex flex-column align-items-center justify-content-center w-100 h-100 gap-2">
+                <InputGroup hasValidation>
+                    <FormControl
+                        type={'time'}
+                        key={`${date}_interval_${realIntervalIndex}_start`}
+                        value={getTimeStringFromDate(workInterval.start)}
+                        name={'start'}
+                        onChange={handleIntervalChange}
+                        style={{textAlign: "center"}}
+                        required
+                        isInvalid={
+                            !workInterval.start || !isWorkScheduleValid
+                        }
+                    />
+                </InputGroup>
+                <span>-</span>
+                <InputGroup hasValidation className={'mb-4'}>
+                    <FormControl
+                        type={'time'}
+                        key={`${date}_interval_${realIntervalIndex}_end`}
+                        value={getTimeStringFromDate(workInterval.end)}
+                        name={'end'}
+                        onChange={handleIntervalChange}
+                        style={{textAlign: "center",}}
+                        disabled={!workInterval.start}
+                        min={getTimeStringFromDate(workInterval.start)}
+                        required
+                        isInvalid={
+                            workInterval.start !== undefined && (!isIntervalValid(workInterval) || !isWorkScheduleValid)
+                        }
+                    />
+                </InputGroup>
                 <Button variant={'success'} onClick={async () => await onAddButtonClick()}>Добавить занятие</Button>
                 {newSchedules.map((newSchedule, idx) => {
                     const newSchedulesWithoutCurrentElem =
@@ -159,7 +239,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                                         !newSchedule.start ||
                                         (
                                             !!newSchedule.start
-                                            && !isScheduleValid(newSchedule, newSchedulesWithoutCurrentElem, schedule, realInterval)
+                                            && !isNewScheduleIntervalValid(newSchedule, newSchedulesWithoutCurrentElem, schedule, workInterval)
                                         )
                                     }
                                 />
@@ -183,7 +263,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                                         newSchedule.start !== undefined &&
                                         (
                                             !isIntervalValid(newSchedule) ||
-                                            !isScheduleValid(newSchedule, newSchedulesWithoutCurrentElem, schedule, realInterval)
+                                            !isNewScheduleIntervalValid(newSchedule, newSchedulesWithoutCurrentElem, schedule, workInterval)
                                         )
                                     }
                                 />

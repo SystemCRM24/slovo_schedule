@@ -169,10 +169,10 @@ export function findScheduleIntervalsInRange(schedule, startTimestamp, endTimest
 /**
  *
  * @param {
- * {start: Date, end: Date, patient: {name: string, type: string} | null, status: "booked" | "confirmed" | "free" | "na"}
+ * {start: Date, end: Date}
  * } interval1
  * @param {
- * {start: Date, end: Date, patient: {name: string, type: string} | null, status: "booked" | "confirmed" | "free" | "na"}
+ * {start: Date, end: Date}
  * } interval2
  * @returns {Boolean} - пересекаются ли временные промежутки
  */
@@ -243,11 +243,11 @@ export function isIntervalValid(interval) {
  *     } newSchedules - список всех новых занятий
  * @param {Array<
  * {start: Date, end: Date, patient: {name: string, type: string} | null, status: "booked" | "confirmed" | "free" | "na"}
- * >} generalSchedule - текущее расписание занятий на день
+ * >} daySchedule - текущее расписание занятий на день
  * @param {{start: Date, end: Date} | Array<{start: Date, end: Date}>} workSchedule - текущее промежуток графика работы на день
  * @returns {Boolean} валидный ли интервал
  */
-export function isScheduleValid(schedule, newSchedules, generalSchedule, workSchedule) {
+export function isNewScheduleIntervalValid(schedule, newSchedules, daySchedule, workSchedule) {
     if (schedule.start !== undefined && schedule.end !== undefined) {
         let inWorkTime;
         // если нам пришел массив, то нужно проверить все промежутки
@@ -261,13 +261,13 @@ export function isScheduleValid(schedule, newSchedules, generalSchedule, workSch
             inWorkTime = intersections.some(item => item === true);
         } else {
             inWorkTime = schedule.start.getTime() >= workSchedule.start.getTime() &&
-                        schedule.end.getTime() <= workSchedule.end.getTime()
+                schedule.end.getTime() <= workSchedule.end.getTime()
         }
         if (!inWorkTime) {
             console.log(schedule, 'not in work time')
             return false;
         }
-        const schedules = [newSchedules.filter(interval => isIntervalValid(interval)), generalSchedule];
+        const schedules = [newSchedules.filter(interval => isIntervalValid(interval)), daySchedule];
         for (const scheduleArr of schedules) {
             const intervalsInRange = findScheduleIntervalsInRange(
                 scheduleArr, schedule.start.getTime(), schedule.end.getTime()
@@ -298,14 +298,49 @@ export function isScheduleValid(schedule, newSchedules, generalSchedule, workSch
  *     } newSchedules - список всех новых занятий
  * @param {Array<
  * {start: Date, end: Date, patient: {name: string, type: string} | null, status: "booked" | "confirmed" | "free" | "na"}
- * >} generalSchedule - текущее расписание занятий на день
+ * >} daySchedule - текущее расписание занятий на день
  * @param {{start: Date, end: Date}} workSchedule - текущее промежуток графика работы на день
  * @returns {Boolean} является ли новое занятие валидным
  */
-export function isNewScheduleValid(schedule, newSchedules, generalSchedule, workSchedule) {
+export function isNewScheduleValid(schedule, newSchedules, daySchedule, workSchedule) {
     const invalidPatientValues = ['', null, undefined];
-    return isScheduleValid(schedule, newSchedules, generalSchedule, workSchedule) && !(
+    return isNewScheduleIntervalValid(schedule, newSchedules, daySchedule, workSchedule) && !(
         invalidPatientValues.includes(schedule.patientId) || invalidPatientValues.includes(schedule.patientType)
     );
 }
 
+/**
+ * @param {
+ * {start: Date | undefined, end: Date | undefined}
+ * } newWorkSchedule - проверяемый объект занятия в расписании
+ * @param {
+ * Array<{start: Date | undefined, end: Date | undefined, patientName: string | undefined, patientType: string | undefined}>
+ *     } newSchedules - список всех новых занятий
+ * @param {Array<
+ * {start: Date, end: Date, patient: {name: string, type: string} | null, status: "booked" | "confirmed" | "free" | "na"}
+ * >} daySchedule - текущее расписание занятий на день
+ * @param {{start: Date, end: Date}} dayWorkSchedule - текущее промежуток графика работы на день
+ * @returns {Boolean} является ли новый рабочий график валидным
+ */
+export function isNewWorkScheduleValid(newWorkSchedule, newSchedules,
+                                       daySchedule, dayWorkSchedule) {
+    // базовая проверка интервала на валидность
+    if (!isIntervalValid(newWorkSchedule)) {
+        return false;
+    }
+    // проверяем, не пересекается ли с другими рабочими промежутками и занятиями
+    const potentiallyOverlappingSchedules = [...newSchedules.filter(isIntervalValid), ...daySchedule, ...dayWorkSchedule];
+    for (const potentiallyOverlappingSchedule of potentiallyOverlappingSchedules) {
+        if (
+            areIntervalsOverlapping(newWorkSchedule, potentiallyOverlappingSchedule) &&
+            !(
+                potentiallyOverlappingSchedule.start >= newWorkSchedule.start &&
+                    potentiallyOverlappingSchedule.end <= newWorkSchedule.end
+            )
+        ) {
+            console.log(newWorkSchedule, 'overlapping', potentiallyOverlappingSchedule)
+            return false;
+        }
+    }
+    return true;
+}

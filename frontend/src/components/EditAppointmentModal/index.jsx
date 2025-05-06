@@ -5,7 +5,7 @@ import {Button, FormControl, FormSelect, InputGroup} from "react-bootstrap";
 import {useDayContext} from "../../contexts/Day/provider";
 import useSchedules from "../../hooks/useSchedules";
 import useSpecialist from "../../hooks/useSpecialist.js";
-import {getDateWithTime, getTimeStringFromDate, isIntervalValid, isScheduleValid} from "../../utils/dates.js";
+import {getDateWithTime, getTimeStringFromDate, isIntervalValid, isNewScheduleIntervalValid} from "../../utils/dates.js";
 import {useChildrenContext} from "../../contexts/Children/provider.jsx";
 import apiClient, {constants} from "../../api/index.js";
 
@@ -135,7 +135,7 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, pat
                 `${specialist.name} - ${patientName} ${patientType} ${dayOfWeek} ${dateString}
              ${getTimeStringFromDate(startDt)} - ${getTimeStringFromDate(endDt)}`
             }
-            primaryBtnDisabled={!isScheduleValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals)}
+            primaryBtnDisabled={!isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals)}
             handlePrimaryBtnClick={onSubmit}
             primaryBtnText={'Сохранить'}
         >
@@ -143,7 +143,6 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, pat
                 <InputGroup hasValidation>
                     <FormControl
                         type={'time'}
-                        key={`${day}_interval_${recordIndex}_start`}
                         value={getTimeStringFromDate(appointment.start)}
                         name={'start'}
                         onChange={async (e) => {
@@ -155,7 +154,7 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, pat
                             !appointment.start ||
                             (
                                 !!appointment.start
-                                && !isScheduleValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals)
+                                && !isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals)
                             )
                         }
                     />
@@ -164,7 +163,6 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, pat
                 <InputGroup hasValidation className={'mb-4'}>
                     <FormControl
                         type={'time'}
-                        key={`${day}_interval_${recordIndex}_end`}
                         value={getTimeStringFromDate(appointment.end)}
                         name={'end'}
                         onChange={async (e) => {
@@ -178,7 +176,7 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, pat
                             appointment.start !== undefined &&
                             (
                                 !isIntervalValid(appointment) ||
-                                !isScheduleValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals)
+                                !isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals)
                             )
                         }
                     />

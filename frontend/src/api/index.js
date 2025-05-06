@@ -1,4 +1,4 @@
-import {getDateRange} from "../utils/dates.js";
+import {getDateRange, getDateWithTime} from "../utils/dates.js";
 import BX24Wrapper from "./bx24Wrapper.js";
 
 
@@ -7,7 +7,7 @@ export const constants = {
     departments: {
         "28": "A", "26": "ABA", "40": "d", "24": "D 3,5+", "42": "d-ава", "23": "D1-3,5",
         "44": "dd", "45": "dL", "43": "dNP", "46": "dP", "38": "i", "21": "L",
-        "22": "LM", "32": "NP", "30": "NТ", "34": "P", "25": "R", "27": "Z",
+        "22": "LM", "32": "NP", "30": "NТ", "33": "P", "25": "R", "27": "Z",
         "37": "АВА-Р", "39": "К", "36": "КИТ", "41": "КК", "31": "НДГ", "35": "СИ"
     },
     uf: {
@@ -125,11 +125,12 @@ class APIClient {
      @returns object - объект рсаписания на указанный промежуток врмеени
      */
     async getSchedules(from, to) {
+        const toDtLastMinute = getDateWithTime(to, 23, 59);
         const params = {
             entityTypeId: constants.entityTypeId.appointment,
             filter: {
                 [`>=${constants.uf.appointment.start}`]: from,
-                [`<=${constants.uf.appointment.end}`]: to,
+                [`<=${constants.uf.appointment.end}`]: toDtLastMinute,
             },
             order: {[constants.uf.appointment.start]: 'ASC'}
         }
