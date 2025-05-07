@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from .settings import settings
+from . import bitrix
 
 
 class Handler:
@@ -13,3 +14,4 @@ class Handler:
 
     async def run(self) -> str:
         """Запускает процесс постановки приема"""
+        await bitrix.get_specialist_from_code('R')

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.bitrix import get_deal_info
+from app.main import Handler
 
 
 app = FastAPI(
@@ -11,5 +11,5 @@ app = FastAPI(
 
 @app.post('/handle', status_code=200, tags=['Main'])
 async def handle_appointment(deal_id: str, user_id: str = None):
-    deal = await get_deal_info(deal_id)
-    return deal
+    handler = Handler(deal_id, user_id)
+    return await handler.run()
