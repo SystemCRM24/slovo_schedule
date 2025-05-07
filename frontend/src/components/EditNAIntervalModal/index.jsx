@@ -74,10 +74,6 @@ const EditNAInterval = ({show, setShow, startDt, endDt}) => {
         setShow(false);
     }
 
-    const areIntervalsValid = useMemo(() => {
-        return workIntervals.map(interval => isIntervalValid(interval)).every(elem => elem === true)
-    }, [workIntervals]);
-
     const isNewIntervalValid = useCallback((interval, index) => {
         if (interval.start !== undefined && interval.end !== undefined) {
             if (interval.start.getTime() < startDt.getTime() || interval.end.getTime() > endDt.getTime()) {
@@ -94,11 +90,14 @@ const EditNAInterval = ({show, setShow, startDt, endDt}) => {
         } else {
             return false;
         }
-    }, [endDt, startDt, workIntervals])
+    }, [endDt, startDt, workIntervals]);
+
+    const areIntervalsValid = useMemo(() => {
+        return workIntervals.map(isNewIntervalValid).every(elem => elem === true)
+    }, [isNewIntervalValid, workIntervals]);
 
     const areNewSchedulesValid = useMemo(() => {
         return workIntervals.map(isNewIntervalValid).every(elem => elem === true);
-
     }, [isNewIntervalValid, workIntervals])
 
     return (
