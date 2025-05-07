@@ -43,6 +43,13 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
         setWorkInterval(realInterval);
     }, [realInterval]);
 
+    const canDelete = useMemo(() => {
+        const schedules = findScheduleIntervalsInRange(
+            schedule, realInterval.start.getTime(), realInterval.end.getTime()
+        );
+        return schedules.length === 0;
+    }, [realInterval, schedule]);
+
     const onTimeInputChange = async (idx, attrName, value) => {
         const newIntervals = newSchedules.map((schedule, index) => {
             if (index === idx) {
@@ -97,7 +104,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                 return isNewScheduleValid(newSchedule, newSchedulesWithoutCurrentElem, schedule, workInterval);
             })
             .every(item => item === true);
-    }, [newSchedules, realInterval, schedule]);
+    }, [newSchedules, schedule, workInterval]);
 
     const isWorkScheduleValid = useMemo(() => {
         const workScheduleWithoutCurrentInterval = workSchedule.intervals
@@ -242,8 +249,14 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                         }
                     />
                 </InputGroup>
-                <Button variant={'danger'} onClick={handleDelete}>Удалить рабочий
-                    промежуток</Button>
+                <Button variant={'danger'} onClick={handleDelete} disabled={!canDelete}>
+                    Удалить рабочий промежуток
+                </Button>
+                {
+                    !canDelete && <div className={'text-danger opacity-50'}>
+                        Удалите или перенесите занятия внутри рабочего промежутка для его удаления
+                    </div>
+                }
                 <Button variant={'success'} onClick={onAddButtonClick}>Добавить занятие</Button>
                 {newSchedules.map((newSchedule, idx) => {
                     const newSchedulesWithoutCurrentElem =

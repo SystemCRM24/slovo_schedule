@@ -1,9 +1,9 @@
-import React, {useState} from 'react';
+import React, {useCallback, useMemo, useState} from 'react';
 import useSchedules from "../../hooks/useSchedules.js";
 import CustomModal from "../ui/Modal/index.jsx";
 import {useDayContext} from "../../contexts/Day/provider.jsx";
 import {Button, FormControl, InputGroup} from "react-bootstrap";
-import {getDateWithTime, getTimeStringFromDate, isIntervalValid} from "../../utils/dates.js";
+import {areIntervalsOverlapping, getDateWithTime, getTimeStringFromDate, isIntervalValid} from "../../utils/dates.js";
 import {useSpecialistContext} from "../../contexts/Specialist/provider.jsx";
 import apiClient from "../../api/index.js";
 
@@ -17,6 +17,25 @@ const AddWorkScheduleModal = ({show, setShow}) => {
     const dayOfWeek = date.toLocaleString('ru-RU', {weekday: 'long'});
     const dateString = date.toLocaleDateString();
     const [workIntervals, setWorkIntervals] = useState([]);
+
+    const isNewIntervalValid = useCallback((interval, index) => {
+        if (interval.start !== undefined && interval.end !== undefined) {
+            const intervalsWithoutCurrent = workIntervals.filter((value, idx) => idx !== index);
+            for (const interv of intervalsWithoutCurrent) {
+                if (isIntervalValid(interv) && areIntervalsOverlapping(interval, interv)) {
+                    console.log(interval, 'overlapping', interv);
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }, [workIntervals])
+
+    const areIntervalsValid = useMemo(() => {
+        return workIntervals.map(isNewIntervalValid).every(elem => elem === true)
+    }, [isNewIntervalValid, workIntervals]);
 
     const onTimeInputChange = async (idx, attrName, value) => {
         const newIntervals = workIntervals.map((interval, index) => {
@@ -64,7 +83,8 @@ const AddWorkScheduleModal = ({show, setShow}) => {
             title={`${specialistId}, ${dayOfWeek} ${dateString}`}
             primaryBtnDisabled={
                 workIntervals.length === 0 ||
-                !workIntervals.map(interval => isIntervalValid(interval)).every(elem => elem === true)
+                !workIntervals.map(interval => isIntervalValid(interval)).every(elem => elem === true) ||
+                !areIntervalsValid
             }
             primaryBtnText={'Сохранить'}
             handlePrimaryBtnClick={onSumbit}
@@ -104,7 +124,10 @@ const AddWorkScheduleModal = ({show, setShow}) => {
                                     disabled={!interval?.start}
                                     min={getTimeStringFromDate(interval?.start)}
                                     required
-                                    isInvalid={interval.start !== undefined && !isIntervalValid(interval)}
+                                    isInvalid={interval.start !== undefined && (
+                                        !isIntervalValid(interval) ||
+                                        !isNewIntervalValid(interval, idx)
+                                    )}
                                 />
                             </InputGroup>
                             <Button
