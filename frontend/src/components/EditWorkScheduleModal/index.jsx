@@ -105,6 +105,35 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
         return isNewWorkScheduleValid(workInterval, newSchedules, schedule, workScheduleWithoutCurrentInterval);
     }, [newSchedules, realIntervalIndex, schedule, workInterval, workSchedule.intervals]);
 
+    const handleDelete = async () => {
+        const newWorkScheduleIntervals = workSchedule.intervals.filter(
+            (value, index) => index !== realIntervalIndex
+        );
+        if (newWorkScheduleIntervals.length === 0) {
+            await apiClient.deleteWorkSchedule(workSchedule.id);
+            const newGeneralWorkSchedule = structuredClone(generalWorkSchedule);
+            delete newGeneralWorkSchedule[specialistId][date];
+            setGeneralWorkSchedule(newGeneralWorkSchedule);
+        } else {
+            const result = await apiClient.updateWorkSchedule(workSchedule.id, {
+                specialist: specialistId, date: date, intervals: newWorkScheduleIntervals
+            });
+            if (result) {
+                setGeneralWorkSchedule({
+                    ...generalWorkSchedule,
+                    [specialistId]: {
+                        ...generalWorkSchedule[specialistId],
+                        [date]: {
+                            id: workSchedule.id,
+                            intervals: newWorkScheduleIntervals
+                        }
+                    }
+                });
+            }
+        }
+        setShow(false);
+    }
+
     const handleSubmit = async () => {
         setLoading(true);
         let transformedNewSchedules = newSchedules.map(item => {
@@ -178,7 +207,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
             title={`${specialist.name} - ${dayOfWeek} ${dateString} ${getTimeStringFromDate(workInterval.start)}
              - ${getTimeStringFromDate(workInterval.end)}`}
             handlePrimaryBtnClick={handleSubmit}
-            primaryBtnText={loading ? <Spinner variant={'light'} size={'sm'} as={'span'}/> : 'Сохранить'}
+            primaryBtnText={'Сохранить'}
             primaryBtnDisabled={!areNewSchedulesValid || !isWorkScheduleValid || loading}
         >
             <div className="d-flex flex-column align-items-center justify-content-center w-100 h-100 gap-2">
@@ -213,7 +242,9 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                         }
                     />
                 </InputGroup>
-                <Button variant={'success'} onClick={async () => await onAddButtonClick()}>Добавить занятие</Button>
+                <Button variant={'danger'} onClick={handleDelete}>Удалить рабочий
+                    промежуток</Button>
+                <Button variant={'success'} onClick={onAddButtonClick}>Добавить занятие</Button>
                 {newSchedules.map((newSchedule, idx) => {
                     const newSchedulesWithoutCurrentElem =
                         newSchedules.filter((item, index) => index !== idx);

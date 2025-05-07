@@ -104,7 +104,7 @@ export function getWorkingIntervalsFromSchedules(schedule, workSchedule, working
     }
     for (const [index, workingInterval] of Object.entries(sortedWorkSchedule)) {
         // добавляем нерабочий интервал между рабочими промежутками
-        if (index > 0) {
+        if (index > 0 && sortedWorkSchedule[index - 1].end.getTime() !== workingInterval.start.getTime()) {
             intervals.push({
                 start: sortedWorkSchedule[index - 1].end,
                 end: workingInterval.start,
@@ -312,7 +312,7 @@ export function isNewScheduleValid(schedule, newSchedules, daySchedule, workSche
 /**
  * @param {
  * {start: Date | undefined, end: Date | undefined}
- * } newWorkSchedule - проверяемый объект занятия в расписании
+ * } newWorkSchedule - проверяемый объект графика работы
  * @param {
  * Array<{start: Date | undefined, end: Date | undefined, patientName: string | undefined, patientType: string | undefined}>
  *     } newSchedules - список всех новых занятий

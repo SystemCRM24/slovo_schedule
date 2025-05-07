@@ -4,6 +4,7 @@ import {getIntervalTimeString} from "../../utils/dates.js";
 import EditWorkScheduleModal from "../EditWorkScheduleModal/index.jsx";
 import EditAppointmentModal from '../EditAppointmentModal/index.jsx';
 import {useChildrenContext} from "../../contexts/Children/provider.jsx";
+import EditNAIntervalModal from "../EditNAIntervalModal/index.jsx";
 
 
 const WorkingInterval = ({id, startDt, endDt, percentOfWorkingDay, status, patientId, patientType}) => {
@@ -24,6 +25,9 @@ const WorkingInterval = ({id, startDt, endDt, percentOfWorkingDay, status, patie
             <div>
                 {getIntervalTimeString(startDt, endDt)}
             </div>
+            {status === "na" &&
+                <EditNAIntervalModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt}/>
+            }
             {status === "free" &&
                 <EditWorkScheduleModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt}/>
             }
