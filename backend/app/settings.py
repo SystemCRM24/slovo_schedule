@@ -24,5 +24,4 @@ class Settings(BaseSettings):
         return ZoneInfo("Europe/Moscow")
     
 
-
 settings = Settings()

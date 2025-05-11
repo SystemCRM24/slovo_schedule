@@ -1,5 +1,4 @@
 from fast_bitrix24 import BitrixAsync
-import aiocache
 
 from .settings import settings
 
@@ -13,7 +12,7 @@ async def get_deal_info(deal_id: str) -> dict:
     return response.get('result', {})
 
 
-async def get_specialist_from_code(code: str):
+async def get_specialist_from_code(code: str) -> list:
     """Получает всех специалистов по указанному коду"""
     department_id: str = await get_department_id_by_code(code)
     params = {
@@ -23,12 +22,9 @@ async def get_specialist_from_code(code: str):
         }
     }
     response = await BITRIX.call('user.get', params, raw=True)
-    print(response)
+    return response.get('result', [])
 
 
-departments_cache = aiocache.cached(ttl=60 * 60 * 4, namespace='departments')
-
-@departments_cache
 async def get_department_id_by_code(code: str) -> str:
     """Отдает все подразделения"""
     response: dict = await BITRIX.call('department.get', {}, raw=True)
@@ -39,3 +35,14 @@ async def get_department_id_by_code(code: str) -> str:
             department_id = department['ID']
             break
     return department_id
+
+
+async def get_deal_field_values() -> dict:
+    """Получает значения полей"""
+    response = await BITRIX.call('crm.deal.fields', raw=True)
+    return response.get('result', {})
+
+
+async def call_batch(cmd: dict) -> dict:
+    """Делает батч запрос"""
+    return await BITRIX.call_batch(params={'halt': 0, 'cmd': cmd})
