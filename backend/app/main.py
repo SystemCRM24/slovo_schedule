@@ -205,4 +205,4 @@ class Handler:
             'ufCrm3Code': '55',
             'ufCrm3Status': 50
         })
-        print(result)
+        return result.get('item', None)
