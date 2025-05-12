@@ -3,7 +3,7 @@ from pydantic import field_validator
 from zoneinfo import ZoneInfo
 
 
-class _Settings(BaseSettings):
+class Settings(BaseSettings):
     BITRIX_WEBHOOK: str
     TIMEZONE: ZoneInfo = ZoneInfo('Europe/Moscow')
 
@@ -19,4 +19,4 @@ class _Settings(BaseSettings):
         return ZoneInfo("Europe/Moscow")
     
 
-Settings = settings = _Settings()
+settings = Settings()

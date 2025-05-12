@@ -1,9 +1,9 @@
 from fast_bitrix24 import BitrixAsync
 
-from .settings import settings
+from .settings import Settings
 
 
-BITRIX = BitrixAsync(settings.BITRIX_WEBHOOK)
+BITRIX = BitrixAsync(Settings.BITRIX_WEBHOOK)
 
 
 async def get_deal_info(deal_id: str) -> dict:
