@@ -43,6 +43,15 @@ async def get_deal_field_values() -> dict:
     return response.get('result', {})
 
 
+async def create_appointment(fields: dict):
+    response = await BITRIX.call(
+        'crm.item.add',
+        {'entityTypeId': 1036, 'fields': fields},
+        raw=True
+    )
+    return response.get('result', None)
+
+
 async def call_batch(cmd: dict) -> dict:
     """Делает батч запрос"""
     return await BITRIX.call_batch(params={'halt': 0, 'cmd': cmd})
