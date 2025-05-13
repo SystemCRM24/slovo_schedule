@@ -1,10 +1,19 @@
+x-app_environment: &app_env
+  environment:
+    # Backend
+    - BITRIX_WEBHOOK
+    # Frontend
+    - VITE_API_URL
+    - VITE_BASE_PATH
+
+
 services:
   frontend:
     restart: always
     build:
       context: frontend/.
-    ports:
-      - "8010:8010"
+    ports: 
+    - "8010:8010"
     environment:
       - NODE_ENV=production
     command: sh -c "npm run build && npm install -g serve && serve -s dist -l 8010"
@@ -13,7 +22,7 @@ services:
     restart: always
     build:
       context: backend/.
-    ports:
-      - "8011:8000"
-    env_file: ".env"
+    ports: 
+    - "8011:8000"
+    <<: *app_env
     command: uv run uvicorn main:app --host 0.0.0.0 --port 8000
