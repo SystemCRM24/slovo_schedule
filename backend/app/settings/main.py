@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
 from zoneinfo import ZoneInfo
+from pathlib import Path
 
 
 class Settings(BaseSettings):
@@ -8,7 +9,7 @@ class Settings(BaseSettings):
     TIMEZONE: ZoneInfo = ZoneInfo('Europe/Moscow')
 
     class Config:
-        env_file = ".env"
+        env_file = Path(__file__).parent.parent.parent.parent
         env_file_encoding = "utf-8"
         extra = "ignore"
 

@@ -1,2 +1,2 @@
-from .main import settings
-from .bx_constants import bxconstants
+from .main import settings as Settings
+from .bxconstants import BXConstants

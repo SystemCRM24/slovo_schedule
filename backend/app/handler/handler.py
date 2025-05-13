@@ -1,7 +1,9 @@
 from datetime import datetime
 
-from .settings import Settings
-from .schemas import RequestShema
+from app.settings import Settings
+from app.schemas import RequestShema
+
+from .specialist import SpecialistSchedule
 
 
 class Handler:
