@@ -5,6 +5,7 @@ x-app_environment: &app_env
     # Frontend
     - VITE_API_URL
     - VITE_BASE_PATH
+    - NODE_ENV
 
 
 services:
@@ -14,8 +15,7 @@ services:
       context: frontend/.
     ports: 
     - "8010:8010"
-    environment:
-      - NODE_ENV=production
+    <<: *app_env
     command: sh -c "npm run build && npm install -g serve && serve -s dist -l 8010"
   
   backend:
