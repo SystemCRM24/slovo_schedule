@@ -1,0 +1,10 @@
+#DateRangePicker {
+    display: flex;
+    gap: 1rem;
+}
+
+#DateRangePicker div {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}

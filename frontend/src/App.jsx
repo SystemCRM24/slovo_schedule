@@ -8,14 +8,11 @@ import {ScheduleContextProvider} from "./contexts/Schedule/provider.jsx";
 
 function App() {
     const [dates, setDates] = useState({fromDate: undefined, toDate: undefined});
-    const onDatesChange = e => {
-        const dateType = e.target.name;
-        setDates({...dates, [dateType]: e.target.valueAsDate,});
-    }
+
     return (
         <>
             <Container fluid className={'mt-2'}>
-                <DateRangePicker onChange={onDatesChange} dates={dates}/>
+                <DateRangePicker setDates={setDates}/>
             </Container>
             <WorkScheduleContextProvider schedule={{}}>
                 <ScheduleContextProvider schedule={{}}>
