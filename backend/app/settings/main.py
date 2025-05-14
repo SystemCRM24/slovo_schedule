@@ -4,12 +4,15 @@ from zoneinfo import ZoneInfo
 from pathlib import Path
 
 
+ROOT_PATH = Path(__file__).parent.parent.parent.parent
+
+
 class Settings(BaseSettings):
     BITRIX_WEBHOOK: str
     TIMEZONE: ZoneInfo = ZoneInfo('Europe/Moscow')
 
     class Config:
-        env_file = Path(__file__).parent.parent.parent.parent
+        env_file = f"{ROOT_PATH}/.env"
         env_file_encoding = "utf-8"
         extra = "ignore"
 
