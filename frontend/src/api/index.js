@@ -491,6 +491,12 @@ class APIClientMock {
         }
     }
 
+    async getClients() {}
+
+    async getSchedules() {}
+
+    async createWorkSchedule() {}
+
     /**
      * This method is mocked for a while
      @async
@@ -608,12 +614,12 @@ class APIClientMock {
     }
 }
 
-const MOCK = true;
+const MOCK = false;
 
-let apiClient = APIClient();
+let apiClient = new APIClient();
 
 if ( MOCK ) {
-    apiClient = APIClientMock()
+    apiClient = new APIClientMock()
 }
 
 export default apiClient;

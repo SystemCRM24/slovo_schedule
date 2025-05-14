@@ -2,7 +2,7 @@ import React, {Suspense, useEffect, useState, useMemo} from 'react';
 import {Spinner, Table} from "react-bootstrap";
 
 import DaySchedule from '../DaySchedule';
-import apiClient, {clientMock} from "../../api/";
+import apiClient from "../../api/";
 import {useScheduleContext} from "../../contexts/Schedule/provider.jsx";
 import {useWorkScheduleContext} from "../../contexts/WorkSchedule/provider.jsx";
 import {SpecialistContextProvider} from "../../contexts/Specialist/provider.jsx";
@@ -55,7 +55,7 @@ const Schedule = ({fromDate, toDate}) => {
                 headers.push((
                     <th
                         scope="col"
-                        style={{width: 400, whiteSpace: 'pre-wrap'}}
+                        style={{width: 300, whiteSpace: 'pre-wrap'}}
                         key={`specialist_${id}_header`}
                     >
                         {specialist.name + '\n' + codes}
@@ -71,7 +71,7 @@ const Schedule = ({fromDate, toDate}) => {
         () => {
             const rows = [];
             let currentDate = new Date(fromDate);
-            const style = {height: '1100px'};
+            const style = {height: '500px'};
             while (currentDate <= toDate) {
                 const row = [];
                 const dayOfWeek = currentDate.toLocaleString('ru-RU', {weekday: 'long'});
@@ -126,7 +126,7 @@ const Schedule = ({fromDate, toDate}) => {
                     <Table bordered responsive className={'mt-3'} style={{minWidth: `250%`}}>
                         <thead>
                         <tr>
-                            <th scope="col" style={{width: 200}}/>
+                            <th scope="col" style={{width: 150}}/>
                             {headers}
                         </tr>
                         </thead>
