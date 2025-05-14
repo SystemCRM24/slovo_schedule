@@ -608,7 +608,12 @@ class APIClientMock {
     }
 }
 
-export const clientMock = new APIClientMock();
+const MOCK = true;
 
-const apiClient = new APIClient();
+let apiClient = APIClient();
+
+if ( MOCK ) {
+    apiClient = APIClientMock()
+}
+
 export default apiClient;
