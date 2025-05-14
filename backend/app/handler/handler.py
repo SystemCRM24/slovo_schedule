@@ -45,7 +45,7 @@ class Handler:
         for index, specs in enumerate(self.specialists):
             specs.possible_specs = response[index]
     
-    async def update_specialists_schedules(self):
+    # async def update_specialists_schedules(self):
         
 
     # async def get_listfield_values(self) -> dict:

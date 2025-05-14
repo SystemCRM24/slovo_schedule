@@ -3,15 +3,14 @@ from fastapi import FastAPI
 from app.handler import Handler
 from app.schemas import RequestShema
 
+from api.router import router as api_router
+
 
 app = FastAPI(
     title='Слово - автоматизация заполнения расписания.',
     description="На основе данных сделки создает новый элемент смарт-процесса."
 )
-
-"""
-{"deal_id":202,"user_id":1,"data":[{"t":"R","q":2,"d":30},{"t":"LM","q":3,"d":15}]}
-"""
+app.include_router(api_router)
 
 
 @app.post('/handle', status_code=200, tags=['Main'])
@@ -21,7 +20,7 @@ async def handle_appointments(data: str):
     return await handler.run()
 
 
-@app.get('/test', status_code=200)
+@app.get('/test', status_code=200, tags=['Main'])
 async def test():
     """
     Тестовый метод, для вызова основного со со следующим параметром\n
