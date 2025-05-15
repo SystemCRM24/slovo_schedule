@@ -1,7 +1,7 @@
 class constants:
 
     class entityTypeId:
-        appointemnt = 1036
+        appointment = 1036
         workSchedule = 1042
 
     departments = {
@@ -12,7 +12,7 @@ class constants:
     }
 
     class uf:
-        class appointemnt:
+        class appointment:
             patient = "ufCrm3Children"
             start = "ufCrm3StartDate"
             end = "ufCrm3EndDate"
@@ -20,11 +20,11 @@ class constants:
             code = "ufCrm3Code"
 
         class workSchedule:
-            date: "ufCrm4Date"
-            intervals: "ufCrm4Intervals"
+            date = "ufCrm4Date"
+            intervals = "ufCrm4Intervals"
     
     class listFieldValues:
-        class appointemnt:
+        class appointment:
             statusById = {50: 'booked', 51: 'confirmed'}
             idByStatus = {'booked': 50, 'confirmed': 51}
             idByCode = {

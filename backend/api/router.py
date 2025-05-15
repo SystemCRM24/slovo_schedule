@@ -5,6 +5,7 @@ from .appointment import router as appointment_router
 from .schedule import router as schedule_router
 from app.bitrix import BITRIX
 from app.utils import BatchBuilder
+from app.settings import Settings
 
 from .constants import constants
 
@@ -67,83 +68,82 @@ async def get_clients():
 
 @router.get('/get_schedules', status_code=200)
 async def get_schedules(start: datetime, end: datetime):
-    # const toDtLastMinute = getDateWithTime(to, 23, 59);
-    #     const params = {
-    #         entityTypeId: constants.entityTypeId.appointment,
-    #         filter: {
-    #             [`>=${constants.uf.appointment.start}`]: from,
-    #             [`<=${constants.uf.appointment.end}`]: toDtLastMinute,
-    #         },
-    #         order: {[constants.uf.appointment.start]: 'ASC'}
-    #     }
-    #     const response = await this.bx.callListMethod('crm.item.list', params);
-    #     const schedule = {};
-    #     for (const itemsObject of response) {
-    #         for (const appointment of itemsObject.items) {
-    #             const specialistId = appointment.assignedById;
-    #             const start = new Date(appointment[constants.uf.appointment.start]);
-    #             const startOfDay = new Date(start);
-    #             startOfDay.setHours(3, 0, 0, 0);
-    #             const end = new Date(appointment[constants.uf.appointment.end]);
-    #             const patientId = appointment[constants.uf.appointment.patient];
-    #             const patientTypeId = (appointment[constants.uf.appointment.code] || [''])[0];
-    #             const patientType = constants.listFieldValues.appointment.codeById[patientTypeId];
-    #             const rawStatus = appointment[constants.uf.appointment.status];
-    #             const status = constants.listFieldValues.appointment.statusById[rawStatus];
-    #             // Наполняем объект
-    #             const specialistData = schedule[specialistId] ??= {};
-    #             const appointments = specialistData[startOfDay] ??= [];
-    #             appointments.push({
-    #                 id: appointment.id,
-    #                 start,
-    #                 end,
-    #                 patient: {
-    #                     id: patientId,
-    #                     type: patientType
-    #                 },
-    #                 status,
-    #             });
-    #         }
-    #     }
-    #     return schedule;
-    pass
+    toDtLastMinute = end.replace(hour=23, minute=59)
+    params = {
+        'entityTypeId': constants.entityTypeId.appointment,
+        'filter': {
+            f'>={constants.uf.appointment.start}': start.isoformat(),
+            f'<={constants.uf.appointment.end}': toDtLastMinute.isoformat(),
+        },
+        # 'order': {constants.uf.appointment.start: 'ASC'}
+    }
+    response = await BITRIX.get_all('crm.item.list', params)
+    schedule = {}
+    for appointment in response:
+        specialistId = appointment['assignedById']
+        start = datetime.fromisoformat(appointment[constants.uf.appointment.start])
+        startOfDay = start.replace(hour=3, minute=0, second=0, microsecond=0)
+        end = datetime.fromisoformat(appointment[constants.uf.appointment.end])
+        patientId = appointment[constants.uf.appointment.patient]
+        patientTypeId = (appointment[constants.uf.appointment.code] or [''])[0]
+        patientType = constants.listFieldValues.appointment.codeById[patientTypeId]
+        rawStatus = appointment[constants.uf.appointment.status]
+        status = constants.listFieldValues.appointment.statusById[rawStatus]
+        # Наполняем объект
+        specialistData = schedule.get(specialistId, None)
+        if specialistData is None:
+            specialistData = schedule[specialistId] = {}
+        appointments: list = specialistData.get(startOfDay, None)
+        if appointments is None:
+            appointments = specialistData[startOfDay] = []
+        appointments.append({
+            'id': appointment['id'],
+            'start': start,
+            'end': end,
+            'patient': {
+                'id': patientId,
+                'type': patientType
+            },
+            'status': status,
+        })
+    return schedule
 
 
 @router.get('/get_work_schedules', status_code=200)
 async def get_work_schedules(start: datetime, end: datetime):
-    # const params = {
-    #         entityTypeId: constants.entityTypeId.workSchedule,
-    #         filter: {
-    #             [`>=${constants.uf.workSchedule.date}`]: from,
-    #             [`<=${constants.uf.workSchedule.date}`]: to,
-    #         },
-    #         order: {[constants.uf.workSchedule.date]: 'ASC'}
-    #     }
-    #     const response = await this.bx.callListMethod('crm.item.list', params);
-    #     const workSchedule = {};
-    #     for (const items of response) {
-    #         for (const schedule of items.items) {
-    #             const specialistData = workSchedule[schedule.assignedById] ??= {};
-    #             const date = new Date(schedule[constants.uf.workSchedule.date]);
-    #             // date.setHours(0, 0, 0, 0);
-    #             const data = specialistData[date] = {
-    #                 id: schedule.id,
-    #                 intervals: []
-    #             };
-    #             const rawIntervals = schedule[constants.uf.workSchedule.intervals] || [];
-    #             for (const interval of rawIntervals) {
-    #                 const [start, end] = interval.split(":");
-    #                 data.intervals.push({start: new Date(parseInt(start)), end: new Date(parseInt(end))});
-    #             }
-    #         }
-    #     }
-    #     return workSchedule;
-    pass
+    params = {
+        'entityTypeId': constants.entityTypeId.workSchedule,
+        'filter': {
+            f'>={constants.uf.workSchedule.date}': start.isoformat(),
+            f'<={constants.uf.workSchedule.date}': end.isoformat(),
+        },
+        # order: {[constants.uf.workSchedule.date]: 'ASC'}
+    }
+    response = await BITRIX.get_all('crm.item.list', params)
+    workSchedule = {}
+    for schedule in response:
+        specialistData = workSchedule.get(schedule['assignedById'], None)
+        if specialistData is None:
+            specialistData = workSchedule[schedule['assignedById']] = {}
+        date = datetime.fromisoformat(schedule[constants.uf.workSchedule.date])
+        # date.setHours(0, 0, 0, 0);
+        data = specialistData[date] = {
+            'id': schedule['id'],
+            'intervals': []
+        }
+        rawIntervals = schedule[constants.uf.workSchedule.intervals] or []
+        for interval in rawIntervals: 
+            start, end = interval.split(":")
+            data['intervals'].append({
+                'start': datetime.fromtimestamp(float(start) / 1000).astimezone(Settings.TIMEZONE).isoformat(), 
+                'end': datetime.fromtimestamp(float(end) / 1000).astimezone(Settings.TIMEZONE).isoformat()
+            });
+    return workSchedule
 
 
 @router.get('/get_deals', status_code=200)
 async def get_deals():
-        #     const deals = await this.bx.callListMethod('crm.deal.list', {'FILTER': filter});
+        # const deals = await this.bx.callListMethod('crm.deal.list', {'FILTER': filter});
         # console.log(deals);
         # return deals;
     pass
