@@ -15,16 +15,14 @@ const WorkingInterval = ({id, startDt, endDt, percentOfWorkingDay, status, patie
     }, [patientId, patients]);
     return (
         <div
-            style={{height: `${percentOfWorkingDay}%`, fontSize: percentOfWorkingDay < 3 ? "8pt" : "small"}}
-            className={`interval status-${status} d-flex flex-column align-items-center justify-content-center`}
+            style={{height: '2rem', fontSize: "small", justifyContent: 'space-around'}}
+            className={`interval status-${status} d-flex`}
             onClick={() => {
                 !showModal && setShowModal(true)
             }}
         >
+            <div>{getIntervalTimeString(startDt, endDt)}</div>
             {patientId && <div className={'fw-bold'}>{patientName} {patientType}</div>}
-            <div>
-                {getIntervalTimeString(startDt, endDt)}
-            </div>
             {status === "na" &&
                 <EditNAIntervalModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt}/>
             }

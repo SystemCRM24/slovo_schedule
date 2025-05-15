@@ -71,7 +71,6 @@ const Schedule = ({fromDate, toDate}) => {
         () => {
             const rows = [];
             let currentDate = new Date(fromDate);
-            const style = {height: '500px'};
             while (currentDate <= toDate) {
                 const row = [];
                 const dayOfWeek = currentDate.toLocaleString('ru-RU', {weekday: 'long'});
@@ -90,7 +89,7 @@ const Schedule = ({fromDate, toDate}) => {
                     );
                     row.push(cell)
                 }
-                rows.push((<tr style={style} key={`row_${date}`}>{row}</tr>))
+                rows.push((<tr style={{minHeight: '300px'}} key={`row_${date}`}>{row}</tr>))
                 currentDate.setDate(currentDate.getDate() + 1);
             }
             return rows;
@@ -123,10 +122,10 @@ const Schedule = ({fromDate, toDate}) => {
             </ul>
             <AllSpecialistsContextProvider specialists={specialists}>
                 <ChildrenContextProvider childrenElements={children}>
-                    <Table bordered responsive className={'mt-3'} style={{minWidth: `250%`}}>
+                    <Table bordered responsive className={'mt-3'} style={{minWidth: `200%`, display: 'block'}}>
                         <thead>
                         <tr>
-                            <th scope="col" style={{width: 150}}/>
+                            <th scope="col" style={{width: 120}}/>
                             {headers}
                         </tr>
                         </thead>

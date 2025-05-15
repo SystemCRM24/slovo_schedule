@@ -47,7 +47,8 @@ export const constants = {
 class APIClient {
 
     constructor() {
-        this.bx = new BX24Wrapper();
+        // this.bx = new BX24Wrapper();
+        this.serverUrl = 'https://3638421-ng03032.twc1.net/slovo_schedule_api/front';
         this.testFrom = new Date('2025-04-27T21:00:00.000Z');
         this.testTo = new Date('2025-04-30T20:59:59.167Z');
     }
@@ -61,18 +62,8 @@ class APIClient {
      * @returns {Promise<Object.<string, { name: string, departments: number[] }>>}
      */
     async getSpecialists() {
-        const response = await this.bx.callListMethod(
-            'user.get',
-            {'@UF_DEPARTMENT': Object.keys(constants.departments)}
-        );
-        const specialists = {};
-        for (const user of response) {
-            const name = user['LAST_NAME'] + " " + user['NAME'].charAt(0) + ".";
-            const userDepratments = user['UF_DEPARTMENT'] || [];
-            const departments = userDepratments.map(d => constants.departments[d]);
-            specialists[user.ID] = {name, departments};
-        }
-        return specialists;
+        const response = await fetch(`${this.serverUrl}/get_specialist`);
+        return await response.json();
     }
 
     /**
@@ -80,28 +71,8 @@ class APIClient {
      * @returns {Promise<Object.<string, string>>}
      */
     async getClients() {
-        const result = {};
-        const parseClient = (client) => {
-            result[client.ID] = client.NAME + (client.LAST_NAME ? ` ${client.LAST_NAME}` : '');
-        }
-        const params = {
-            filter: {TYPE_ID: "CLIENT"},
-            order: {LAST_NAME: 'ASC', NAME: 'ASC'},
-            select: ['ID', 'NAME', 'LAST_NAME']
-        };
-        const firstResponse = await this.bx.callMethod('crm.contact.list', params);
-        firstResponse.forEach(parseClient);
-        let current = this.bx.lastResult.answer.next;
-        const total = this.bx.lastResult.answer.total;
-        const requests = [];
-        while ( current < total ) {
-            requests.push({...params, start: current});
-            current += 50;
-        }
-        const calls = BX24Wrapper.createCalls('crm.contact.list', requests);
-        const response = await this.bx.callLongBatch(calls, false);
-        response.forEach(page => page.forEach(parseClient));
-        return result;
+        const response = await fetch(`${this.serverUrl}/get_clients`);
+        return await response.json();
     }
 
     /**
@@ -125,45 +96,21 @@ class APIClient {
      @returns object - объект рсаписания на указанный промежуток врмеени
      */
     async getSchedules(from, to) {
-        const toDtLastMinute = getDateWithTime(to, 23, 59);
-        const params = {
-            entityTypeId: constants.entityTypeId.appointment,
-            filter: {
-                [`>=${constants.uf.appointment.start}`]: from,
-                [`<=${constants.uf.appointment.end}`]: toDtLastMinute,
-            },
-            order: {[constants.uf.appointment.start]: 'ASC'}
-        }
-        const response = await this.bx.callListMethod('crm.item.list', params);
-        const schedule = {};
-        for (const itemsObject of response) {
-            for (const appointment of itemsObject.items) {
-                const specialistId = appointment.assignedById;
-                const start = new Date(appointment[constants.uf.appointment.start]);
-                const startOfDay = new Date(start);
-                startOfDay.setHours(3, 0, 0, 0);
-                const end = new Date(appointment[constants.uf.appointment.end]);
-                const patientId = appointment[constants.uf.appointment.patient];
-                const patientTypeId = (appointment[constants.uf.appointment.code] || [''])[0];
-                const patientType = constants.listFieldValues.appointment.codeById[patientTypeId];
-                const rawStatus = appointment[constants.uf.appointment.status];
-                const status = constants.listFieldValues.appointment.statusById[rawStatus];
-                // Наполняем объект
-                const specialistData = schedule[specialistId] ??= {};
-                const appointments = specialistData[startOfDay] ??= [];
-                appointments.push({
-                    id: appointment.id,
-                    start,
-                    end,
-                    patient: {
-                        id: patientId,
-                        type: patientType
-                    },
-                    status,
-                });
+        const response = await fetch(`${this.serverUrl}/get_schedules?start=${from.toISOString()}&end=${to.toISOString()}`);
+        const data = await response.json();
+        for ( const [specId, dateData] of Object.entries(data) ) {
+            const correctData = {};
+            for ( const [day, appointments] of Object.entries(dateData)) {
+                correctData[new Date(day)] = appointments;
+                for ( const appointment of appointments ) {
+                    appointment.start = new Date(appointment.start);
+                    appointment.end = new Date(appointment.end);
+                }
             }
+            data[specId] = correctData;
         }
-        return schedule;
+        console.log(data);
+        return data;
     }
 
     /**
@@ -184,33 +131,21 @@ class APIClient {
      * }
      */
     async getWorkSchedules(from, to) {
-        const params = {
-            entityTypeId: constants.entityTypeId.workSchedule,
-            filter: {
-                [`>=${constants.uf.workSchedule.date}`]: from,
-                [`<=${constants.uf.workSchedule.date}`]: to,
-            },
-            order: {[constants.uf.workSchedule.date]: 'ASC'}
-        }
-        const response = await this.bx.callListMethod('crm.item.list', params);
-        const workSchedule = {};
-        for (const items of response) {
-            for (const schedule of items.items) {
-                const specialistData = workSchedule[schedule.assignedById] ??= {};
-                const date = new Date(schedule[constants.uf.workSchedule.date]);
-                // date.setHours(0, 0, 0, 0);
-                const data = specialistData[date] = {
-                    id: schedule.id,
-                    intervals: []
-                };
-                const rawIntervals = schedule[constants.uf.workSchedule.intervals] || [];
-                for (const interval of rawIntervals) {
-                    const [start, end] = interval.split(":");
-                    data.intervals.push({start: new Date(parseInt(start)), end: new Date(parseInt(end))});
+        const response = await fetch(`${this.serverUrl}/get_work_schedules?start=${from.toISOString()}&end=${to.toISOString()}`);
+        const data = await response.json();
+        for ( const [specId, dateData] of Object.entries(data) ) {
+            const currentData = {};
+            for ( const [day, intervalsData] of Object.entries(dateData) ) {
+                currentData[new Date(day)] = {
+                    id: String(intervalsData.id),
+                    intervals: intervalsData.intervals.map(i => {
+                    return {start: new Date(i.start), end: new Date(i.end)}
+                })
                 }
             }
+            data[String(specId)] = currentData;
         }
-        return workSchedule;
+        return data;
     }
 
     async getDeals(filter = {}) {
@@ -355,271 +290,6 @@ class APIClient {
 }
 
 
-class APIClientMock {
-    constructor() {
-        this.bx = new BX24Wrapper();
-    }
-
-    /**
-     * This method is mocked for a while
-     @async
-     @param {Date} fromDate - начало промежутка дат
-     @param {Date} toDate - конец промежутка дат
-     @returns {Promise<Object<string|number, Object<Date, Array<{
-      start: Date, end: Date, patient: {name: string, type: string}, status: "booked" | "confirmed" | "free" | "na"
-      }>>>>}
-     объект расписания занятий по сотрудникам
-     */
-    async getSchedule(fromDate, toDate) {
-        /**
-         * Структура объекта:
-         * {
-         *     "<id пользователя>: {
-         *         <строка даты в iso-формате для описания дня>: [
-         *             {
-         *                 start: <строка даты в iso-формате>,
-         *                 end: <строка даты в iso-формате>,
-         *                 patient: {
-         *                     name: "Егорова Я.""
-         *                     type: "L"
-         *                 },
-         *                 status: "booked",
-         *             },
-         *         ]
-         *     }
-         * }
-         */
-            // MUST BE DELETED LATER
-        const tmpVisitationStartDate1 = new Date(fromDate);
-        const tmpVisitationStartDate2 = new Date(fromDate);
-        const tmpVisitationEndDate1 = new Date(fromDate);
-        const tmpVisitationEndDate2 = new Date(fromDate);
-        tmpVisitationStartDate1.setHours(9);
-        tmpVisitationEndDate1.setHours(9, 30);
-        tmpVisitationStartDate2.setHours(18, 30);
-        tmpVisitationEndDate2.setHours(19)
-        return {
-            "8":
-                {
-                    [fromDate]: [
-                        {
-                            start: tmpVisitationStartDate1,
-                            end: tmpVisitationEndDate1,
-                            patient: {
-                                name: "Тестовый П.",
-                                type: "ABA",
-                            },
-                            status: "booked"  // booked / confirmed / free / na,
-                        },
-                        {
-                            start: tmpVisitationStartDate2,
-                            end: tmpVisitationEndDate2,
-                            patient: {
-                                name: "Тестовый2 П.",
-                                type: "ABA",
-                            },
-                            status: 'confirmed',
-                        }
-                    ],
-                },
-        };
-    }
-
-
-    /**
-     * This method is mocked for a while
-     @async
-     @param {Date} fromDate - начало промежутка дат
-     @param {Date} toDate - конец промежутка дат
-     @returns {Promise<Object<string|number, Object<Date, Array<{start: Date, end: Date}>>>>}
-     объект на указаный промежуток времени, где описан рабочий график сотрудников.
-     */
-    async getWorkSchedule(fromDate, toDate) {
-        /**
-         * Структура объекта:
-         * {
-         *     "<id пользователя >": {
-         *         <строка даты в iso-формате для описания дня>: [
-         *             {
-         *                 start: <строка даты в iso-формате>,
-         *                 end: <строка даты в iso-формате>,
-         *             },
-         *         ]
-         *     }
-         * }
-         */
-        if (fromDate < toDate) {
-            let schedule = {};
-            const specialists = [
-                "8", "9",
-                "11", "12", "13",
-                "15", "16",
-                "17", "18", "19",
-                "20", "21", "22",
-                "23"
-            ]
-            const dateRange = getDateRange(fromDate, toDate)
-            for (const specialist of specialists) {
-                schedule[specialist] = {};
-                // strange mock for a while, i know, excusez-moi, mon ami :)
-                for (const date of dateRange) {
-                    if (date.getTime() !== toDate.getTime()) {
-                        const start1 = new Date(date);
-                        const start2 = new Date(date);
-                        const end1 = new Date(date);
-                        const end2 = new Date(date);
-                        start1.setHours(9, 0);
-                        start2.setHours(12, 30);
-                        end1.setHours(11, 30);
-                        end2.setHours(19, 0);
-                        schedule[specialist][date] = [
-                            {
-                                start: start1,
-                                end: end1
-                            },
-                            {
-                                start: start2,
-                                end: end2
-                            }
-                        ];
-                    } else {
-                        schedule[specialist][date] = [];
-                    }
-                }
-            }
-            return schedule;
-        }
-    }
-
-    async getClients() {}
-
-    async getSchedules() {}
-
-    async createWorkSchedule() {}
-
-    /**
-     * This method is mocked for a while
-     @async
-     @returns {Promise<Object<string|int, {name: string, departments: string[]}>>}
-     */
-    async getSpecialists() {
-        // mock for a while
-        return {
-            "8": {
-                "name": "Ходырева Н.",
-                "departments": [
-                    "ABA",
-                    "d"
-                ]
-            },
-            "9": {
-                "name": "Мазницкая А.",
-                "departments": [
-                    "НДГ",
-                    "СИ"
-                ]
-            },
-            "11": {
-                "name": "Железнова М.",
-                "departments": [
-                    "NP"
-                ]
-            },
-            "12": {
-                "name": "Исмагилова С.",
-                "departments": [
-                    "R"
-                ]
-            },
-            "13": {
-                "name": "Вагизов С.",
-                "departments": [
-                    "НДГ"
-                ]
-            },
-            "15": {
-                "name": "Александра Ш.",
-                "departments": [
-                    "НДГ",
-                    "СИ"
-                ]
-            },
-            "16": {
-                "name": "Слесь И.",
-                "departments": [
-                    "ABA",
-                    "d-ава"
-                ]
-            },
-            "17": {
-                "name": "Шлык В.",
-                "departments": [
-                    "NP",
-                    "НДГ"
-                ]
-            },
-            "18": {
-                "name": "Статина Е.",
-                "departments": [
-                    "dNP",
-                    "NP",
-                    "КИТ"
-                ]
-            },
-            "19": {
-                "name": "Федькович С.",
-                "departments": [
-                    "ABA",
-                    "d",
-                    "L",
-                    "LM"
-                ]
-            },
-            "20": {
-                "name": "Гарькуша И.",
-                "departments": [
-                    "d",
-                    "dL",
-                    "L",
-                    "LM"
-                ]
-            },
-            "21": {
-                "name": "Мамедова Т.",
-                "departments": [
-                    "d",
-                    "dL",
-                    "L",
-                    "LM",
-                    "Z"
-                ]
-            },
-            "22": {
-                "name": "Дорошева Т.",
-                "departments": [
-                    "dL",
-                    "dNP",
-                    "L",
-                    "LM",
-                    "NP"
-                ]
-            },
-            "23": {
-                "name": "Липина А.",
-                "departments": [
-                    "ABA"
-                ]
-            }
-        }
-    }
-}
-
-const MOCK = false;
-
-let apiClient = new APIClient();
-
-if ( MOCK ) {
-    apiClient = new APIClientMock()
-}
+const apiClient = new APIClient();
 
 export default apiClient;
