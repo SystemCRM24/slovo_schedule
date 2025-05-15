@@ -12,3 +12,6 @@ dependencies = [
     "tzdata>=2025.2",
     "uvicorn>=0.34.2",
 ]
+
+[tools.setuptools]
+py-modules = []
