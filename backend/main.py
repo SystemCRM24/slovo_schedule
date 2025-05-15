@@ -56,7 +56,7 @@ async def get_specialists_schedules(data: str = Query(...)):
     parsed_data = RequestShema.model_validate_json(data)
     handler = Handler(parsed_data)
     await handler.update_specialists_info()         # Получили специалистов
-    await handler.update_specialists_schedules()    # Получили расписание и графики
+    await handler.update_specialists_schedules_test()    # Получили расписание и графики
     result = []
     for spec in handler.specialists:
         result.append({

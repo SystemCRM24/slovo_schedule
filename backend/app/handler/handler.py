@@ -136,6 +136,60 @@ class Handler:
                 spec.specialists_data[specialist_id] = {'schedule': [], 'appointments': []}
             spec.specialists_data[specialist_id][typ] = items
 
+    async def update_specialists_schedules_test(self):
+        """Получает график и расписание занятий для всех специалистов."""
+        cmd = {}
+        # Вставляем позавчерашнюю дату
+        from datetime import datetime, timedelta
+        pozavchera = datetime.now() - timedelta(days=10)
+        date_start = pozavchera.replace(hour=0, minute=0, second=0, microsecond=0)
+        date_start_iso = date_start.isoformat()
+
+        batch_index = 0
+        mapping = {}  # Связь: batch_index = (Specialist, specialist_id)
+
+        for spec in self.specialists:
+            for possible_spec in spec.possible_specs:
+                specialist_id = possible_spec.get('ID')
+                if not specialist_id:
+                    continue
+
+                # Получить график (1042)
+                cmd[batch_index] = BatchBuilder('crm.item.list', {
+                    'entityTypeId': 1042,
+                    'filter': {
+                        '>=ufCrm4Date': date_start_iso,
+                        'assignedById': specialist_id
+                    },
+                    'order': {'ufCrm4Date': 'ASC'}
+                }).build()
+                mapping[batch_index] = (spec, specialist_id, 'schedule')
+                batch_index += 1
+
+                # Получить расписание занятий (1036)
+                cmd[batch_index] = BatchBuilder('crm.item.list', {
+                    'entityTypeId': 1036,
+                    'filter': {
+                        '>=ufCrm3StartDate': date_start_iso,
+                        'assignedById': specialist_id
+                    },
+                    'order': {'ufCrm3StartDate': 'ASC'}
+                }).build()
+                mapping[batch_index] = (spec, specialist_id, 'appointments')
+                batch_index += 1
+
+        response = await bitrix.call_batch(cmd)
+        
+        for idx, (spec, specialist_id, typ) in mapping.items():
+            result = response[idx]  # Это dict, а не list (очень важно!!!)
+            # result = {'result': {'items': [...]}} или просто {'items': [...]}
+            items = result.get('result', {}).get('items', result.get('items', []))
+            if not hasattr(spec, 'specialists_data'):
+                spec.specialists_data = {}
+            if specialist_id not in spec.specialists_data:
+                spec.specialists_data[specialist_id] = {'schedule': [], 'appointments': []}
+            spec.specialists_data[specialist_id][typ] = items
+
     # async def get_listfield_values(self) -> dict:
     #     """Возвращает словарь, где ключи - id полей, а значения - значения"""
     #     fields = await bitrix.get_deal_field_values()
