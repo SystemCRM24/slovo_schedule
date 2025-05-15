@@ -13,5 +13,5 @@ dependencies = [
     "uvicorn>=0.34.2",
 ]
 
-[tools.setuptools]
+[tool.setuptools]
 py-modules = []
