@@ -32,8 +32,6 @@ class Specialist:
         batch = BatchBuilder('user.get', params)
         return batch.build()
     
-    def 
-    
 
 
     # def __init__(

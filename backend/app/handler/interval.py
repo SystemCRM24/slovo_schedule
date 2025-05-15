@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from typing import Self
 
+from app.settings.main import Settings
+
 
 class Interval:
     __slots__ = ('start', 'end')
@@ -16,7 +18,7 @@ class Interval:
     @classmethod
     def from_js_timestamp(cls, start: int | str, end: int | str) -> Self:
         """Создает объект на основе таймстампов js формата"""
-        map_obj = map(lambda x: float(x) / 1000, (starat, end))
+        map_obj = map(lambda x: float(x) / 1000, (start, end))
         return cls.from_timestamp(*map_obj)
     
     @classmethod
