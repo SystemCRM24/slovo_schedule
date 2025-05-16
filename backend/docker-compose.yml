@@ -1,8 +1,0 @@
-version: '3.9'
-
-services:
-  dev_api:
-    container_name: dev_api
-    build: .
-    ports:
-      - 8000:8000
