@@ -1,4 +1,7 @@
+from datetime import timedelta
 from urllib.parse import quote as url_quote
+
+from app.handler.interval import Interval
 
 
 class BatchBuilder:
@@ -58,3 +61,21 @@ class BatchBuilder:
         params = url_quote(str(params))
         subbatch = f'&{cmd}={params}'
         return subbatch
+
+def subtract_busy_from_interval(work: Interval, busys: list[Interval]) -> list[Interval]:
+    """
+    Из рабочего интервала вычитает все занятые интервалы. 
+    Возвращает список свободных промежутков (Interval).
+    """
+    busys = sorted(busys, key=lambda x: x.start)
+    result = []
+    cur = work.start
+    for busy in busys:
+        if busy.end <= cur or busy.start >= work.end:
+            continue
+        if busy.start > cur:
+            result.append(Interval(cur, busy.start))
+        cur = max(cur, busy.end)
+    if cur < work.end:
+        result.append(Interval(cur, work.end))
+    return [x for x in result if x.duration() > timedelta(minutes=0)]

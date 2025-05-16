@@ -141,7 +141,7 @@ class Handler:
         cmd = {}
         # Вставляем позавчерашнюю дату
         from datetime import datetime, timedelta
-        pozavchera = datetime.now() - timedelta(days=10)
+        pozavchera = datetime.now() - timedelta(days=5)
         date_start = pozavchera.replace(hour=0, minute=0, second=0, microsecond=0)
         date_start_iso = date_start.isoformat()
 

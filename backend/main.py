@@ -65,3 +65,38 @@ async def get_specialists_schedules(data: str = Query(...)):
             "specialists_data": getattr(spec, "specialists_data", {})
         })
     return result
+
+@app.post('/most-free-specialist', tags=['Debug', 'Specialist'])
+async def get_most_free_specialist(data: str = Query(...)):
+    """
+    Возвращает специалиста с максимальным количеством свободных окон, его расписание, свободные интервалы.
+    """
+    parsed_data = RequestShema.model_validate_json(data)
+    handler = Handler(parsed_data)
+    await handler.update_specialists_info()
+    await handler.update_specialists_schedules_test()
+    # Собираем всех специалистов со слотами
+    spec_slots = [
+        (spec, spec.get_free_slots_count())
+        for spec in handler.specialists
+    ]
+    if not spec_slots:
+        return {"error": "Нет специалистов"}
+    # Выбираем самого свободного
+    max_spec, max_count = max(spec_slots, key=lambda x: x[1])
+    slots = max_spec.get_all_free_slots()
+    result = {
+        "code": max_spec.code,
+        "max_free_slots": max_count,
+        "free_slots": [
+            {
+                "specialist_id": spec_id,
+                "start": slot.start.isoformat(),
+                "end": slot.end.isoformat(),
+                "duration_minutes": int((slot.end - slot.start).total_seconds() // 60)
+            }
+            for spec_id, slot in slots
+        ],
+        "specialists_data": getattr(max_spec, "specialists_data", {}),
+    }
+    return result
