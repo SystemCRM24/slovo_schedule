@@ -25,7 +25,7 @@ logging.basicConfig(level=logging.DEBUG)
 # call на get_all + Схемы
 router = APIRouter(prefix='/front', tags=['front'])
 
-router.include_router(appointment_router, )
+router.include_router(appointment_router)
 router.include_router(schedule_router)
 
 
@@ -76,8 +76,9 @@ async def get_clients():
 async def get_schedules(date_range: DateRange = Depends()):
     """Получение расписания записей специалистов за указанный период."""
     try:
-        start = date_range.start
-        end = date_range.end
+        start = date_range.start.astimezone(Settings.TIMEZONE) if date_range.start.tzinfo else date_range.start.replace(tzinfo=Settings.TIMEZONE)
+        end = date_range.end.astimezone(Settings.TIMEZONE) if date_range.end.tzinfo else date_range.end.replace(tzinfo=Settings.TIMEZONE)
+        
         to_dt_last_minute = end.replace(hour=23, minute=59)
         params = {
             'entityTypeId': constants.entityTypeId.appointment,
