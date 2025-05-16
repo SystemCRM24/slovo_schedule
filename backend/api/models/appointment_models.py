@@ -56,11 +56,3 @@ class Appointment(BaseModel):
 
 class AppointmentCreateResponse(BaseModel):
     id: int
-    title: str
-    createdTime: str
-    assignedById: int
-    patient: Optional[str]  # ufCrm3Children — ID пациента
-    start: Optional[str]    # ufCrm3StartDate — начало приема
-    end: Optional[str]      # ufCrm3EndDate — конец приема
-    status: Optional[int]   # ufCrm3Status — статус записи
-    code: Optional[List[str]]  # ufCrm3Code — код записи

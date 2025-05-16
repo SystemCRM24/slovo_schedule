@@ -36,14 +36,6 @@ async def create_appointment(appointment: AppointmentCreate):
         if response.get("id"):
             return AppointmentCreateResponse(
                 id=response["id"],
-                title=response["title"],
-                createdTime=response["createdTime"],
-                assignedById=response["assignedById"],
-                patient=response.get("ufCrm3Children"),
-                start=response.get("ufCrm3StartDate"),
-                end=response.get("ufCrm3EndDate"),
-                status=response.get("ufCrm3Status"),
-                code=response.get("ufCrm3Code")
             )
         else:
             raise HTTPException(
