@@ -51,12 +51,10 @@ def bitrix_to_intervals(bitrix_list: List[str]) -> List[str]:
 @router.post("/", status_code=201, response_model=WorkScheduleCreateResponse)
 async def create_schedule(schedule: WorkScheduleCreate):
     try:
-        date_bitrix = iso_date_to_bitrix(schedule.date)
-        intervals_bitrix = intervals_to_bitrix(schedule.intervals)
         fields = {
             "ASSIGNED_BY_ID": schedule.specialist,
-            constants.uf.workSchedule.date: date_bitrix,
-            constants.uf.workSchedule.intervals: intervals_bitrix,
+            constants.uf.workSchedule.date: schedule.date,
+            constants.uf.workSchedule.intervals: schedule.intervals,
         }
         response = await BITRIX.call(
             "crm.item.add",
