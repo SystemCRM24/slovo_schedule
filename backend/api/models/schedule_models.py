@@ -6,14 +6,14 @@ from pydantic import BaseModel, Field
 class WorkScheduleCreate(BaseModel):
     specialist: int = Field(..., description="ID специалиста")
     date: datetime = Field(..., description="Дата в формате ISO (например, '2023-05-15')")
-    intervals: List[str, str] = Field(..., description="Список интервалов")
+    intervals: List[str] = Field(..., description="Список интервалов")
 
 
 class WorkSchedule(BaseModel):
     id: int
     specialist: int
     date: Optional[str]
-    intervals: List[str, str]
+    intervals: List[str]
 
 
 class WorkScheduleCreateResponse(BaseModel):
