@@ -4,10 +4,13 @@ from .models.appointment_models import (
     AppointmentCreate,
     AppointmentCreateResponse,
 )
-from slovo_schedule.backend.app.bitrix import BITRIX
+from app.bitrix import BITRIX
 from .constants import constants
+import logging
 
-router = APIRouter(prefix="/appointment")
+logging.basicConfig(level=logging.DEBUG)
+
+router = APIRouter(prefix="/appointment", tags=["Appointment"])
 
 
 @router.post("/", status_code=201, response_model=AppointmentCreateResponse)
@@ -29,8 +32,19 @@ async def create_appointment(appointment: AppointmentCreate):
             "crm.item.add",
             {"entityTypeId": constants.entityTypeId.appointment, "fields": fields},
         )
-        if response.get("result"):
-            return {"id": response["result"]}
+        logging.debug(f"\n[ BITRIX RESPONSE ]\n{response}")
+        if response.get("id"):
+            return AppointmentCreateResponse(
+                id=response["id"],
+                title=response["title"],
+                createdTime=response["createdTime"],
+                assignedById=response["assignedById"],
+                patient=response.get("ufCrm3Children"),
+                start=response.get("ufCrm3StartDate"),
+                end=response.get("ufCrm3EndDate"),
+                status=response.get("ufCrm3Status"),
+                code=response.get("ufCrm3Code")
+            )
         else:
             raise HTTPException(
                 status_code=500,
@@ -53,8 +67,9 @@ async def get_appointment(id: int = Query(...)):
                 "useOriginalUfNames": "N",
             },
         )
-        if response.get("result"):
-            return Appointment.from_bitrix(response["result"])
+        logging.debug(f"\n[ BITRIX RESPONSE ]\n{response}")
+        if response.get("id"):
+            return Appointment.from_bitrix(response)
         else:
             raise HTTPException(status_code=404, detail="Запись не найдена")
     except Exception as e:
@@ -84,8 +99,9 @@ async def update_appointment(appointment: AppointmentCreate, id: int = Query(...
                 "fields": fields,
             },
         )
-        if response.get("result"):
-            return {"message": "Успешно обновлено"}
+        logging.debug(f"\n[ BITRIX RESPONSE ]\n{response}")
+        if response.get("id"):
+            return Appointment.from_bitrix(response)
         else:
             raise HTTPException(
                 status_code=500,
@@ -104,7 +120,8 @@ async def delete_appointment(id: int = Query(...)):
             "crm.item.delete",
             {"entityTypeId": constants.entityTypeId.appointment, "id": id},
         )
-        if response.get("result"):
+        logging.debug(f"\n[ BITRIX RESPONSE ]\n{response}")
+        if response == []:
             return {"message": "Успешно удалено"}
         else:
             raise HTTPException(

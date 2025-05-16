@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, validator
-from typing import Optional
+from typing import List, Optional
 from ..constants import constants
 
 
@@ -37,9 +37,11 @@ class Appointment(BaseModel):
 
     @classmethod
     def from_bitrix(cls, data: dict) -> "Appointment":
+        raw_code = data.get(constants.uf.appointment.code)
+        code_value = raw_code[0] if isinstance(raw_code, list) and raw_code else raw_code
         return cls(
-            id=data["ID"],
-            specialist=data["ASSIGNED_BY_ID"],
+            id=data["id"],
+            specialist=data["assignedById"],
             patient=data.get(constants.uf.appointment.patient),
             start=data.get(constants.uf.appointment.start),
             end=data.get(constants.uf.appointment.end),
@@ -47,10 +49,18 @@ class Appointment(BaseModel):
                 data.get(constants.uf.appointment.status), "unknown"
             ),
             code=constants.listFieldValues.appointment.codeById.get(
-                data.get(constants.uf.appointment.code), "unknown"
+                code_value, "unknown"
             ),
         )
 
 
 class AppointmentCreateResponse(BaseModel):
     id: int
+    title: str
+    createdTime: str
+    assignedById: int
+    patient: Optional[str]  # ufCrm3Children — ID пациента
+    start: Optional[str]    # ufCrm3StartDate — начало приема
+    end: Optional[str]      # ufCrm3EndDate — конец приема
+    status: Optional[int]   # ufCrm3Status — статус записи
+    code: Optional[List[str]]  # ufCrm3Code — код записи

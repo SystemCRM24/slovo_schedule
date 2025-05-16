@@ -3,38 +3,40 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Query
 from .models.schedule_models import Interval, WorkSchedule, WorkScheduleCreate, WorkScheduleCreateResponse
 from .constants import constants
-from slovo_schedule.backend.app.bitrix import BITRIX
+from app.bitrix import BITRIX
+import logging
 
-router = APIRouter(prefix='/schedule')
+logging.basicConfig(level=logging.DEBUG)
+router = APIRouter(prefix='/schedule', tags=["Schedule"])
 
 
 # Преобразование даты из ISO в формат Bitrix
 def iso_date_to_bitrix(date_str: str) -> str:
-    dt = datetime.fromisoformat(date_str.replace("+00:00", "")).date()
+    dt = datetime.strptime(date_str, "%Y-%m-%d").date()
     return dt.strftime("%d.%m.%Y")
-
 
 # Преобразование интервала из ISO в формат Bitrix
 def interval_to_bitrix(interval: Interval) -> str:
-    start_dt = datetime.fromisoformat(interval.start.replace("+00:00", ""))
-    end_dt = datetime.fromisoformat(interval.end.replace("+00:00", ""))
+    start_dt = datetime.fromisoformat(interval.start.replace("+03:00", ""))
+    end_dt = datetime.fromisoformat(interval.end.replace("+03:00", ""))
     start_ms = int(start_dt.timestamp() * 1000)
     end_ms = int(end_dt.timestamp() * 1000)
     return f"{start_ms}:{end_ms}"
-
 
 # Преобразование списка интервалов из ISO в формат Bitrix
 def intervals_to_bitrix(intervals: List[Interval]) -> List[str]:
     return [interval_to_bitrix(i) for i in intervals]
 
-
 # Преобразование даты из формата Bitrix в ISO
 def bitrix_date_to_iso(bitrix_date: str) -> Optional[str]:
     if bitrix_date:
-        day, month, year = map(int, bitrix_date.split("."))
-        return f"{year}-{month:02d}-{day:02d}"
+        try:
+            dt = datetime.fromisoformat(bitrix_date.replace("+03:00", ""))
+            return dt.strftime("%Y-%m-%d")
+        except ValueError:
+            logging.error(f"Неверный формат даты Bitrix: {bitrix_date}")
+            return None
     return None
-
 
 # Преобразование интервала из формата Bitrix в ISO
 def bitrix_to_interval(bitrix_str: str) -> Interval:
@@ -42,9 +44,9 @@ def bitrix_to_interval(bitrix_str: str) -> Interval:
     start_dt = datetime.fromtimestamp(start_ms / 1000)
     end_dt = datetime.fromtimestamp(end_ms / 1000)
     return Interval(
-        start=start_dt.isoformat() + "+00:00", end=end_dt.isoformat() + "+00:00"
+        start=start_dt.isoformat() + "+03:00",  # Исправил на +03:00 для консистентности
+        end=end_dt.isoformat() + "+03:00"
     )
-
 
 # Преобразование списка интервалов из формата Bitrix в ISO
 def bitrix_to_intervals(bitrix_list: List[str]) -> List[Interval]:
@@ -64,8 +66,9 @@ async def create_schedule(schedule: WorkScheduleCreate):
             "crm.item.add",
             {"entityTypeId": constants.entityTypeId.workSchedule, "fields": fields},
         )
-        if response.get("result"):
-            return {"id": response["result"]}
+        logging.debug(f"\n[ BITRIX RESPONSE ]\n{response}")
+        if response.get("id"):
+            return WorkScheduleCreateResponse.from_bitrix(response)
         else:
             error = response.get("error", {})
             raise HTTPException(
@@ -87,15 +90,13 @@ async def get_schedule(id: int = Query(...)):
                 "useOriginalUfNames": "N",
             },
         )
-        if response.get("result"):
-            data = response["result"]
-            date_iso = bitrix_date_to_iso(data.get(constants.uf.workSchedule.date))
-            intervals = bitrix_to_intervals(
-                data.get(constants.uf.workSchedule.intervals, [])
-            )
+        logging.debug(f"\n[ BITRIX RESPONSE ]\n{response}")
+        if response.get("id"):
+            date_iso = bitrix_date_to_iso(response.get(constants.uf.workSchedule.date))
+            intervals = bitrix_to_intervals(response.get(constants.uf.workSchedule.intervals, []))
             return WorkSchedule(
-                id=data["ID"],
-                specialist=data["ASSIGNED_BY_ID"],
+                id=response["id"],
+                specialist=response["assignedById"],
                 date=date_iso,
                 intervals=intervals,
             )
@@ -122,6 +123,7 @@ async def update_schedule(schedule: WorkScheduleCreate, id: int = Query(...)):
             constants.uf.workSchedule.date: date_bitrix,
             constants.uf.workSchedule.intervals: intervals_bitrix,
         }
+
         response = await BITRIX.call(
             "crm.item.update",
             {
@@ -130,8 +132,16 @@ async def update_schedule(schedule: WorkScheduleCreate, id: int = Query(...)):
                 "fields": fields,
             },
         )
-        if response.get("result"):
-            return {"message": "Успешно обновлено"}
+        logging.debug(f"\n[ BITRIX RESPONSE ]\n{response}")
+        if response.get("id"):
+            date_iso = bitrix_date_to_iso(response.get(constants.uf.workSchedule.date))
+            intervals = bitrix_to_intervals(response.get(constants.uf.workSchedule.intervals, []))
+            return WorkSchedule(
+                id=response["id"],
+                specialist=response["assignedById"],
+                date=date_iso,
+                intervals=intervals,
+            )
         else:
             error = response.get("error", {})
             raise HTTPException(
@@ -149,7 +159,8 @@ async def delete_schedule(id: int = Query(...)):
             "crm.item.delete",
             {"entityTypeId": constants.entityTypeId.workSchedule, "id": id},
         )
-        if response.get("result"):
+        logging.debug(f"\n[ BITRIX RESPONSE ]\n{response}")
+        if response == []:
             return {"message": "Успешно удалено"}
         else:
             error = response.get("error", {})

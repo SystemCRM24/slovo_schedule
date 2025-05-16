@@ -12,7 +12,7 @@ from .constants import constants
 
 router = APIRouter(prefix='/front', tags=['front'])
 
-router.include_router(appointment_router)
+router.include_router(appointment_router, )
 router.include_router(schedule_router)
 
 
