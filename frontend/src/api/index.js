@@ -48,13 +48,52 @@ class APIClient {
 
     constructor() {
         // this.bx = new BX24Wrapper();
-        this.serverUrl = 'https://3638421-ng03032.twc1.net/slovo_schedule_api/front';
+        this.serverUrl = 'https://3638421-ng03032.twc1.net/slovo_schedule_api/front/';
         this.testFrom = new Date('2025-04-27T21:00:00.000Z');
         this.testTo = new Date('2025-04-30T20:59:59.167Z');
     }
 
-    async ping() {
-        console.log('pong');
+    async delete(url) {
+        const init = {method: 'DELETE'};
+        const response = await fetch(url, init);
+        return await response.json();
+    }
+
+    async get(url) {
+        const response = await fetch(url);
+        return await response.json();
+    }
+
+    async post(url, body) {
+        const init = {   
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        }
+        const response = await fetch(url, init)
+        return await response.json();
+    }
+
+    async update(url, body) {
+        const init = {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        };
+        const response = await fetch(url, init);
+        return await response.json();
+    }
+
+    getUrl(method, queries = null) {
+        let url = `${this.serverUrl}${method}`;
+        if ( queries !== null ) {
+            const params = new URLSearchParams();
+            for ( const [key, value] of Object.entries(queries) ) {
+                params.append(key, value);
+            }
+            url += `?${params.toString()}`
+        }
+        return url;
     }
 
     /**
@@ -62,8 +101,12 @@ class APIClient {
      * @returns {Promise<Object.<string, { name: string, departments: number[] }>>}
      */
     async getSpecialists() {
-        const response = await fetch(`${this.serverUrl}/get_specialist`);
-        return await response.json();
+        const response = await this.get(this.getUrl('get_specialist'));
+        const data = {};
+        for( const spec of response ) {
+            data[spec.id] = spec;
+        }
+        return data;
     }
 
     /**
@@ -71,8 +114,13 @@ class APIClient {
      * @returns {Promise<Object.<string, string>>}
      */
     async getClients() {
-        const response = await fetch(`${this.serverUrl}/get_clients`);
-        return await response.json();
+        const url = this.getUrl('get_clients');
+        const response = await this.get(url);
+        const data = {};
+        for ( const child of response ) {
+            data[child.id] = child.full_name;
+        }
+        return data;
     }
 
     /**
@@ -96,20 +144,20 @@ class APIClient {
      @returns object - объект рсаписания на указанный промежуток врмеени
      */
     async getSchedules(from, to) {
-        const response = await fetch(`${this.serverUrl}/get_schedules?start=${from.toISOString()}&end=${to.toISOString()}`);
-        const data = await response.json();
-        for ( const [specId, dateData] of Object.entries(data) ) {
-            const correctData = {};
-            for ( const [day, appointments] of Object.entries(dateData)) {
-                correctData[new Date(day)] = appointments;
-                for ( const appointment of appointments ) {
-                    appointment.start = new Date(appointment.start);
-                    appointment.end = new Date(appointment.end);
-                }
+        const url = this.getUrl('get_schedules', {start: from.toISOString(), end: to.toISOString()});
+        const response = await this.get(url);
+        const data = {};
+        for ( const item of response ) {
+            const specialist = data[item.specialist_id] ??= {};
+            const day = specialist[new Date(item.date)] ??= [];
+            for ( const dayData of item.appointments ) {
+                day.push({
+                    ...dayData,
+                    start: new Date(dayData.start),
+                    end: new Date(dayData.end)
+                });
             }
-            data[specId] = correctData;
         }
-        console.log(data);
         return data;
     }
 
@@ -131,20 +179,20 @@ class APIClient {
      * }
      */
     async getWorkSchedules(from, to) {
-        const response = await fetch(`${this.serverUrl}/get_work_schedules?start=${from.toISOString()}&end=${to.toISOString()}`);
-        const data = await response.json();
-        for ( const [specId, dateData] of Object.entries(data) ) {
-            const currentData = {};
-            for ( const [day, intervalsData] of Object.entries(dateData) ) {
-                currentData[new Date(day)] = {
-                    id: String(intervalsData.id),
-                    intervals: intervalsData.intervals.map(i => {
-                    return {start: new Date(i.start), end: new Date(i.end)}
-                })
+        const url = this.getUrl('get_work_schedules', {start: from.toISOString(), end: to.toISOString()});
+        const response = await this.get(url);
+        const data = {};
+        for ( const item of response ) {
+            const specialist = data[item.specialist_id] ??= {};
+            const day = specialist[new Date(item.date)] ??= item.schedule;
+            day.intervals.forEach(
+                interval => {
+                    interval.start = new Date(interval.start);
+                    interval.end = new Date(interval.end);
                 }
-            }
-            data[String(specId)] = currentData;
+            );
         }
+        console.log(data);
         return data;
     }
 
@@ -152,22 +200,6 @@ class APIClient {
         const deals = await this.bx.callListMethod('crm.deal.list', {'FILTER': filter});
         console.log(deals);
         return deals;
-    }
-
-    async _createCrmItem(entityTypeId, fields) {
-        return await this.bx.callMethod('crm.item.add', {entityTypeId, fields});
-    }
-
-    async _getCrmItem(entityTypeId, id) {
-        return await this.bx.callMethod('crm.item.get', {entityTypeId, id, useOriginalUfNames: 'N'});
-    }
-
-    async _updateCrmItem(entityTypeId, id, fields) {
-        return await this.bx.callMethod('crm.item.update', {entityTypeId, id, fields});
-    }
-
-    async _deleteCrmItem(entityTypeId, id) {
-        return await this.bx.callMethod('crm.item.delete', {entityTypeId, id});
     }
 
     /**
@@ -242,14 +274,13 @@ class APIClient {
      * @param {Array<{start: Date, end: Date}>} data.intervals - Интервалы, которые обозначают рабочее время
      */
     async createWorkSchedule(data) {
-        const intervals = data.intervals.map(i => `${i.start.getTime()}:${i.end.getTime()}`);
-        const fields = {
-            ASSIGNED_BY_ID: data.specialist,
-            [constants.uf.workSchedule.date]: data.date,
-            [constants.uf.workSchedule.intervals]: intervals
-        }
-        const response = await this._createCrmItem(constants.entityTypeId.workSchedule, fields);
-        return response.item;
+        const url = this.getUrl('schedule/');
+        const body = {
+            specialist: data.specialist,
+            date: data.date.toISOString(),
+            intervals: data.intervals.map(i => `${i.start.getTime()}:${i.end.getTime()}`)
+        };
+        return await this.post(url, body);
     }
 
     /**

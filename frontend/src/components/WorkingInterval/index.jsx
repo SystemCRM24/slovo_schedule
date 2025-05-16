@@ -11,18 +11,40 @@ const WorkingInterval = ({id, startDt, endDt, percentOfWorkingDay, status, patie
     const [showModal, setShowModal] = useState(false);
     const patients = useChildrenContext();
     const patientName = useMemo(() => {
-        return patients?.[patientId]
+        const patientName = patients?.[patientId];
+        if ( patientName ) {
+            const splitName = patientName.split(' ');
+            if ( splitName.length > 2 ) {
+                return splitName.splice(0, 2).join(' ');
+            }
+        }
+        return patientName;
     }, [patientId, patients]);
+
     return (
         <div
-            style={{height: '2rem', fontSize: "small", justifyContent: 'space-around'}}
-            className={`interval status-${status} d-flex`}
-            onClick={() => {
-                !showModal && setShowModal(true)
-            }}
+            className={`interval status-${status}`}
+            style={{height: '2.5rem'}}
+            onClick={() => { !showModal && setShowModal(true) }}
         >
-            <div>{getIntervalTimeString(startDt, endDt)}</div>
-            {patientId && <div className={'fw-bold'}>{patientName} {patientType}</div>}
+            <div 
+                style={{
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    paddingRight: '0.5rem',
+                    paddingLeft: '0.5rem'
+                }}
+            >
+                <div>{getIntervalTimeString(startDt, endDt)}</div>
+                {patientId && 
+                    <div 
+                        className={'fw-bold'}
+                        style={{marginLeft: 'auto'}}
+                    >
+                        {patientName} {patientType}
+                    </div>
+                }
+            </div> 
             {status === "na" &&
                 <EditNAIntervalModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt}/>
             }

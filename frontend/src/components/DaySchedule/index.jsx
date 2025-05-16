@@ -6,8 +6,8 @@ import useSchedules from "../../hooks/useSchedules.js";
 const DaySchedule = () => {
     const {workSchedule} = useSchedules();
     return (
-        <td className={'p-0'} style={{height: "inherit"}}>
-            <div className={'d-flex flex-column align-items-center justify-content-center h-100 w-100'} style={{minHeight: '150px'}}>
+        <td className={'p-0'} >
+            <div>
                 {
                     workSchedule?.intervals.length > 0 ?
                         <WorkingIntervals />
