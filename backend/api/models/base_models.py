@@ -17,7 +17,7 @@ class ClientResponse(BaseModel):
     full_name: str
 
 class Patient(BaseModel):
-    id: str
+    id: int
     type: str
 
 class Appointment(BaseModel):

@@ -103,7 +103,7 @@ async def get_schedules(date_range: DateRange = Depends()):
                 id=appointment['id'],
                 start=start_time,
                 end=end_time,
-                patient=Patient(id=patient_id, type=patient_type),
+                patient=Patient(id=int(patient_id), type=patient_type),
                 status=status
             )
             if specialist_id not in schedule_dict:
