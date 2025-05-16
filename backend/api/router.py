@@ -130,8 +130,8 @@ async def get_schedules(date_range: DateRange = Depends()):
 async def get_work_schedules(date_range: DateRange = Depends()):
     """Получение рабочих расписаний специалистов за указанный период."""
     try:
-        start = date_range.start
-        end = date_range.end
+        start = date_range.start.astimezone(Settings.TIMEZONE) if date_range.start.tzinfo else date_range.start.replace(tzinfo=Settings.TIMEZONE)
+        end = date_range.end.astimezone(Settings.TIMEZONE) if date_range.end.tzinfo else date_range.end.replace(tzinfo=Settings.TIMEZONE)
         params = {
             'entityTypeId': constants.entityTypeId.workSchedule,
             'filter': {
