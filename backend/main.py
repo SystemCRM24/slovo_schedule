@@ -85,7 +85,7 @@ async def get_most_free_specialist(data: str = Query(...)):
     parsed_data = RequestShema.model_validate_json(data)
     handler = Handler(parsed_data)
     await handler.update_specialists_info()
-    await handler.update_specialists_schedules_test()
+    await handler.update_specialists_schedules()
     # Собираем всех специалистов со слотами
     spec_slots = [
         (spec, spec.get_free_slots_count())
