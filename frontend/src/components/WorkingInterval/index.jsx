@@ -35,7 +35,7 @@ const WorkingInterval = ({id, startDt, endDt, percentOfWorkingDay, status, patie
                     paddingLeft: '0.5rem'
                 }}
             >
-                <div>{getIntervalTimeString(startDt, endDt)}</div>
+                <div style={patientName ? {marginRight: 'auto'} : {margin: 'auto'}}>{getIntervalTimeString(startDt, endDt)}</div>
                 {patientId && 
                     <div 
                         className={'fw-bold'}

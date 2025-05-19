@@ -316,6 +316,7 @@ class APIClient {
      * @returns
      */
     async deleteWorkSchedule(id) {
+        const url = this.getUrl();
         return await this._deleteCrmItem(constants.entityTypeId.workSchedule, id);
     }
 }
