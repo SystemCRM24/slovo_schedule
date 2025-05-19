@@ -1,7 +1,3 @@
-import {getDateRange, getDateWithTime} from "../utils/dates.js";
-import BX24Wrapper from "./bx24Wrapper.js";
-
-
 export const constants = {
     entityTypeId: {appointment: 1036, workSchedule: 1042},
     departments: {
@@ -47,13 +43,52 @@ export const constants = {
 class APIClient {
 
     constructor() {
-        this.bx = new BX24Wrapper();
+        // this.bx = new BX24Wrapper();
+        this.serverUrl = 'https://3638421-ng03032.twc1.net/slovo_schedule_api/front/';
         this.testFrom = new Date('2025-04-27T21:00:00.000Z');
         this.testTo = new Date('2025-04-30T20:59:59.167Z');
     }
 
-    async ping() {
-        console.log('pong');
+    async delete(url) {
+        const response = await fetch(url, {method: 'DELETE'});
+        return await response.json();
+    }
+
+    async get(url) {
+        const response = await fetch(url);
+        return await response.json();
+    }
+
+    async post(url, body) {
+        const init = {   
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        }
+        const response = await fetch(url, init)
+        return await response.json();
+    }
+
+    async update(url, body) {
+        const init = {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        };
+        const response = await fetch(url, init);
+        return await response.json();
+    }
+
+    getUrl(method, queries = null) {
+        let url = `${this.serverUrl}${method}`;
+        if ( queries !== null ) {
+            const params = new URLSearchParams();
+            for ( const [key, value] of Object.entries(queries) ) {
+                params.append(key, value);
+            }
+            url += `?${params.toString()}`
+        }
+        return url;
     }
 
     /**
@@ -61,18 +96,12 @@ class APIClient {
      * @returns {Promise<Object.<string, { name: string, departments: number[] }>>}
      */
     async getSpecialists() {
-        const response = await this.bx.callListMethod(
-            'user.get',
-            {'@UF_DEPARTMENT': Object.keys(constants.departments)}
-        );
-        const specialists = {};
-        for (const user of response) {
-            const name = user['LAST_NAME'] + " " + user['NAME'].charAt(0) + ".";
-            const userDepratments = user['UF_DEPARTMENT'] || [];
-            const departments = userDepratments.map(d => constants.departments[d]);
-            specialists[user.ID] = {name, departments};
+        const response = await this.get(this.getUrl('get_specialist'));
+        const data = {};
+        for( const spec of response ) {
+            data[spec.id] = spec;
         }
-        return specialists;
+        return data;
     }
 
     /**
@@ -80,28 +109,13 @@ class APIClient {
      * @returns {Promise<Object.<string, string>>}
      */
     async getClients() {
-        const result = {};
-        const parseClient = (client) => {
-            result[client.ID] = client.NAME + (client.LAST_NAME ? ` ${client.LAST_NAME}` : '');
+        const url = this.getUrl('get_clients');
+        const response = await this.get(url);
+        const data = {};
+        for ( const child of response ) {
+            data[child.id] = child.full_name;
         }
-        const params = {
-            filter: {TYPE_ID: "CLIENT"},
-            order: {LAST_NAME: 'ASC', NAME: 'ASC'},
-            select: ['ID', 'NAME', 'LAST_NAME']
-        };
-        const firstResponse = await this.bx.callMethod('crm.contact.list', params);
-        firstResponse.forEach(parseClient);
-        let current = this.bx.lastResult.answer.next;
-        const total = this.bx.lastResult.answer.total;
-        const requests = [];
-        while ( current < total ) {
-            requests.push({...params, start: current});
-            current += 50;
-        }
-        const calls = BX24Wrapper.createCalls('crm.contact.list', requests);
-        const response = await this.bx.callLongBatch(calls, false);
-        response.forEach(page => page.forEach(parseClient));
-        return result;
+        return data;
     }
 
     /**
@@ -125,45 +139,21 @@ class APIClient {
      @returns object - объект рсаписания на указанный промежуток врмеени
      */
     async getSchedules(from, to) {
-        const toDtLastMinute = getDateWithTime(to, 23, 59);
-        const params = {
-            entityTypeId: constants.entityTypeId.appointment,
-            filter: {
-                [`>=${constants.uf.appointment.start}`]: from,
-                [`<=${constants.uf.appointment.end}`]: toDtLastMinute,
-            },
-            order: {[constants.uf.appointment.start]: 'ASC'}
-        }
-        const response = await this.bx.callListMethod('crm.item.list', params);
-        const schedule = {};
-        for (const itemsObject of response) {
-            for (const appointment of itemsObject.items) {
-                const specialistId = appointment.assignedById;
-                const start = new Date(appointment[constants.uf.appointment.start]);
-                const startOfDay = new Date(start);
-                startOfDay.setHours(3, 0, 0, 0);
-                const end = new Date(appointment[constants.uf.appointment.end]);
-                const patientId = appointment[constants.uf.appointment.patient];
-                const patientTypeId = (appointment[constants.uf.appointment.code] || [''])[0];
-                const patientType = constants.listFieldValues.appointment.codeById[patientTypeId];
-                const rawStatus = appointment[constants.uf.appointment.status];
-                const status = constants.listFieldValues.appointment.statusById[rawStatus];
-                // Наполняем объект
-                const specialistData = schedule[specialistId] ??= {};
-                const appointments = specialistData[startOfDay] ??= [];
-                appointments.push({
-                    id: appointment.id,
-                    start,
-                    end,
-                    patient: {
-                        id: patientId,
-                        type: patientType
-                    },
-                    status,
+        const url = this.getUrl('get_schedules', {start: from.toISOString(), end: to.toISOString()});
+        const response = await this.get(url);
+        const data = {};
+        for ( const item of response ) {
+            const specialist = data[item.specialist_id] ??= {};
+            const day = specialist[new Date(item.date)] ??= [];
+            for ( const dayData of item.appointments ) {
+                day.push({
+                    ...dayData,
+                    start: new Date(dayData.start),
+                    end: new Date(dayData.end)
                 });
             }
         }
-        return schedule;
+        return data;
     }
 
     /**
@@ -184,55 +174,27 @@ class APIClient {
      * }
      */
     async getWorkSchedules(from, to) {
-        const params = {
-            entityTypeId: constants.entityTypeId.workSchedule,
-            filter: {
-                [`>=${constants.uf.workSchedule.date}`]: from,
-                [`<=${constants.uf.workSchedule.date}`]: to,
-            },
-            order: {[constants.uf.workSchedule.date]: 'ASC'}
-        }
-        const response = await this.bx.callListMethod('crm.item.list', params);
-        const workSchedule = {};
-        for (const items of response) {
-            for (const schedule of items.items) {
-                const specialistData = workSchedule[schedule.assignedById] ??= {};
-                const date = new Date(schedule[constants.uf.workSchedule.date]);
-                // date.setHours(0, 0, 0, 0);
-                const data = specialistData[date] = {
-                    id: schedule.id,
-                    intervals: []
-                };
-                const rawIntervals = schedule[constants.uf.workSchedule.intervals] || [];
-                for (const interval of rawIntervals) {
-                    const [start, end] = interval.split(":");
-                    data.intervals.push({start: new Date(parseInt(start)), end: new Date(parseInt(end))});
+        const url = this.getUrl('get_work_schedules', {start: from.toISOString(), end: to.toISOString()});
+        const response = await this.get(url);
+        const data = {};
+        for ( const item of response ) {
+            const specialist = data[item.specialist_id] ??= {};
+            const day = specialist[new Date(item.date)] ??= item.schedule;
+            day.intervals.forEach(
+                interval => {
+                    interval.start = new Date(interval.start);
+                    interval.end = new Date(interval.end);
                 }
-            }
+            );
         }
-        return workSchedule;
+        console.log(data);
+        return data;
     }
 
     async getDeals(filter = {}) {
         const deals = await this.bx.callListMethod('crm.deal.list', {'FILTER': filter});
         console.log(deals);
         return deals;
-    }
-
-    async _createCrmItem(entityTypeId, fields) {
-        return await this.bx.callMethod('crm.item.add', {entityTypeId, fields});
-    }
-
-    async _getCrmItem(entityTypeId, id) {
-        return await this.bx.callMethod('crm.item.get', {entityTypeId, id, useOriginalUfNames: 'N'});
-    }
-
-    async _updateCrmItem(entityTypeId, id, fields) {
-        return await this.bx.callMethod('crm.item.update', {entityTypeId, id, fields});
-    }
-
-    async _deleteCrmItem(entityTypeId, id) {
-        return await this.bx.callMethod('crm.item.delete', {entityTypeId, id});
     }
 
     /**
@@ -307,14 +269,13 @@ class APIClient {
      * @param {Array<{start: Date, end: Date}>} data.intervals - Интервалы, которые обозначают рабочее время
      */
     async createWorkSchedule(data) {
-        const intervals = data.intervals.map(i => `${i.start.getTime()}:${i.end.getTime()}`);
-        const fields = {
-            ASSIGNED_BY_ID: data.specialist,
-            [constants.uf.workSchedule.date]: data.date,
-            [constants.uf.workSchedule.intervals]: intervals
-        }
-        const response = await this._createCrmItem(constants.entityTypeId.workSchedule, fields);
-        return response.item;
+        const url = this.getUrl('schedule/');
+        const body = {
+            specialist: data.specialist,
+            date: data.date.toISOString(),
+            intervals: data.intervals.map(i => `${i.start.getTime()}:${i.end.getTime()}`)
+        };
+        return await this.post(url, body);
     }
 
     /**
@@ -334,14 +295,12 @@ class APIClient {
      * @param {Array<{start: Date, end: Date}>} data.intervals - Интервалы, которые обозначают рабочее время
      */
     async updateWorkSchedule(id, data) {
-        const intervals = data.intervals.map(i => `${i.start.getTime()}:${i.end.getTime()}`);
-        const fields = {
-            ASSIGNED_BY_ID: data.specialist,
-            [constants.uf.workSchedule.date]: data.date,
-            [constants.uf.workSchedule.intervals]: intervals
-        }
-        const response = await this._updateCrmItem(constants.entityTypeId.workSchedule, id, fields);
-        return response.item;
+        const url = this.getUrl('schedule/', {id});
+        const body = {
+            ...data,
+            intervals: data.intervals.map(i => `${i.start.getTime()}:${i.end.getTime()}`)
+        };
+        return await this.update(url, body);
     }
 
     /**
@@ -350,276 +309,12 @@ class APIClient {
      * @returns
      */
     async deleteWorkSchedule(id) {
-        return await this._deleteCrmItem(constants.entityTypeId.workSchedule, id);
+        const url = this.getUrl('schedule/', {id});
+        return await this.delete(url);
     }
 }
 
 
-class APIClientMock {
-    constructor() {
-        this.bx = new BX24Wrapper();
-    }
-
-    /**
-     * This method is mocked for a while
-     @async
-     @param {Date} fromDate - начало промежутка дат
-     @param {Date} toDate - конец промежутка дат
-     @returns {Promise<Object<string|number, Object<Date, Array<{
-      start: Date, end: Date, patient: {name: string, type: string}, status: "booked" | "confirmed" | "free" | "na"
-      }>>>>}
-     объект расписания занятий по сотрудникам
-     */
-    async getSchedule(fromDate, toDate) {
-        /**
-         * Структура объекта:
-         * {
-         *     "<id пользователя>: {
-         *         <строка даты в iso-формате для описания дня>: [
-         *             {
-         *                 start: <строка даты в iso-формате>,
-         *                 end: <строка даты в iso-формате>,
-         *                 patient: {
-         *                     name: "Егорова Я.""
-         *                     type: "L"
-         *                 },
-         *                 status: "booked",
-         *             },
-         *         ]
-         *     }
-         * }
-         */
-            // MUST BE DELETED LATER
-        const tmpVisitationStartDate1 = new Date(fromDate);
-        const tmpVisitationStartDate2 = new Date(fromDate);
-        const tmpVisitationEndDate1 = new Date(fromDate);
-        const tmpVisitationEndDate2 = new Date(fromDate);
-        tmpVisitationStartDate1.setHours(9);
-        tmpVisitationEndDate1.setHours(9, 30);
-        tmpVisitationStartDate2.setHours(18, 30);
-        tmpVisitationEndDate2.setHours(19)
-        return {
-            "8":
-                {
-                    [fromDate]: [
-                        {
-                            start: tmpVisitationStartDate1,
-                            end: tmpVisitationEndDate1,
-                            patient: {
-                                name: "Тестовый П.",
-                                type: "ABA",
-                            },
-                            status: "booked"  // booked / confirmed / free / na,
-                        },
-                        {
-                            start: tmpVisitationStartDate2,
-                            end: tmpVisitationEndDate2,
-                            patient: {
-                                name: "Тестовый2 П.",
-                                type: "ABA",
-                            },
-                            status: 'confirmed',
-                        }
-                    ],
-                },
-        };
-    }
-
-
-    /**
-     * This method is mocked for a while
-     @async
-     @param {Date} fromDate - начало промежутка дат
-     @param {Date} toDate - конец промежутка дат
-     @returns {Promise<Object<string|number, Object<Date, Array<{start: Date, end: Date}>>>>}
-     объект на указаный промежуток времени, где описан рабочий график сотрудников.
-     */
-    async getWorkSchedule(fromDate, toDate) {
-        /**
-         * Структура объекта:
-         * {
-         *     "<id пользователя >": {
-         *         <строка даты в iso-формате для описания дня>: [
-         *             {
-         *                 start: <строка даты в iso-формате>,
-         *                 end: <строка даты в iso-формате>,
-         *             },
-         *         ]
-         *     }
-         * }
-         */
-        if (fromDate < toDate) {
-            let schedule = {};
-            const specialists = [
-                "8", "9",
-                "11", "12", "13",
-                "15", "16",
-                "17", "18", "19",
-                "20", "21", "22",
-                "23"
-            ]
-            const dateRange = getDateRange(fromDate, toDate)
-            for (const specialist of specialists) {
-                schedule[specialist] = {};
-                // strange mock for a while, i know, excusez-moi, mon ami :)
-                for (const date of dateRange) {
-                    if (date.getTime() !== toDate.getTime()) {
-                        const start1 = new Date(date);
-                        const start2 = new Date(date);
-                        const end1 = new Date(date);
-                        const end2 = new Date(date);
-                        start1.setHours(9, 0);
-                        start2.setHours(12, 30);
-                        end1.setHours(11, 30);
-                        end2.setHours(19, 0);
-                        schedule[specialist][date] = [
-                            {
-                                start: start1,
-                                end: end1
-                            },
-                            {
-                                start: start2,
-                                end: end2
-                            }
-                        ];
-                    } else {
-                        schedule[specialist][date] = [];
-                    }
-                }
-            }
-            return schedule;
-        }
-    }
-
-    async getClients() {}
-
-    async getSchedules() {}
-
-    async createWorkSchedule() {}
-
-    /**
-     * This method is mocked for a while
-     @async
-     @returns {Promise<Object<string|int, {name: string, departments: string[]}>>}
-     */
-    async getSpecialists() {
-        // mock for a while
-        return {
-            "8": {
-                "name": "Ходырева Н.",
-                "departments": [
-                    "ABA",
-                    "d"
-                ]
-            },
-            "9": {
-                "name": "Мазницкая А.",
-                "departments": [
-                    "НДГ",
-                    "СИ"
-                ]
-            },
-            "11": {
-                "name": "Железнова М.",
-                "departments": [
-                    "NP"
-                ]
-            },
-            "12": {
-                "name": "Исмагилова С.",
-                "departments": [
-                    "R"
-                ]
-            },
-            "13": {
-                "name": "Вагизов С.",
-                "departments": [
-                    "НДГ"
-                ]
-            },
-            "15": {
-                "name": "Александра Ш.",
-                "departments": [
-                    "НДГ",
-                    "СИ"
-                ]
-            },
-            "16": {
-                "name": "Слесь И.",
-                "departments": [
-                    "ABA",
-                    "d-ава"
-                ]
-            },
-            "17": {
-                "name": "Шлык В.",
-                "departments": [
-                    "NP",
-                    "НДГ"
-                ]
-            },
-            "18": {
-                "name": "Статина Е.",
-                "departments": [
-                    "dNP",
-                    "NP",
-                    "КИТ"
-                ]
-            },
-            "19": {
-                "name": "Федькович С.",
-                "departments": [
-                    "ABA",
-                    "d",
-                    "L",
-                    "LM"
-                ]
-            },
-            "20": {
-                "name": "Гарькуша И.",
-                "departments": [
-                    "d",
-                    "dL",
-                    "L",
-                    "LM"
-                ]
-            },
-            "21": {
-                "name": "Мамедова Т.",
-                "departments": [
-                    "d",
-                    "dL",
-                    "L",
-                    "LM",
-                    "Z"
-                ]
-            },
-            "22": {
-                "name": "Дорошева Т.",
-                "departments": [
-                    "dL",
-                    "dNP",
-                    "L",
-                    "LM",
-                    "NP"
-                ]
-            },
-            "23": {
-                "name": "Липина А.",
-                "departments": [
-                    "ABA"
-                ]
-            }
-        }
-    }
-}
-
-const MOCK = false;
-
-let apiClient = new APIClient();
-
-if ( MOCK ) {
-    apiClient = new APIClientMock()
-}
+const apiClient = new APIClient();
 
 export default apiClient;

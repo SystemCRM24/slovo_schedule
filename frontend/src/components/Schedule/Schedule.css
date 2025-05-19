@@ -1,0 +1,23 @@
+#schedule-table {
+    width: auto;
+    table-layout: auto;
+}
+
+#schedule-table td {
+    position: relative;
+    padding: 0px;
+    vertical-align: middle;
+    height: 100%;
+}
+
+#schedule-table td > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100px;
+    box-sizing: border-box;
+
+    width: 100%;
+    height: 100%;
+}

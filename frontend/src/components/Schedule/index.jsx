@@ -10,6 +10,8 @@ import {DayContextProvider} from "../../contexts/Day/provider.jsx";
 import {AllSpecialistsContextProvider} from "../../contexts/AllSpecialists/provider.jsx";
 import {ChildrenContextProvider} from "../../contexts/Children/provider.jsx";
 
+import "./Schedule.css"
+
 
 const Schedule = ({fromDate, toDate}) => {
     const [specialists, setSpecialists] = useState({});
@@ -27,7 +29,6 @@ const Schedule = ({fromDate, toDate}) => {
                     apiClient.getClients()
                 ]
             )
-            console.log(allSpecialists);
             setSpecialists(allSpecialists);
             setChildren(children);
         })();
@@ -55,7 +56,7 @@ const Schedule = ({fromDate, toDate}) => {
                 headers.push((
                     <th
                         scope="col"
-                        style={{width: 300, whiteSpace: 'pre-wrap'}}
+                        style={{minWidth: '220px', whiteSpace: 'pre-wrap'}}
                         key={`specialist_${id}_header`}
                     >
                         {specialist.name + '\n' + codes}
@@ -71,13 +72,18 @@ const Schedule = ({fromDate, toDate}) => {
         () => {
             const rows = [];
             let currentDate = new Date(fromDate);
-            const style = {height: '500px'};
             while (currentDate <= toDate) {
                 const row = [];
                 const dayOfWeek = currentDate.toLocaleString('ru-RU', {weekday: 'long'});
                 const date = currentDate.toLocaleDateString();
                 row.push((
-                    <th scope={'row'} key={date}>{dayOfWeek}<br/>{date}</th>
+                    <th 
+                        // scope={'row'} 
+                        key={date}
+                        style={{minHeight: '100px', height: 'auto'}}
+                    >
+                        {dayOfWeek}<br/>{date}
+                    </th>
                 ));
                 const scheduleDate = new Date(currentDate)
                 for (const specialistId of Object.keys(specialists)) {
@@ -90,7 +96,7 @@ const Schedule = ({fromDate, toDate}) => {
                     );
                     row.push(cell)
                 }
-                rows.push((<tr style={style} key={`row_${date}`}>{row}</tr>))
+                rows.push((<tr key={`row_${date}`}>{row}</tr>))
                 currentDate.setDate(currentDate.getDate() + 1);
             }
             return rows;
@@ -123,16 +129,17 @@ const Schedule = ({fromDate, toDate}) => {
             </ul>
             <AllSpecialistsContextProvider specialists={specialists}>
                 <ChildrenContextProvider childrenElements={children}>
-                    <Table bordered responsive className={'mt-3'} style={{minWidth: `250%`}}>
+                    <Table 
+                        id='schedule-table'
+                        bordered 
+                        responsive
+                    >
                         <thead>
-                        <tr>
-                            <th scope="col" style={{width: 150}}/>
-                            {headers}
-                        </tr>
+                            <tr>
+                                <th scope="col" style={{minWidth: '130px'}}/>{headers}
+                            </tr>
                         </thead>
-                        <tbody>
-                        {rows}
-                        </tbody>
+                        <tbody>{rows}</tbody>
                     </Table>
                 </ChildrenContextProvider>
             </AllSpecialistsContextProvider>
