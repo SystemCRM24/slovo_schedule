@@ -32,6 +32,7 @@ class Specialist:
         batch = BatchBuilder('user.get', params)
         return batch.build()
     
+
     def get_free_slots_count(self) -> int:
         slots = self.get_all_free_slots()
         return len(slots)

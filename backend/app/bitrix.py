@@ -4,7 +4,7 @@ from aiocache import cached
 from .settings import Settings
 
 
-BITRIX = BitrixAsync(Settings.BITRIX_WEBHOOK)
+BITRIX = BitrixAsync(Settings.BITRIX_WEBHOOK, verbose=False)
 
 
 async def call_batch(cmd: dict) -> dict:
