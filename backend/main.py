@@ -1,4 +1,5 @@
 
+import json
 from fastapi import Body, FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -30,6 +31,16 @@ async def handle_appointments(data: str):
     parsed_data = RequestShema.model_validate_json(data)
     handler = Handler(parsed_data)
     return await handler.run()
+
+@app.post("/test-echo", tags=["Debug"])
+async def test_echo(data: str = Query(...)):
+    """
+    Метод-заглушка. Принимает строку, пробует распарсить как JSON.
+    Если получилось — возвращает обратно как строку (json.dumps(parsed, ensure_ascii=False)).
+    """
+    parsed = json.loads(data)
+    return json.dumps(parsed, ensure_ascii=False)
+
 
 
 @app.get('/test', status_code=200, tags=['Main'])
