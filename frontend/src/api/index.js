@@ -54,8 +54,7 @@ class APIClient {
     }
 
     async delete(url) {
-        const init = {method: 'DELETE'};
-        const response = await fetch(url, init);
+        const response = await fetch(url, {method: 'DELETE'});
         return await response.json();
     }
 
@@ -316,8 +315,8 @@ class APIClient {
      * @returns
      */
     async deleteWorkSchedule(id) {
-        const url = this.getUrl();
-        return await this._deleteCrmItem(constants.entityTypeId.workSchedule, id);
+        const url = this.getUrl('schedule/', {id});
+        return await this.delete(url);
     }
 }
 
