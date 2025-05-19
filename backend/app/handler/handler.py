@@ -301,8 +301,7 @@ class Handler:
             "ufCrm3StartDate": appointment["start"],
             "ufCrm3EndDate": appointment["end"],
             "ufCrm3ParentDeal": self.data.deal_id,
-            # При необходимости добавь поля UF_* (ребенок, тип занятия и т.п.)
-            # "ufCrm3Child": ...,
+            "ufCrm3Child": appointment.get("user_id"),
             "user_id": appointment["user_id"],
             "ufCrm3Type": appointment["specialist_type"],
         }
