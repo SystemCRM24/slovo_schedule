@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from app.settings import Settings
 from app.schemas import RequestShema
 from app import bitrix
+from app.bitrix import BITRIX
 from app.utils import BatchBuilder
 
 from .specialist import Specialist
@@ -306,7 +307,7 @@ class Handler:
             "ufCrm3Type": appointment["specialist_type"],
         }
         # Здесь предполагается, что у тебя есть объект bitrix для запросов к Bitrix24
-        response = await bitrix.call("crm.item.add", {
+        response = await BITRIX.call("crm.item.add", {
             "entityTypeId": entityTypeId,
             "fields": fields
         })
