@@ -114,7 +114,7 @@ async def delete_appointment(id: int = Query(...)):
         )
         logging.debug(f"\n[ BITRIX RESPONSE ]\n{response}")
         if response == []:
-            return {"message": "Успешно удалено"}
+            return True
         else:
             raise HTTPException(
                 status_code=500,
