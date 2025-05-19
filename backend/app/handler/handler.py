@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.settings import Settings
 from app.schemas import RequestShema
@@ -19,9 +19,9 @@ class Handler:
     def create_specialists(self) -> tuple[Specialist]:
         return tuple(Specialist(self.initial_time, d.type, d.quantity, d.duration) for d in self.data.data)
 
-    async def run(self) -> str:
+    # async def run(self) -> str:
         """Запускает процесс постановки приема"""
-        await self.update_specialists_info()
+        # await self.update_specialists_info()
         # code_items = await self.get_listfield_values()
         # deal = await bitrix.get_deal_info(self.deal_id)
         # code = code_items.get(deal.get(UserFields.code, ''))
@@ -36,6 +36,109 @@ class Handler:
         #     return
         # first = sorted_schedules[0]
         # await self.create_appointment(deal, first)
+
+    async def run(self) -> dict:
+        """
+        Основной процесс постановки занятий в расписание и назначения сотрудника.
+        """
+        await self.update_specialists_info()
+        await self.update_specialists_schedules()
+
+        user_id = self.data.user_id
+        appointments_to_create = []
+
+        for appoint in self.data.data: 
+            type_code = appoint.type
+            quantity = appoint.quantity
+            duration = appoint.duration
+
+            candidates = [spec for spec in self.specialists if spec.code == type_code]
+            if not candidates:
+                continue
+
+            for _ in range(quantity):
+                # Выбираем спеца с макс количеством свободных окон
+                chosen = max(candidates, key=lambda s: s.get_free_slots_count(), default=None)
+                if not chosen or chosen.get_free_slots_count() == 0:
+                    continue  # нет свободных
+
+                free_slots = chosen.get_all_free_slots()
+                slot_found = False
+                for spec_id, slot in free_slots:
+                    if slot.duration().total_seconds() < duration * 60:
+                        continue
+
+                    data = chosen.specialists_data[spec_id]
+                    schedule = data.get('schedule', [])
+                    appointments = data.get('appointments', [])
+
+                    slot_date = slot.start.date()
+                    appoints_same_day = [
+                        a for a in appointments
+                        if 'ufCrm3StartDate' in a and
+                        datetime.fromisoformat(a['ufCrm3StartDate']).date() == slot_date
+                    ]
+
+                    # Ограничение: не более 6 занятий у спеца в день
+                    if len(appoints_same_day) >= 6:
+                        continue
+
+                    # Ограничение: не более 2 у одного ребенка
+                    child_same_day = [
+                        a for a in appoints_same_day
+                        if a.get('user_id') == user_id
+                    ]
+                    if len(child_same_day) >= 2:
+                        continue
+
+                    # Проверка перерывов между занятиями
+                    new_start = slot.start
+                    new_end = new_start + timedelta(minutes=duration)
+
+                    ok = True
+                    for a in appoints_same_day:
+                        exist_start = datetime.fromisoformat(a['ufCrm3StartDate'])
+                        exist_end = datetime.fromisoformat(a['ufCrm3EndDate'])
+                        # Пересекается по времени?
+                        if not (new_end <= exist_start or new_start >= exist_end):
+                            ok = False
+                            break
+                        # Перерыв до предыдущего
+                        gap1 = abs((exist_start - new_end).total_seconds()) // 60
+                        gap2 = abs((new_start - exist_end).total_seconds()) // 60
+                        if (0 < gap1 < 15) or (0 < gap2 < 15):
+                            ok = False
+                            break
+                        if (gap1 > 0 and gap1 > 45) or (gap2 > 0 and gap2 > 45):
+                            ok = False
+                            break
+                    if not ok:
+                        continue
+
+                    new_appt = {
+                        "specialist_id": spec_id,
+                        "specialist_type": type_code,
+                        "user_id": user_id,
+                        "start": new_start.isoformat(),
+                        "end": new_end.isoformat()
+                    }
+
+                    appointments.append({
+                        "ufCrm3StartDate": new_start.isoformat(),
+                        "ufCrm3EndDate": new_end.isoformat(),
+                        "user_id": user_id
+                    })
+                    appointments_to_create.append(new_appt)
+
+                    await self.create_schedule_entry(new_appt)
+                    slot_found = True
+                    break  
+
+                if not slot_found:
+                    continue  
+
+        return {"appointments": appointments_to_create}
+
     
     async def update_specialists_info(self):
         """Обновляет инфу для возможных специалистов"""
@@ -189,6 +292,25 @@ class Handler:
             if specialist_id not in spec.specialists_data:
                 spec.specialists_data[specialist_id] = {'schedule': [], 'appointments': []}
             spec.specialists_data[specialist_id][typ] = items
+
+    async def create_schedule_entry(self, appointment: dict):
+        entityTypeId = 1036
+        fields = {
+            "assignedById": int(appointment["specialist_id"]),
+            "ufCrm3StartDate": appointment["start"],
+            "ufCrm3EndDate": appointment["end"],
+            "ufCrm3ParentDeal": self.data.deal_id,
+            # При необходимости добавь поля UF_* (ребенок, тип занятия и т.п.)
+            # "ufCrm3Child": ...,
+            "user_id": appointment["user_id"],
+            "ufCrm3Type": appointment["specialist_type"],
+        }
+        # Здесь предполагается, что у тебя есть объект bitrix для запросов к Bitrix24
+        response = await bitrix.call("crm.item.add", {
+            "entityTypeId": entityTypeId,
+            "fields": fields
+        })
+        return response
 
     # async def get_listfield_values(self) -> dict:
     #     """Возвращает словарь, где ключи - id полей, а значения - значения"""

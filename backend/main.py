@@ -100,3 +100,9 @@ async def get_most_free_specialist(data: str = Query(...)):
         "specialists_data": getattr(max_spec, "specialists_data", {}),
     }
     return result
+
+@app.post('/auto-assign', tags=['Автоматизация'])
+async def auto_assign(data: str = Query(...)):
+    parsed_data = RequestShema.model_validate_json(data)
+    handler = Handler(parsed_data)
+    return await handler.run()
