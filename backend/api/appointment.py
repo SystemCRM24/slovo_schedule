@@ -8,7 +8,7 @@ from app.bitrix import BITRIX
 from .constants import constants
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 router = APIRouter(prefix="/appointment", tags=["Appointment"])
 
