@@ -20,9 +20,9 @@ import logging
 from .constants import constants
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
-# call на get_all + Схемы
+
 router = APIRouter(prefix='/front', tags=['front'])
 
 router.include_router(appointment_router)
@@ -50,6 +50,7 @@ async def get_specialist():
         return specialists
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ошибка при получении списка специалистов из Bitrix: {str(e)}")
+
 
 @router.get('/get_clients', status_code=200, response_model=List[ClientResponse])
 async def get_clients():
@@ -126,6 +127,7 @@ async def get_schedules(date_range: DateRange = Depends()):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ошибка при получении расписания записей специалистов за указанный период: {str(e)}")
 
+
 @router.get('/get_work_schedules', status_code=200, response_model=List[WorkScheduleResponse])
 async def get_work_schedules(date_range: DateRange = Depends()):
     """Получение рабочих расписаний специалистов за указанный период."""
@@ -169,6 +171,7 @@ async def get_work_schedules(date_range: DateRange = Depends()):
         return work_schedule_list
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ошибка при получении рабочих расписаний специалистов за указанный период: {str(e)}")
+
 
 @router.get('/get_deals', status_code=200)
 async def get_deals():
