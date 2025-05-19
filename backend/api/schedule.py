@@ -95,13 +95,11 @@ async def get_schedule(id: int = Query(...)):
         )
         logging.debug(f"\n[ BITRIX RESPONSE ]\n{response}")
         if response.get("id"):
-            date_iso = bitrix_date_to_iso(response.get(constants.uf.workSchedule.date))
-            intervals = bitrix_to_intervals(response.get(constants.uf.workSchedule.intervals, []))
             return WorkSchedule(
                 id=response["id"],
                 specialist=response["assignedById"],
-                date=date_iso,
-                intervals=intervals,
+                date=response[constants.uf.workSchedule.date],
+                intervals=response[constants.uf.workSchedule.intervals],
             )
         else:
             error = response.get("error", {})
@@ -119,14 +117,11 @@ async def get_schedule(id: int = Query(...)):
 @router.put("/", status_code=200)
 async def update_schedule(schedule: WorkScheduleCreate, id: int = Query(...)):
     try:
-        date_bitrix = iso_date_to_bitrix(schedule.date)
-        intervals_bitrix = intervals_to_bitrix(schedule.intervals)
         fields = {
             "ASSIGNED_BY_ID": schedule.specialist,
-            constants.uf.workSchedule.date: date_bitrix,
-            constants.uf.workSchedule.intervals: intervals_bitrix,
+            constants.uf.workSchedule.date: schedule.date,
+            constants.uf.workSchedule.intervals: schedule.intervals,
         }
-
         response = await BITRIX.call(
             "crm.item.update",
             {
@@ -136,15 +131,8 @@ async def update_schedule(schedule: WorkScheduleCreate, id: int = Query(...)):
             },
         )
         logging.debug(f"\n[ BITRIX RESPONSE ]\n{response}")
-        if response.get("id"):
-            date_iso = bitrix_date_to_iso(response.get(constants.uf.workSchedule.date))
-            intervals = bitrix_to_intervals(response.get(constants.uf.workSchedule.intervals, []))
-            return WorkSchedule(
-                id=response["id"],
-                specialist=response["assignedById"],
-                date=date_iso,
-                intervals=intervals,
-            )
+        if response.get("id", None) == id:
+            return True
         else:
             error = response.get("error", {})
             raise HTTPException(

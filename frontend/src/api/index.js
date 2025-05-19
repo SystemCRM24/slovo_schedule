@@ -299,14 +299,12 @@ class APIClient {
      * @param {Array<{start: Date, end: Date}>} data.intervals - Интервалы, которые обозначают рабочее время
      */
     async updateWorkSchedule(id, data) {
-        const intervals = data.intervals.map(i => `${i.start.getTime()}:${i.end.getTime()}`);
-        const fields = {
-            ASSIGNED_BY_ID: data.specialist,
-            [constants.uf.workSchedule.date]: data.date,
-            [constants.uf.workSchedule.intervals]: intervals
-        }
-        const response = await this._updateCrmItem(constants.entityTypeId.workSchedule, id, fields);
-        return response.item;
+        const url = this.getUrl('schedule/', {id});
+        const body = {
+            ...data,
+            intervals: data.intervals.map(i => `${i.start.getTime()}:${i.end.getTime()}`)
+        };
+        return await this.update(url, body);
     }
 
     /**
