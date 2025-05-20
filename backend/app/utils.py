@@ -1,7 +1,9 @@
 from datetime import timedelta
 from urllib.parse import quote as url_quote
+import json
 
 from app.handler.interval import Interval
+from app.schemas import RequestSchema
 
 
 class BatchBuilder:
@@ -79,3 +81,23 @@ def subtract_busy_from_interval(work: Interval, busys: list[Interval]) -> list[I
     if cur < work.end:
         result.append(Interval(cur, work.end))
     return [x for x in result if x.duration() > timedelta(minutes=0)]
+
+def parse_query(query: str) -> RequestSchema:
+    obj = json.loads(query)
+    obj['deal_id'] = int(obj['deal_id'])
+    obj['user_id'] = int(str(obj['user_id']).replace('user_', ''))
+    for stage in ['first_stage', 'second_stage']:
+        if stage in obj:
+            obj[stage]['duration'] = int(obj[stage]['duration'])
+            for appoint in obj[stage]['data']:
+                if appoint.get('q', ''):
+                    appoint['q'] = int(appoint['q'])
+                if appoint.get('d', ''):
+                    appoint['d'] = int(appoint['d'])
+    obj['data'] = {
+        'first_stage': obj['first_stage'],
+        'second_stage': obj['second_stage']
+    }
+    obj.pop('first_stage', None)
+    obj.pop('second_stage', None)
+    return RequestSchema(**obj)

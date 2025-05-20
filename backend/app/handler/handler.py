@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from app.settings import Settings
-from app.schemas import RequestShema
+from app.schemas import RequestSchema
 from app import bitrix
 from app.bitrix import BITRIX
 from app.utils import BatchBuilder
@@ -10,133 +10,106 @@ from .specialist import Specialist
 
 
 class Handler:
-    """Обрабатывает то, что нужно обработать"""
-
-    def __init__(self, data: RequestShema):
+    def __init__(self, data: RequestSchema):
         self.initial_time = datetime.now(Settings.TIMEZONE)
         self.data = data
         self.specialists = self.create_specialists()
     
-    def create_specialists(self) -> tuple[Specialist]:
-        return tuple(Specialist(self.initial_time, d.type, d.quantity, d.duration) for d in self.data.data)
-
-    # async def run(self) -> str:
-        """Запускает процесс постановки приема"""
-        # await self.update_specialists_info()
-        # code_items = await self.get_listfield_values()
-        # deal = await bitrix.get_deal_info(self.deal_id)
-        # code = code_items.get(deal.get(UserFields.code, ''))
-        # duration = self.get_appointment_duration(deal)
-        # specs = await bitrix.get_specialist_from_code(code)
-        # schedules = await self.get_specs_schedules(specs, duration)
-        # sorted_schedules = sorted(
-        #     filter(lambda s: s.last_find != None, schedules),
-        #     key=lambda s: s.last_find
-        # )
-        # if not sorted_schedules:
-        #     return
-        # first = sorted_schedules[0]
-        # await self.create_appointment(deal, first)
+    def create_specialists(self) -> tuple:
+        specialists = []
+        for stage in self.data.data.values():
+            for d in stage.data:
+                specialists.append(Specialist(self.initial_time, d.type, d.quantity, d.duration))
+        return tuple(specialists)
 
     async def run(self) -> dict:
-        """
-        Основной процесс постановки занятий в расписание и назначения сотрудника.
-        """
         await self.update_specialists_info()
         await self.update_specialists_schedules()
 
         user_id = self.data.user_id
         appointments_to_create = []
 
-        for appoint in self.data.data: 
-            type_code = appoint.type
-            quantity = appoint.quantity
-            duration = appoint.duration
+        for stage in self.data.data.values():
+            for appoint in stage.data:
+                type_code = appoint.type
+                quantity = appoint.quantity
+                duration = appoint.duration
 
-            candidates = [spec for spec in self.specialists if spec.code == type_code]
-            if not candidates:
-                continue
+                candidates = [spec for spec in self.specialists if spec.code == type_code]
+                if not candidates:
+                    continue
 
-            for _ in range(quantity):
-                # Выбираем спеца с макс количеством свободных окон
-                chosen = max(candidates, key=lambda s: s.get_free_slots_count(), default=None)
-                if not chosen or chosen.get_free_slots_count() == 0:
-                    continue  # нет свободных
-
-                free_slots = chosen.get_all_free_slots()
-                slot_found = False
-                for spec_id, slot in free_slots:
-                    if slot.duration().total_seconds() < duration * 60:
+                for _ in range(quantity):
+                    chosen = max(candidates, key=lambda s: s.get_free_slots_count(), default=None)
+                    if not chosen or chosen.get_free_slots_count() == 0:
                         continue
 
-                    data = chosen.specialists_data[spec_id]
-                    schedule = data.get('schedule', [])
-                    appointments = data.get('appointments', [])
+                    free_slots = chosen.get_all_free_slots()
+                    slot_found = False
+                    for spec_id, slot in free_slots:
+                        if slot.duration().total_seconds() < duration * 60:
+                            continue
 
-                    slot_date = slot.start.date()
-                    appoints_same_day = [
-                        a for a in appointments
-                        if 'ufCrm3StartDate' in a and
-                        datetime.fromisoformat(a['ufCrm3StartDate']).date() == slot_date
-                    ]
+                        data = chosen.specialists_data[spec_id]
+                        appointments = data.get('appointments', [])
 
-                    # Ограничение: не более 6 занятий у спеца в день
-                    if len(appoints_same_day) >= 6:
+                        slot_date = slot.start.date()
+                        appoints_same_day = [
+                            a for a in appointments
+                            if 'ufCrm3StartDate' in a and
+                            datetime.fromisoformat(a['ufCrm3StartDate']).date() == slot_date
+                        ]
+                        if len(appoints_same_day) >= 6:
+                            continue
+                        child_same_day = [
+                            a for a in appoints_same_day
+                            if a.get('user_id') == user_id
+                        ]
+                        if len(child_same_day) >= 2:
+                            continue
+
+                        new_start = slot.start
+                        new_end = new_start + timedelta(minutes=duration)
+
+                        ok = True
+                        for a in appoints_same_day:
+                            exist_start = datetime.fromisoformat(a['ufCrm3StartDate'])
+                            exist_end = datetime.fromisoformat(a['ufCrm3EndDate'])
+                            if not (new_end <= exist_start or new_start >= exist_end):
+                                ok = False
+                                break
+                            gap1 = abs((exist_start - new_end).total_seconds()) // 60
+                            gap2 = abs((new_start - exist_end).total_seconds()) // 60
+                            if (0 < gap1 < 15) or (0 < gap2 < 15):
+                                ok = False
+                                break
+                            if (gap1 > 0 and gap1 > 45) or (gap2 > 0 and gap2 > 45):
+                                ok = False
+                                break
+                        if not ok:
+                            continue
+
+                        new_appt = {
+                            "specialist_id": spec_id,
+                            "specialist_type": type_code,
+                            "user_id": user_id,
+                            "start": new_start.isoformat(),
+                            "end": new_end.isoformat()
+                        }
+
+                        appointments.append({
+                            "ufCrm3StartDate": new_start.isoformat(),
+                            "ufCrm3EndDate": new_end.isoformat(),
+                            "user_id": user_id
+                        })
+                        appointments_to_create.append(new_appt)
+
+                        await self.create_schedule_entry(new_appt)
+                        slot_found = True
+                        break
+
+                    if not slot_found:
                         continue
-
-                    # Ограничение: не более 2 у одного ребенка
-                    child_same_day = [
-                        a for a in appoints_same_day
-                        if a.get('user_id') == user_id
-                    ]
-                    if len(child_same_day) >= 2:
-                        continue
-
-                    # Проверка перерывов между занятиями
-                    new_start = slot.start
-                    new_end = new_start + timedelta(minutes=duration)
-
-                    ok = True
-                    for a in appoints_same_day:
-                        exist_start = datetime.fromisoformat(a['ufCrm3StartDate'])
-                        exist_end = datetime.fromisoformat(a['ufCrm3EndDate'])
-                        # Пересекается по времени?
-                        if not (new_end <= exist_start or new_start >= exist_end):
-                            ok = False
-                            break
-                        # Перерыв до предыдущего
-                        gap1 = abs((exist_start - new_end).total_seconds()) // 60
-                        gap2 = abs((new_start - exist_end).total_seconds()) // 60
-                        if (0 < gap1 < 15) or (0 < gap2 < 15):
-                            ok = False
-                            break
-                        if (gap1 > 0 and gap1 > 45) or (gap2 > 0 and gap2 > 45):
-                            ok = False
-                            break
-                    if not ok:
-                        continue
-
-                    new_appt = {
-                        "specialist_id": spec_id,
-                        "specialist_type": type_code,
-                        "user_id": user_id,
-                        "start": new_start.isoformat(),
-                        "end": new_end.isoformat()
-                    }
-
-                    appointments.append({
-                        "ufCrm3StartDate": new_start.isoformat(),
-                        "ufCrm3EndDate": new_end.isoformat(),
-                        "user_id": user_id
-                    })
-                    appointments_to_create.append(new_appt)
-
-                    await self.create_schedule_entry(new_appt)
-                    slot_found = True
-                    break  
-
-                if not slot_found:
-                    continue  
 
         return {"appointments": appointments_to_create}
 
