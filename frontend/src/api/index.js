@@ -43,10 +43,26 @@ export const constants = {
 class APIClient {
 
     constructor() {
-        // this.bx = new BX24Wrapper();
+        this.bx = new BX24Wrapper();
         this.serverUrl = 'https://3638421-ng03032.twc1.net/slovo_schedule_api/front/';
         this.testFrom = new Date('2025-04-27T21:00:00.000Z');
         this.testTo = new Date('2025-04-30T20:59:59.167Z');
+    }
+
+    async _createCrmItem(entityTypeId, fields) {
+        return await this.bx.callMethod('crm.item.add', {entityTypeId, fields});
+    }
+
+    async _getCrmItem(entityTypeId, id) {
+        return await this.bx.callMethod('crm.item.get', {entityTypeId, id, useOriginalUfNames: 'N'});
+    }
+
+    async _updateCrmItem(entityTypeId, id, fields) {
+        return await this.bx.callMethod('crm.item.update', {entityTypeId, id, fields});
+    }
+
+    async _deleteCrmItem(entityTypeId, id) {
+        return await this.bx.callMethod('crm.item.delete', {entityTypeId, id});
     }
 
     async delete(url) {
