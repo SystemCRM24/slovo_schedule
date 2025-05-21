@@ -124,6 +124,7 @@ async def get_schedules(date_range: DateRange = Depends()):
         ]
         return schedule_list
     except IndexError as e:
+        logging.error(f"[ IndexError ] :: {e}")
         return []
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ошибка при получении расписания записей специалистов за указанный период: {str(e)}")
