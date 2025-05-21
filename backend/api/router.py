@@ -89,7 +89,7 @@ async def get_schedules(date_range: DateRange = Depends()):
         }
         response = await BITRIX.get_all('crm.item.list', params)
         schedule_dict = {}
-        logging.debug(f"\nITEM 0:\n{response[0]}")
+        logging.debug(f"\nITEM 0:\n{response}")
         for appointment in response:
             specialist_id = appointment['assignedById']
             start_time = datetime.fromisoformat(appointment[constants.uf.appointment.start])
@@ -123,6 +123,8 @@ async def get_schedules(date_range: DateRange = Depends()):
             for date, appointments in dates.items()
         ]
         return schedule_list
+    except IndexError as e:
+        return []
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Ошибка при получении расписания записей специалистов за указанный период: {str(e)}")
 
