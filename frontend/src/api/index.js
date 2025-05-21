@@ -1,3 +1,6 @@
+import BX24Wrapper from './bx24Wrapper';
+
+
 export const constants = {
     entityTypeId: {appointment: 1036, workSchedule: 1042},
     departments: {
