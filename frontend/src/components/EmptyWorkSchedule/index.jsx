@@ -15,4 +15,4 @@ const EmptyWorkSchedule = () => {
     );
 };
 
-export default React.memo(EmptyWorkSchedule);
+export default EmptyWorkSchedule;

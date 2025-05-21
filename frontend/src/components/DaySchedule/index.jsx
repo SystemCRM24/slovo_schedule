@@ -19,4 +19,4 @@ const DaySchedule = () => {
     );
 }
 
-export default React.memo(DaySchedule);
+export default DaySchedule;

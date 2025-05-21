@@ -247,4 +247,4 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, pat
     );
 }
 
-export default React.memo(EditAppointmentModal);
+export default EditAppointmentModal;

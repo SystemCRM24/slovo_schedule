@@ -13,6 +13,7 @@
     "@atlaskit/pragmatic-drag-and-drop": "^1.5.2",
     "@atlaskit/pragmatic-drag-and-drop-react-accessibility": "^2.0.3",
     "bootstrap": "^5.3.5",
+    "luxon": "^3.6.1",
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.9",
     "react-dom": "^19.0.0"

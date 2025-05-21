@@ -60,4 +60,4 @@ const WorkingInterval = ({id, startDt, endDt, percentOfWorkingDay, status, patie
     );
 };
 
-export default React.memo(WorkingInterval);
+export default WorkingInterval;

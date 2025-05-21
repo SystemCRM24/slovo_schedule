@@ -147,4 +147,4 @@ const Schedule = ({fromDate, toDate}) => {
     );
 };
 
-export default React.memo(Schedule);
+export default Schedule;

@@ -1,5 +1,6 @@
 import React, {useState, useMemo, useEffect, useCallback} from 'react';
 import {Button, Form} from "react-bootstrap";
+import { DateTime } from 'luxon';
 
 import './DateRangePicker.css'
 
@@ -7,18 +8,10 @@ const DateRangePicker = ({setDates}) => {
 
     const [startOfWeek, endOfWeek] = useMemo(
         () => {
-            const now = new Date();
-            const dayOfWeek = now.getDay();
-            now.getMo
-            const startOfWeek = new Date(now);
-            startOfWeek.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : (dayOfWeek - 1)));
-            startOfWeek.setHours(0, 0, 0, 0);
-
-            const endOfWeek = new Date(startOfWeek);
-            endOfWeek.setDate(startOfWeek.getDate() + 6);
-            endOfWeek.setHours(23, 59, 59, 999);
-
-            return [startOfWeek, endOfWeek];
+            const now = DateTime.utc();
+            const startOfWeek = now.startOf('week');
+            const endOfWeek = now.endOf('week').minus({'hours': 3});
+            return [startOfWeek.toUTC().toJSDate(), endOfWeek.toUTC().toJSDate()];
         },
         []
     );
@@ -52,6 +45,7 @@ const DateRangePicker = ({setDates}) => {
     );
 
     const onSubmit = (e) => {
+        console.log(start, end);
         e.preventDefault();
         setDates({fromDate: start, toDate: end});
     }

@@ -155,7 +155,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
         });
         if (
             realInterval.start.getTime() !== workInterval.start.getTime()
-            || realInterval.end.getTime() !== realInterval.getTime()
+            || realInterval.end.getTime() !== realInterval.end.getTime()
         ) {
             const newWorkIntervals = workSchedule.intervals.map((value, index) => {
                 if (index === realIntervalIndex) {
@@ -365,4 +365,4 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
     );
 };
 
-export default React.memo(EditWorkScheduleModal);
+export default EditWorkScheduleModal;

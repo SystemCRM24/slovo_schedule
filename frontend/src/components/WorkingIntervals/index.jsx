@@ -49,4 +49,4 @@ const WorkingIntervals = () => {
     );
 }
 
-export default React.memo(WorkingIntervals);
+export default WorkingIntervals;

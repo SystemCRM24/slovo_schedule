@@ -187,7 +187,6 @@ class APIClient {
                 }
             );
         }
-        console.log(data);
         return data;
     }
 
