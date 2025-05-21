@@ -2,7 +2,7 @@ from datetime import datetime
 
 from .interval import Interval
 from app import bitrix
-from app.utils import BatchBuilder
+from app.utils import BatchBuilder, subtract_busy_from_interval
 
 
 
@@ -32,9 +32,34 @@ class Specialist:
         batch = BatchBuilder('user.get', params)
         return batch.build()
     
-    # def 
-    
 
+    def get_free_slots_count(self) -> int:
+        slots = self.get_all_free_slots()
+        return len(slots)
+
+    def get_all_free_slots(self) -> list:
+        all_slots = []
+        specialists_data = getattr(self, 'specialists_data', {})
+        for spec_id, data in specialists_data.items():
+            schedule = data.get('schedule', [])
+            appointments = data.get('appointments', [])
+            intervals = []
+            for s in schedule:
+                intervals_ms = s.get('ufCrm4Intervals', [])
+                for pair in intervals_ms:
+                    start_ms, end_ms = map(int, pair.split(':'))
+                    intervals.append(Interval.from_timestamp(start_ms / 1000, end_ms / 1000))
+            busy = []
+            for a in appointments:
+                start = a.get('ufCrm3StartDate')
+                end = a.get('ufCrm3EndDate')
+                if start and end:
+                    busy.append(Interval.from_iso(start, end))
+            free_slots = []
+            for work_interval in intervals:
+                free_slots += subtract_busy_from_interval(work_interval, busy)
+            all_slots += [(spec_id, slot) for slot in free_slots]
+        return all_slots
 
     # def __init__(
     #     self, 
