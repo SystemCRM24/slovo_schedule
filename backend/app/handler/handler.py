@@ -5,6 +5,7 @@ from app.schemas import RequestSchema
 from app import bitrix
 from app.bitrix import BITRIX
 from app.utils import BatchBuilder
+from api.constants import constants
 
 from .specialist import Specialist
 
@@ -21,6 +22,103 @@ class Handler:
             for d in stage.data:
                 specialists.append(Specialist(self.initial_time, d.type, d.quantity, d.duration))
         return tuple(specialists)
+    
+    @staticmethod
+    def get_appointments_on_day(appointments, user_id, dt):
+        target_day = dt.date()
+        return [
+            a for a in appointments
+            if a.get("user_id") == user_id and
+            datetime.fromisoformat(a['ufCrm3StartDate']).date() == target_day
+        ]
+
+    @staticmethod
+    def get_specialist_appointments_on_day(appointments, dt):
+        target_day = dt.date()
+        return [
+            a for a in appointments
+            if datetime.fromisoformat(a['ufCrm3StartDate']).date() == target_day
+        ]
+    
+    def is_slot_ok(self, new_start, new_end, appointments, min_break=15):
+        print(f"\n[is_slot_ok] Проверка для {new_start} — {new_end} appointments={appointments}")
+        for a in appointments:
+            exist_start = datetime.fromisoformat(a['ufCrm3StartDate'])
+            exist_end = datetime.fromisoformat(a['ufCrm3EndDate'])
+            # Проверка на пересечение интервалов
+            if not (new_end <= exist_start or new_start >= exist_end):
+                return False
+            # Проверка на минимальный разрыв
+            gap_before = (new_start - exist_end).total_seconds() / 60
+            gap_after = (exist_start - new_end).total_seconds() / 60
+            if 0 <= gap_before < min_break:
+                return False
+            if 0 <= gap_after < min_break:
+                return False
+        print("  OK!")
+        return True
+
+    async def assign_appointment(self, chosen, user_id, appoint, type_code, duration):
+        """
+        Пытается назначить appointment для выбранного специалиста chosen.
+        Возвращает fields, если получилось назначить, иначе None.
+        """
+        for spec_id, slot in chosen.get_all_free_slots():
+            # Проверяем, подходит ли длительность слота
+            if slot.duration().total_seconds() < duration * 60:
+                continue
+
+            data = chosen.specialists_data[spec_id]
+            appointments = data.setdefault('appointments', [])
+
+            new_start = slot.start
+            new_end = new_start + timedelta(minutes=duration)
+
+            # --- ОГРАНИЧЕНИЕ: не больше 2 занятий у ребёнка в день ---
+            child_appointments_today = self.get_appointments_on_day(appointments, user_id, new_start)
+            if len(child_appointments_today) >= 2:
+                print("  Уже 2 занятия у ребёнка в этот день!")
+                continue
+
+            # --- ОГРАНИЧЕНИЕ: не больше 6 занятий у специалиста в день ---
+            spec_appointments_today = self.get_specialist_appointments_on_day(appointments, new_start)
+            if len(spec_appointments_today) >= 6:
+                print("  Уже 6 занятий у специалиста в этот день!")
+                continue
+
+            # Главная проверка на пересечения и перерывы
+            if not self.is_slot_ok(new_start, new_end, appointments):
+                continue
+
+            # Формируем fields для Bitrix и т.д.
+            fields = {
+                "assignedById": int(spec_id),
+                "ufCrm3StartDate": new_start.isoformat(),
+                "ufCrm3EndDate": new_end.isoformat(),
+                "ufCrm3ParentDeal": self.data.deal_id,
+                "ufCrm3Child": user_id,
+                "user_id": user_id,
+                "ufCrm3Type": appoint.t if hasattr(appoint, "t") else type_code,
+                "ufCrm3Code": type_code
+            }
+
+            # Создаём запись в Bitrix
+            await self.create_schedule_entry(fields)
+
+            # Обновляем appointments для этого специалиста (добавляем занятие!)
+            appointments.append({
+                "ufCrm3StartDate": new_start.isoformat(),
+                "ufCrm3EndDate": new_end.isoformat(),
+                "user_id": user_id,
+                "ufCrm3Type": type_code,
+                "ufCrm3Code": getattr(appoint, 'code', "unknown")
+            })
+            chosen.specialists_data[spec_id]['appointments'] = appointments
+
+            return fields  # Возвращаем созданную запись
+
+        # Если ни один слот не подошёл
+        return None
 
     async def run(self) -> dict:
         await self.update_specialists_info()
@@ -39,77 +137,24 @@ class Handler:
                 if not candidates:
                     continue
 
-                for _ in range(quantity):
-                    chosen = max(candidates, key=lambda s: s.get_free_slots_count(), default=None)
-                    if not chosen or chosen.get_free_slots_count() == 0:
-                        continue
+            for _ in range(quantity):
+                # САМЫЙ КРИТИЧНЫЙ МОМЕНТ — пересчитывать на каждом шаге!
+                chosen = max(
+                    candidates, 
+                    key=lambda s: s.get_free_slots_count(), 
+                    default=None
+                )
+                if not chosen or chosen.get_free_slots_count() == 0:
+                    continue
 
-                    free_slots = chosen.get_all_free_slots()
-                    slot_found = False
-                    for spec_id, slot in free_slots:
-                        if slot.duration().total_seconds() < duration * 60:
-                            continue
-
-                        data = chosen.specialists_data[spec_id]
-                        appointments = data.get('appointments', [])
-
-                        slot_date = slot.start.date()
-                        appoints_same_day = [
-                            a for a in appointments
-                            if 'ufCrm3StartDate' in a and
-                            datetime.fromisoformat(a['ufCrm3StartDate']).date() == slot_date
-                        ]
-                        if len(appoints_same_day) >= 6:
-                            continue
-                        child_same_day = [
-                            a for a in appoints_same_day
-                            if a.get('user_id') == user_id
-                        ]
-                        if len(child_same_day) >= 2:
-                            continue
-
-                        new_start = slot.start
-                        new_end = new_start + timedelta(minutes=duration)
-
-                        ok = True
-                        for a in appoints_same_day:
-                            exist_start = datetime.fromisoformat(a['ufCrm3StartDate'])
-                            exist_end = datetime.fromisoformat(a['ufCrm3EndDate'])
-                            if not (new_end <= exist_start or new_start >= exist_end):
-                                ok = False
-                                break
-                            gap1 = abs((exist_start - new_end).total_seconds()) // 60
-                            gap2 = abs((new_start - exist_end).total_seconds()) // 60
-                            if (0 < gap1 < 15) or (0 < gap2 < 15):
-                                ok = False
-                                break
-                            if (gap1 > 0 and gap1 > 45) or (gap2 > 0 and gap2 > 45):
-                                ok = False
-                                break
-                        if not ok:
-                            continue
-
-                        new_appt = {
-                            "specialist_id": spec_id,
-                            "specialist_type": type_code,
-                            "user_id": user_id,
-                            "start": new_start.isoformat(),
-                            "end": new_end.isoformat()
-                        }
-
-                        appointments.append({
-                            "ufCrm3StartDate": new_start.isoformat(),
-                            "ufCrm3EndDate": new_end.isoformat(),
-                            "user_id": user_id
-                        })
-                        appointments_to_create.append(new_appt)
-
-                        await self.create_schedule_entry(new_appt)
-                        slot_found = True
-                        break
-
-                    if not slot_found:
-                        continue
+                # ПЕРЕСЧЁТ! get_all_free_slots на каждой итерации!
+                fields = await self.assign_appointment(
+                    chosen, user_id, appoint, type_code, duration
+                )
+                if fields:
+                    appointments_to_create.append(fields)
+                else:
+                    continue
 
         return {"appointments": appointments_to_create}
 
@@ -160,7 +205,7 @@ class Handler:
             users = result.get('result', result) if isinstance(result, dict) else result
             spec.possible_specs = users
 
-            print(f"Для специалиста {spec.code} найдено {len(users)} специалистов")
+            print(f"Для специалиста {spec.code} найдено {len(users)} юзеров")
     
     async def update_specialists_schedules(self):
         """Получает график и расписание занятий для всех специалистов."""
@@ -266,25 +311,35 @@ class Handler:
             if specialist_id not in spec.specialists_data:
                 spec.specialists_data[specialist_id] = {'schedule': [], 'appointments': []}
             spec.specialists_data[specialist_id][typ] = items
+    
+    async def create_schedule_entry(self, fields: dict, specialist=None):
+        entityTypeId = constants.entityTypeId.appointment
 
-    async def create_schedule_entry(self, appointment: dict):
-        entityTypeId = 1036
-        fields = {
-            "assignedById": int(appointment["specialist_id"]),
-            "ufCrm3StartDate": appointment["start"],
-            "ufCrm3EndDate": appointment["end"],
-            "ufCrm3ParentDeal": self.data.deal_id,
-            "ufCrm3Child": appointment.get("user_id"),
-            "user_id": appointment["user_id"],
-            "ufCrm3Type": appointment["specialist_type"],
-        }
-        # Здесь предполагается, что у тебя есть объект bitrix для запросов к Bitrix24
+        code = (
+            fields.get("ufCrm3Code")
+            or fields.get("code")
+            or (specialist.code if specialist and hasattr(specialist, "code") else None)
+        )
+        code_id = constants.listFieldValues.appointment.idByCode.get(code, str(code))
+
+        # Статус "Забронировано" — это всегда 50
+        status_id = 50
+
         response = await BITRIX.call("crm.item.add", {
             "entityTypeId": entityTypeId,
-            "fields": fields
+            "fields": {
+                "ASSIGNED_BY_ID": str(fields.get("assignedById") or fields.get("specialist_id") or fields.get("spec_id")),
+                "ufCrm3StartDate": str(fields.get("ufCrm3StartDate") or fields.get("start") or fields.get("start_date")),
+                "ufCrm3EndDate": str(fields.get("ufCrm3EndDate") or fields.get("end") or fields.get("end_date")),
+                "ufCrm3ParentDeal": str(fields.get("ufCrm3ParentDeal") or fields.get("deal_id")),
+                "ufCrm3Children": str(fields.get("ufCrm3Children") or fields.get("user_id")),
+                "user_id": str(fields.get("user_id")),
+                "ufCrm3Type": str(fields.get("ufCrm3Type") or fields.get("type_code") or fields.get("specialist_type") or fields.get("t")),
+                "ufCrm3Status": str(status_id),
+                "ufCrm3Code": str(code_id),
+            }
         })
         return response
-
     # async def get_listfield_values(self) -> dict:
     #     """Возвращает словарь, где ключи - id полей, а значения - значения"""
     #     fields = await bitrix.get_deal_field_values()

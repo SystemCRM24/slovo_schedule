@@ -65,10 +65,7 @@ class BatchBuilder:
         return subbatch
 
 def subtract_busy_from_interval(work: Interval, busys: list[Interval]) -> list[Interval]:
-    """
-    Из рабочего интервала вычитает все занятые интервалы. 
-    Возвращает список свободных промежутков (Interval).
-    """
+    print(f"\nSubtract busy: work={work}, busys={busys}")
     busys = sorted(busys, key=lambda x: x.start)
     result = []
     cur = work.start

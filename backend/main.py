@@ -82,7 +82,7 @@ async def get_specialists_schedules(data: str = Query(...)):
 async def get_most_free_specialist(data: str = Query(...)):
     parsed_data = parse_query(data)
     handler = Handler(parsed_data)
-    await handler.update_specialists_info()
+    await handler.update_specialists_info_sd()
     await handler.update_specialists_schedules()
     spec_slots = [
         (spec, spec.get_free_slots_count())
