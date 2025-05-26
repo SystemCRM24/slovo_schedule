@@ -8,7 +8,7 @@ from app.bitrix import BITRIX
 from .constants import constants
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 router = APIRouter(prefix="/appointment", tags=["Appointment"])
 
@@ -114,7 +114,7 @@ async def delete_appointment(id: int = Query(...)):
         )
         logging.debug(f"\n[ BITRIX RESPONSE ]\n{response}")
         if response == []:
-            return {"message": "Успешно удалено"}
+            return True
         else:
             raise HTTPException(
                 status_code=500,

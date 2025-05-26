@@ -175,4 +175,4 @@ const EditNAInterval = ({show, setShow, startDt, endDt}) => {
 }
 
 
-export default React.memo(EditNAInterval);
+export default EditNAInterval;

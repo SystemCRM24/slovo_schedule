@@ -93,9 +93,9 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, pat
 
     const onSubmit = async () => {
         const newRecord = {
-            id: appointment.id,
             start: appointment.start,
             end: appointment.end,
+            specialist: appointment.specialist,
             patient: appointment.patientId,
             code: appointment.patientType,
             status: appointment.status,
@@ -247,4 +247,4 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, pat
     );
 }
 
-export default React.memo(EditAppointmentModal);
+export default EditAppointmentModal;

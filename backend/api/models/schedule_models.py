@@ -5,8 +5,8 @@ from pydantic import BaseModel, Field
 
 class WorkScheduleCreate(BaseModel):
     specialist: int = Field(..., description="ID специалиста")
-    date: str = Field(..., description="Дата в формате ISO (например, '2023-05-15')")
-    intervals: List[str] = Field(..., description="Список интервалов")
+    date: str = Field(..., description="Дата в формате ISO")
+    intervals: List[str] = Field(..., description="Список интервалов, выраженный как список строк формата <timestamp>:<timestamp>")
 
 
 class WorkSchedule(BaseModel):

@@ -150,4 +150,4 @@ const AddWorkScheduleModal = ({show, setShow}) => {
     );
 };
 
-export default React.memo(AddWorkScheduleModal);
+export default AddWorkScheduleModal;

@@ -6,7 +6,8 @@ from .constants import constants
 from app.bitrix import BITRIX
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+
+logging.basicConfig(level=logging.INFO)
 router = APIRouter(prefix='/schedule', tags=["Schedule"])
 
 
@@ -14,6 +15,7 @@ router = APIRouter(prefix='/schedule', tags=["Schedule"])
 def iso_date_to_bitrix(date_str: str) -> str:
     dt = datetime.strptime(date_str, "%Y-%m-%d").date()
     return dt.strftime("%d.%m.%Y")
+
 
 # Преобразование интервала из ISO в формат Bitrix
 def interval_to_bitrix(intervals: List[str]) -> str:
@@ -23,9 +25,11 @@ def interval_to_bitrix(intervals: List[str]) -> str:
     end_ms = int(end_dt.timestamp() * 1000)
     return f"{start_ms}:{end_ms}"
 
+
 # Преобразование списка интервалов из ISO в формат Bitrix
 def intervals_to_bitrix(intervals: List[str]) -> List[str]:
     return [interval_to_bitrix(i) for i in intervals]
+
 
 # Преобразование даты из формата Bitrix в ISO
 def bitrix_date_to_iso(bitrix_date: str) -> Optional[str]:
@@ -38,6 +42,7 @@ def bitrix_date_to_iso(bitrix_date: str) -> Optional[str]:
             return None
     return None
 
+
 # Преобразование интервала из формата Bitrix в ISO
 def bitrix_to_interval(bitrix_str: str) -> List[str]:
     start_ms, end_ms = map(int, bitrix_str.split(":"))
@@ -45,8 +50,10 @@ def bitrix_to_interval(bitrix_str: str) -> List[str]:
     end_dt = datetime.fromtimestamp(end_ms / 1000)
     return [start_dt.isoformat() + "+03:00", end_dt.isoformat() + "+03:00"]
 
+
 def bitrix_to_intervals(bitrix_list: List[str]) -> List[str]:
     return [bitrix_to_interval(s) for s in bitrix_list]
+
 
 @router.post("/", status_code=201, response_model=WorkScheduleCreateResponse)
 async def create_schedule(schedule: WorkScheduleCreate):
@@ -88,13 +95,11 @@ async def get_schedule(id: int = Query(...)):
         )
         logging.debug(f"\n[ BITRIX RESPONSE ]\n{response}")
         if response.get("id"):
-            date_iso = bitrix_date_to_iso(response.get(constants.uf.workSchedule.date))
-            intervals = bitrix_to_intervals(response.get(constants.uf.workSchedule.intervals, []))
             return WorkSchedule(
                 id=response["id"],
                 specialist=response["assignedById"],
-                date=date_iso,
-                intervals=intervals,
+                date=response[constants.uf.workSchedule.date],
+                intervals=response[constants.uf.workSchedule.intervals],
             )
         else:
             error = response.get("error", {})
@@ -112,14 +117,11 @@ async def get_schedule(id: int = Query(...)):
 @router.put("/", status_code=200)
 async def update_schedule(schedule: WorkScheduleCreate, id: int = Query(...)):
     try:
-        date_bitrix = iso_date_to_bitrix(schedule.date)
-        intervals_bitrix = intervals_to_bitrix(schedule.intervals)
         fields = {
             "ASSIGNED_BY_ID": schedule.specialist,
-            constants.uf.workSchedule.date: date_bitrix,
-            constants.uf.workSchedule.intervals: intervals_bitrix,
+            constants.uf.workSchedule.date: schedule.date,
+            constants.uf.workSchedule.intervals: schedule.intervals,
         }
-
         response = await BITRIX.call(
             "crm.item.update",
             {
@@ -129,15 +131,8 @@ async def update_schedule(schedule: WorkScheduleCreate, id: int = Query(...)):
             },
         )
         logging.debug(f"\n[ BITRIX RESPONSE ]\n{response}")
-        if response.get("id"):
-            date_iso = bitrix_date_to_iso(response.get(constants.uf.workSchedule.date))
-            intervals = bitrix_to_intervals(response.get(constants.uf.workSchedule.intervals, []))
-            return WorkSchedule(
-                id=response["id"],
-                specialist=response["assignedById"],
-                date=date_iso,
-                intervals=intervals,
-            )
+        if response.get("id", None) == id:
+            return True
         else:
             error = response.get("error", {})
             raise HTTPException(
@@ -157,7 +152,7 @@ async def delete_schedule(id: int = Query(...)):
         )
         logging.debug(f"\n[ BITRIX RESPONSE ]\n{response}")
         if response == []:
-            return {"message": "Успешно удалено"}
+            return True
         else:
             error = response.get("error", {})
             raise HTTPException(
