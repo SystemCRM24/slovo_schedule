@@ -226,24 +226,60 @@ class APIClient {
      * @param {string} data.code - код занятия
      */
     async createAppointment(data) {
-        const fields = {
-            ASSIGNED_BY_ID: data.specialist,
-            [constants.uf.appointment.patient]: data.patient,
-            [constants.uf.appointment.start]: data.start,
-            [constants.uf.appointment.end]: data.end,
-            [constants.uf.appointment.status]: constants.listFieldValues.appointment.idByStatus[data.status],
-            [constants.uf.appointment.code]: constants.listFieldValues.appointment.idByCode[data.code]
+        const url = this.getUrl('appointment/');
+        const body = {
+            specialist: data.specialist,
+            patient: data.patient,
+            start: data.start.toISOString(), 
+            end: data.end.toISOString(), 
+            status: data.status,
+            code: data.code
         };
-        const response = await this._createCrmItem(constants.entityTypeId.appointment, fields);
-        return response.item;
-    }
 
+        if (!body.specialist || !body.patient || !body.start || !body.end || !body.status || !body.code) {
+            throw new Error('Все поля (specialist, patient, start, end, status, code) должны быть заполнены');
+        }
+        if (!constants.listFieldValues.appointment.idByStatus[body.status]) {
+            throw new Error(`Недопустимый статус: ${body.status}`);
+        }
+        if (!constants.listFieldValues.appointment.idByCode[body.code]) {
+            throw new Error(`Недопустимый код: ${body.code}`);
+        }
+
+        const response = await this.post(url, body);
+
+        if (!response.id) {
+            throw new Error(`Ошибка API: ${response}`);
+        }
+
+        return { id: response.id };
+    }
+    // TODO 
+    // нужно ли преобразовывать start и end в Date ??
+    // start: new Date(response.start),
+    // end: new Date(response.end), 
     /**
      * Получение информации о элементе смарт-процесса - расписания
      * @param {string} id
      */
     async getAppointment(id) {
-        return await this._getCrmItem(constants.entityTypeId.appointment, id);
+        const url = this.getUrl('appointment/', { id });
+
+        const response = await this.get(url);
+
+        if (!response.id) {
+            throw new Error(`Запись с id=${id} не найдена`);
+        }
+
+        return {
+            id: response.id,
+            specialist: response.specialist,
+            patient: response.patient,
+            start: new Date(response.start),
+            end: new Date(response.end), 
+            status: response.status,
+            code: response.code
+        };
     }
 
     /**
@@ -258,16 +294,33 @@ class APIClient {
      * @param {string} data.code - код занятия
      */
     async updateAppointment(id, data) {
-        const fields = {
-            ASSIGNED_BY_ID: data.specialist,
-            [constants.uf.appointment.patient]: data.patient,
-            [constants.uf.appointment.start]: data.start,
-            [constants.uf.appointment.end]: data.end,
-            [constants.uf.appointment.status]: constants.listFieldValues.appointment.idByStatus[data.status],
-            [constants.uf.appointment.code]: constants.listFieldValues.appointment.idByCode[data.code]
+        const url = this.getUrl('appointment/', { id });
+        const body = {
+            specialist: data.specialist,
+            patient: data.patient,
+            start: data.start.toISOString(),
+            end: data.end.toISOString(),
+            status: data.status,
+            code: data.code
         };
-        const response = await this._updateCrmItem(constants.entityTypeId.appointment, id, fields);
-        return response.item;
+        
+        if (!body.specialist || !body.patient || !body.start || !body.end || !body.status || !body.code) {
+            throw new Error('Все поля (specialist, patient, start, end, status, code) должны быть заполнены');
+        }
+        if (!constants.listFieldValues.appointment.idByStatus[body.status]) {
+            throw new Error(`Недопустимый статус: ${body.status}`);
+        }
+        if (!constants.listFieldValues.appointment.idByCode[body.code]) {
+            throw new Error(`Недопустимый код: ${body.code}`);
+        }
+
+        const response = await this.update(url, body);
+        
+        if (!response.id) {
+            throw new Error(`Ошибка API: ${response}`);
+        }
+
+        return { id: response.id };
     }
 
     /**
@@ -276,7 +329,8 @@ class APIClient {
      * @returns
      */
     async deleteAppointment(id) {
-        return await this._deleteCrmItem(constants.entityTypeId.appointment, id);
+        const url = this.getUrl('appointment/', {id})
+        return await this.delete(url);
     }
 
     /**
@@ -301,7 +355,8 @@ class APIClient {
      * @param {string} id - ид графика
      */
     async getWorkSchedule(id) {
-        return await this._getCrmItem(constants.entityTypeId.workSchedule, id);
+        const url = this.getUrl('schedule/', {id});
+        return await this.get(url);
     }
 
     /**
