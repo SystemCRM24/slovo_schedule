@@ -88,7 +88,6 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
             end: undefined,
             patientId: undefined,
             patientType: undefined,
-            status: 'booked'
         }]);
     }
 
@@ -147,7 +146,6 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
             return {
                 start: item.start,
                 end: item.end,
-                status: item.status,
                 code: item.patientType,
                 patient: item.patientId,
                 specialist: specialistId,
