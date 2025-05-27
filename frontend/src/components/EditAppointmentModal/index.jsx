@@ -10,11 +10,11 @@ import {useChildrenContext} from "../../contexts/Children/provider.jsx";
 import apiClient, {constants} from "../../api/index.js";
 
 
-const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, patientType}) => {
+const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, patientType, status}) => {
     const {specialistId, specialist} = useSpecialist();
     const [appointment, setAppointment] = useState(
         {
-            id: id, patientId: patientId, patientType: patientType, start: startDt, end: endDt,
+            id: id, status: status, patientId: patientId, patientType: patientType, start: startDt, end: endDt,
             specialist: specialistId,
         }
     );
@@ -91,6 +91,7 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, pat
             specialist: appointment.specialist,
             patient: appointment.patientId,
             code: appointment.patientType,
+            status: appointment.status,
         }
         const result = await apiClient.updateAppointment(id, newRecord);
         if (result) {
