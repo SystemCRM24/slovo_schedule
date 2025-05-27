@@ -131,6 +131,7 @@ class APIClient {
       *           id: string,
       *           type: string
       *       },
+      *       status: string
       *     }>
       *   }
       * }
@@ -195,6 +196,7 @@ class APIClient {
      * @param {string} data.patient - ИД пациента - ребенка
      * @param {Date} data.start - Начало приема
      * @param {Date} data.end - Конец приема
+     * @param {string} data.status - Статус
      * @param {string} data.code - код занятия
      */
     async createAppointment(data) {
@@ -204,11 +206,15 @@ class APIClient {
             patient: data.patient,
             start: data.start.toISOString(), 
             end: data.end.toISOString(), 
+            status: data.status,
             code: data.code
         };
 
-        if (!body.specialist || !body.patient || !body.start || !body.end || !body.code) {
-            throw new Error('Все поля (specialist, patient, start, end, code) должны быть заполнены');
+        if (!body.specialist || !body.patient || !body.start || !body.end || !body.status || !body.code) {
+            throw new Error('Все поля (specialist, patient, start, end, status, code) должны быть заполнены');
+        }
+        if (!constants.listFieldValues.appointment.idByStatus[body.status]) {
+            throw new Error(`Недопустимый статус: ${body.status}`);
         }
         if (!constants.listFieldValues.appointment.idByCode[body.code]) {
             throw new Error(`Недопустимый код: ${body.code}`);
@@ -245,6 +251,7 @@ class APIClient {
             patient: response.patient,
             start: new Date(response.start),
             end: new Date(response.end), 
+            status: response.status,
             code: response.code
         };
     }
@@ -257,6 +264,7 @@ class APIClient {
      * @param {string} data.patient - ИД пациента - ребенка
      * @param {Date} data.start - Начало приема
      * @param {Date} data.end - Конец приема
+     * @param {string} data.status - Статус
      * @param {string} data.code - код занятия
      */
     async updateAppointment(id, data) {
@@ -266,12 +274,20 @@ class APIClient {
             patient: data.patient,
             start: data.start.toISOString(),
             end: data.end.toISOString(),
+            status: data.status,
             code: data.code
         };
         
-        if (!body.specialist || !body.patient || !body.start || !body.end || !body.code) {
+        if (!body.specialist || !body.patient || !body.start || !body.end || !body.status || !body.code) {
             throw new Error('Все поля (specialist, patient, start, end, status, code) должны быть заполнены');
         }
+        if (!constants.listFieldValues.appointment.idByStatus[body.status]) {
+            throw new Error(`Недопустимый статус: ${body.status}`);
+        }
+        if (!constants.listFieldValues.appointment.idByCode[body.code]) {
+            throw new Error(`Недопустимый код: ${body.code}`);
+        }
+
         const response = await this.update(url, body);
         
         if (!response.id) {

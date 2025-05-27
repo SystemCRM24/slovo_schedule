@@ -1,4 +1,3 @@
-
 import json
 from fastapi import Body, FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -40,7 +39,7 @@ async def test_echo(data: str = Query(...)):
 
 @app.get('/test', status_code=200, tags=['Main'])
 async def test():
-    test_string = '''{
+    test_string = """{
         "deal_id":202, # ID сделки
         "user_id":1, # ID юзера 
         "first_stage": {"duration":4, # кол-во недель "data":[{"t":"R","q":2,"d":30}]}, ВАЛИДАЦИЯ # data "t" - type тип специалиста (может в нескольких подраздедениях) "q" - кол во занятий d - в минутах (не заполенено пропускаем) !!! КАК ТРАНЗАКЦИЯ !!! 
@@ -50,7 +49,7 @@ async def test():
     2 получаем их графиик и расписаение 
     3 распределяем по специалистам
     тестировать тестовая сделака с опрред id шником 202  
-    '''
+    """
     return await handle_appointments(test_string)
 
 @app.post('/get-department-specialists', tags=['Debug', 'Specialist'])

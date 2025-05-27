@@ -6,7 +6,7 @@ from .models.base_models import (
     SpecialistResponse,
     ClientResponse,
     Patient,
-    Appointment,
+    AppointmentNoStatus,
     ScheduleResponse,
     WorkInterval,
     WorkSchedule,
@@ -144,7 +144,7 @@ async def get_schedules(date_range: DateRange = Depends()):
                     patient_type_id, ""
                 )
 
-                appointment_obj = Appointment(
+                appointment_obj = AppointmentNoStatus(
                     id=int(appointment["id"]),
                     start=start_time,
                     end=end_time,

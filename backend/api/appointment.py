@@ -21,6 +21,9 @@ async def create_appointment(appointment: AppointmentCreate):
             constants.uf.appointment.patient: appointment.patient,
             constants.uf.appointment.start: appointment.start,
             constants.uf.appointment.end: appointment.end,
+            constants.uf.appointment.status: constants.listFieldValues.appointment.idByStatus[
+                appointment.status
+            ],
             constants.uf.appointment.code: constants.listFieldValues.appointment.idByCode[
                 appointment.code
             ],
@@ -73,6 +76,9 @@ async def update_appointment(appointment: AppointmentCreate, id: int = Query(...
             constants.uf.appointment.patient: appointment.patient,
             constants.uf.appointment.start: appointment.start,
             constants.uf.appointment.end: appointment.end,
+            constants.uf.appointment.status: constants.listFieldValues.appointment.idByStatus[
+                appointment.status
+            ],
             constants.uf.appointment.code: constants.listFieldValues.appointment.idByCode[
                 appointment.code
             ],

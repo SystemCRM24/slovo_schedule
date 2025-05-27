@@ -1,14 +1,18 @@
 from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Query
-from .models.schedule_models import WorkSchedule, WorkScheduleCreate, WorkScheduleCreateResponse
+from .models.schedule_models import (
+    WorkSchedule,
+    WorkScheduleCreate,
+    WorkScheduleCreateResponse,
+)
 from .constants import constants
 from app.bitrix import BITRIX
 import logging
 
 
 logging.basicConfig(level=logging.INFO)
-router = APIRouter(prefix='/schedule', tags=["Schedule"])
+router = APIRouter(prefix="/schedule", tags=["Schedule"])
 
 
 # Преобразование даты из ISO в формат Bitrix
@@ -69,9 +73,7 @@ async def create_schedule(schedule: WorkScheduleCreate):
         )
         logging.debug(f"\n[ BITRIX RESPONSE ]\n{response}")
         if response.get("id"):
-            return WorkScheduleCreateResponse(
-                id=response["id"]
-            )
+            return WorkScheduleCreateResponse(id=response["id"])
         else:
             error = response.get("error", {})
             raise HTTPException(

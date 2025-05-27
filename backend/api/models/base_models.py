@@ -29,7 +29,14 @@ class Appointment(BaseModel):
     start: datetime
     end: datetime
     patient: Patient
+    status: str
 
+
+class AppointmentNoStatus(BaseModel):
+    id: int
+    start: datetime
+    end: datetime
+    patient: Patient
 
 class ScheduleResponse(BaseModel):
     specialist_id: int
