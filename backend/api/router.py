@@ -6,7 +6,7 @@ from .models.base_models import (
     SpecialistResponse,
     ClientResponse,
     Patient,
-    AppointmentNoStatus,
+    Appointment,
     ScheduleResponse,
     WorkInterval,
     WorkSchedule,
@@ -143,12 +143,24 @@ async def get_schedules(date_range: DateRange = Depends()):
                 patient_type = constants.listFieldValues.appointment.codeById.get(
                     patient_type_id, ""
                 )
+                raw_status = appointment[constants.uf.appointment.status]
+                status = constants.listFieldValues.appointment.statusById.get(
+                    raw_status, ""
+                )
 
-                appointment_obj = AppointmentNoStatus(
+                # Пропускаем, если patient_type или status не найдены
+                if not patient_type or not status:
+                    logging.debug(
+                        f"Пропуск записи с id={appointment.get('id')} из-за некорректных patient_type или status"
+                    )
+                    continue
+
+                appointment_obj = Appointment(
                     id=int(appointment["id"]),
                     start=start_time,
                     end=end_time,
                     patient=Patient(id=int(patient_id), type=patient_type),
+                    status=status,
                 )
                 if specialist_id not in schedule_dict:
                     schedule_dict[specialist_id] = {}
