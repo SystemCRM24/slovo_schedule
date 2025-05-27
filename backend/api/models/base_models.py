@@ -42,7 +42,7 @@ class AppointmentNoStatus(BaseModel):
 class ScheduleResponse(BaseModel):
     specialist_id: int
     date: datetime
-    appointments: List[AppointmentNoStatus]
+    appointments: List[Appointment]
 
 
 class WorkInterval(BaseModel):
