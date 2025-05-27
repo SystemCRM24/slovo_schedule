@@ -38,10 +38,11 @@ class AppointmentNoStatus(BaseModel):
     end: datetime
     patient: Patient
 
+
 class ScheduleResponse(BaseModel):
     specialist_id: int
     date: datetime
-    appointments: List[Appointment]
+    appointments: List[AppointmentNoStatus]
 
 
 class WorkInterval(BaseModel):
