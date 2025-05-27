@@ -29,6 +29,7 @@ class Appointment(BaseModel):
     start: datetime
     end: datetime
     patient: Patient
+    status: str
 
 
 class ScheduleResponse(BaseModel):

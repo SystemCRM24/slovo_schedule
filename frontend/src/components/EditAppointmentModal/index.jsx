@@ -31,6 +31,13 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, pat
     const dayOfWeek = day.toLocaleString('ru-RU', {weekday: 'long'});
     const dateString = day.toLocaleDateString();
 
+    const statuses = useMemo(() => {
+        return {
+            confirmed: "Подтверждено",
+            booked: "Забронировано",
+        }
+    }, []);
+
     const [record, recordIndex] = useMemo(
         () => {
             let index = -1;
@@ -211,6 +218,22 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, pat
                     </FormSelect>
                 </InputGroup>
                 <InputGroup hasValidation>
+                    <FormSelect
+                        name={'status'}
+                        isInvalid={['', null, undefined].includes(appointment.status)}
+                        onChange={async (e) => {
+                            await handleInputChange(e);
+                        }}
+                        value={appointment.status}
+                    >
+                        {Object.entries(statuses).map(([code, label]) => {
+                            return (
+                                <option value={code} key={`${day}_interval_${recordIndex}_${code}_${label}_opt`}>
+                                    {label}
+                                </option>
+                            );
+                        })}
+                    </FormSelect>
                 </InputGroup>
                 <Button
                     variant="danger"
