@@ -321,7 +321,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                                     }}
                                     value={newSchedule.patientId}
                                 >
-                                    <option disabled value={undefined} selected>Выберите пациента</option>
+                                    <option disabled value={undefined} selected>Выберите клиента</option>
                                     {Object.entries(children).map(([childId, childName]) => {
                                         return (
                                             <option value={childId} key={`${date}_new_interval_${idx}_${childId}`}>
