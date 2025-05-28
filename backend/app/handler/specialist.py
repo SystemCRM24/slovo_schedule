@@ -1,9 +1,12 @@
-from datetime import datetime
-
+from datetime import datetime, timedelta
+import logging
+from typing import List, Tuple
 from .interval import Interval
 from app import bitrix
 from app.utils import BatchBuilder, subtract_busy_from_interval
+from app.settings import Settings
 
+logger = logging.getLogger(__name__)
 
 
 class Specialist:
@@ -14,113 +17,112 @@ class Specialist:
         self.code = code
         self.qty = qty
         self.duration = duration
-        self.possible_specs: list[dict] = []
-    
+        self.possible_specs: List[dict] = []
+        self.specialists_data: dict = {}
+        logger.debug(f"Создан Specialist: code={code}, qty={qty}, duration={duration}")
+
     def get_specialists_info_batch(self, departments: dict[str, dict]) -> str:
         """Выдает батч на получение информации по спецам для этого кода"""
         department_id = None
         for id, department in departments.items():
-            if department.get('NAME', None) == self.code:
+            if department.get("NAME") == self.code:
                 department_id = id
                 break
-        params = {
-            'filter': {
-                'ACTIVE': True,
-                'UF_DEPARTMENT': department_id
-            }
-        }
-        batch = BatchBuilder('user.get', params)
+        if not department_id:
+            logger.warning(f"Отдел для типа {self.code} не найден")
+            return BatchBuilder("user.get", {"filter": {"ACTIVE": True}}).build()
+        params = {"filter": {"ACTIVE": True, "UF_DEPARTMENT": department_id}}
+        batch = BatchBuilder("user.get", params)
+        logger.debug(f"Сформирован батч для отдела {department_id}, code={self.code}")
         return batch.build()
-    
 
     def get_free_slots_count(self) -> int:
         slots = self.get_all_free_slots()
         return len(slots)
 
-    def get_all_free_slots(self) -> list:
+    def get_all_free_slots(self) -> List[Tuple[str, Interval]]:
         all_slots = []
-        specialists_data = getattr(self, 'specialists_data', {})
+        specialists_data = getattr(self, "specialists_data", {})
+        now = datetime.now(Settings.TIMEZONE)
+        logger.debug(f"Поиск свободных слотов для code={self.code}, now={now}")
+
         for spec_id, data in specialists_data.items():
-            schedule = data.get('schedule', [])
-            appointments = data.get('appointments', [])
+            schedule = data.get("schedule", [])
+            appointments = data.get("appointments", [])
             intervals = []
+
+            if not schedule:
+                logger.warning(f"Нет графика для специалиста {spec_id}")
+                continue
+
+            # Обработка графиков
             for s in schedule:
-                intervals_ms = s.get('ufCrm4Intervals', [])
-                for pair in intervals_ms:
-                    start_ms, end_ms = map(int, pair.split(':'))
-                    intervals.append(Interval.from_timestamp(start_ms / 1000, end_ms / 1000))
+                intervals_ms = s.get("ufCrm4Intervals", [])
+                if intervals_ms:
+                    for pair in intervals_ms:
+                        try:
+                            start_ms, end_ms = map(int, pair.split(":"))
+                            start = datetime.fromtimestamp(
+                                start_ms / 1000, tz=Settings.TIMEZONE
+                            )
+                            end = datetime.fromtimestamp(
+                                end_ms / 1000, tz=Settings.TIMEZONE
+                            )
+                            if start >= now:
+                                intervals.append(Interval(start, end))
+                            else:
+                                logger.debug(
+                                    f"Пропущен интервал {start} — {end}: в прошлом"
+                                )
+                        except (ValueError, TypeError) as e:
+                            logger.error(
+                                f"Ошибка обработки интервала {pair} для {spec_id}: {e}"
+                            )
+                            continue
+                else:
+                    try:
+                        start = datetime.fromisoformat(s.get("ufCrm4Date"))
+                        end = datetime.fromisoformat(s.get("ufCrm4DateEnd"))
+                        if start >= now:
+                            intervals.append(Interval(start, end))
+                        else:
+                            logger.debug(f"Пропущен график {start} — {end}: в прошлом")
+                    except (ValueError, TypeError) as e:
+                        logger.error(f"Ошибка обработки графика {s} для {spec_id}: {e}")
+                        continue
+
+            # Формируем занятые интервалы
             busy = []
             for a in appointments:
-                start = a.get('ufCrm3StartDate')
-                end = a.get('ufCrm3EndDate')
-                if start and end:
-                    busy.append(Interval.from_iso(start, end))
+                start_str = a.get("ufCrm3StartDate")
+                end_str = a.get("ufCrm3EndDate")
+                if start_str and end_str:
+                    try:
+                        busy.append(Interval.from_iso(start_str, end_str))
+                    except ValueError as e:
+                        logger.error(
+                            f"Ошибка обработки занятия {start_str} — {end_str}: {e}"
+                        )
+                        continue
+
+            # Вычисляем свободные слоты
             free_slots = []
             for work_interval in intervals:
-                free_slots += subtract_busy_from_interval(work_interval, busy)
+                slots = subtract_busy_from_interval(work_interval, busy)
+                for slot in slots:
+                    duration_minutes = (slot.end - slot.start).total_seconds() / 60
+                    if duration_minutes >= self.duration:
+                        free_slots.append(slot)
+                    else:
+                        logger.debug(
+                            f"Слот {slot.start} — {slot.end} слишком короткий "
+                            f"({duration_minutes} мин < {self.duration} мин)"
+                        )
+
             all_slots += [(spec_id, slot) for slot in free_slots]
+            logger.debug(f"Найдено {len(free_slots)} слотов для специалиста {spec_id}")
+
+        logger.info(
+            f"Всего найдено {len(all_slots)} свободных слотов для code={self.code}"
+        )
         return all_slots
-
-    # def __init__(
-    #     self, 
-    #     specialist_id, 
-    #     schedule, 
-    #     appointments, 
-    #     duration,
-    #     now
-    # ):
-    #     self.specialist_id = specialist_id
-    #     self.schedule = schedule
-    #     self.appointments = appointments
-    #     self.duration = duration        # Время в минутах
-    #     self.now = now
-    #     self._last_find = None
-
-    # @property
-    # def last_find(self):
-    #     """Ищет подходящее время для занятия"""
-    #     if self.duration is None:
-    #         return self._last_find
-    #     if self._last_find is not None:
-    #         return self._last_find
-    #     schedule_intervals = self.create_schedule_intervals()
-    #     appointments_intervals = self.create_appointments_intervals()
-    #     for schedule_interval in schedule_intervals:
-    #         if schedule_interval.end < self.now:
-    #             continue
-    #         if self.now in schedule_interval:
-    #             schedule_interval.start = self.now
-    #         for appointment_interval in appointments_intervals:
-    #             if appointment_interval in schedule_interval:
-    #                 schedule_interval.start = appointment_interval.end
-    #     appointment_duration = timedelta(minutes=self.duration)
-    #     for schedule_interval in schedule_intervals:
-    #         if schedule_interval.duration() > appointment_duration:
-    #             self._last_find = Interval(
-    #                 start=schedule_interval.start,
-    #                 end=schedule_interval.start + appointment_duration
-    #             )
-    #             break
-    #     return self._last_find
-    
-    # def create_schedule_intervals(self) -> list[Interval]:
-    #     """Возвращает список интеравалов рабочего графика"""
-    #     intervals = []
-    #     for day in self.schedule:
-    #         raw_intervals = day.get('ufCrm4Intervals', [])
-    #         for raw_interval in raw_intervals:
-    #             start, end = raw_interval.split(':')
-    #             interval = Interval.from_js_timestamp(start, end)
-    #             intervals.append(interval)
-    #     return intervals
-    
-    # def create_appointments_intervals(self) -> list[Interval]:
-    #     """Возвращает список интервалов занятий"""
-    #     intervals = []
-    #     for appointemnt in self.appointments:
-    #         interval = Interval.from_iso(
-    #             start=appointemnt.get('ufCrm3StartDate', ''),
-    #             end=appointemnt.get('ufCrm3EndDate', '')
-    #         )
-    #         intervals.append(interval)
-    #     return intervals

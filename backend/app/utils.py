@@ -1,11 +1,13 @@
 from datetime import timedelta
-from typing import Dict
+from typing import Dict, List
 from urllib.parse import quote as url_quote
 import json
 
 from app.handler.interval import Interval
-from app.schemas import RequestSchema
+from app.schemas import RequestSchema, RequestSchemaV2
+import logging
 
+logger = logging.getLogger(__name__)
 
 class BatchBuilder:
     """Создает батч запрос"""
@@ -67,21 +69,88 @@ class BatchBuilder:
 
 
 def subtract_busy_from_interval(
-    work: Interval, busys: list[Interval]
-) -> list[Interval]:
-    print(f"\nSubtract busy: work={work}, busys={busys}")
-    busys = sorted(busys, key=lambda x: x.start)
-    result = []
-    cur = work.start
-    for busy in busys:
-        if busy.end <= cur or busy.start >= work.end:
+    work: Interval, busys: List[Interval]
+) -> List[Interval]:
+    """
+    Вычитает занятые интервалы из рабочего интервала, возвращая свободные слоты.
+
+    Args:
+        work: Рабочий интервал (Interval).
+        busys: Список занятых интервалов (List[Interval]).
+
+    Returns:
+        Список свободных интервалов (List[Interval]).
+    """
+    if not work:
+        logger.debug("Рабочий интервал пуст, возвращаю пустой список")
+        return []
+
+    # Фильтруем занятые интервалы, оставляя только те, что в тот же день
+    work_date = work.start.date()
+    relevant_busys = [
+        busy
+        for busy in busys
+        if busy.start.date() == work_date and busy.end.date() == work_date
+    ]
+
+    logger.debug(
+        f"Subtract busy: work={work}, relevant_busys={[str(b) for b in relevant_busys]}"
+    )
+
+    if not relevant_busys:
+        logger.debug(
+            "Нет занятых интервалов в этот день, возвращаю весь рабочий интервал"
+        )
+        return [work]
+
+    # Нормализуем временные зоны
+    work_start = work.start
+    work_end = work.end
+    free_slots = []
+    current_start = work_start
+
+    # Сортируем занятые интервалы по началу
+    sorted_busys = sorted(relevant_busys, key=lambda x: x.start)
+
+    for busy in sorted_busys:
+        busy_start = busy.start
+        busy_end = busy.end
+
+        # Пропускаем занятые интервалы, которые заканчиваются до начала рабочего времени
+        if busy_end <= work_start:
+            logger.debug(f"Пропущен занятый интервал {busy}: до начала работы")
             continue
-        if busy.start > cur:
-            result.append(Interval(cur, busy.start))
-        cur = max(cur, busy.end)
-    if cur < work.end:
-        result.append(Interval(cur, work.end))
-    return [x for x in result if x.duration() > timedelta(minutes=0)]
+
+        # Пропускаем занятые интервалы, которые начинаются после конца рабочего времени
+        if busy_start >= work_end:
+            logger.debug(f"Пропущен занятый интервал {busy}: после конца работы")
+            continue
+
+        # Если есть свободный слот до начала занятого интервала
+        if current_start < busy_start:
+            free_slot = Interval(current_start, min(busy_start, work_end))
+            if free_slot.start < free_slot.end:
+                free_slots.append(free_slot)
+                logger.debug(f"Добавлен свободный слот: {free_slot}")
+            else:
+                logger.debug(f"Пропущен пустой слот: {free_slot}")
+
+        # Перемещаем текущую точку после конца занятого интервала
+        current_start = max(busy_end, current_start)
+
+    # Добавляем последний слот, если он есть
+    if current_start < work_end:
+        free_slot = Interval(current_start, work_end)
+        if free_slot.start < free_slot.end:
+            free_slots.append(free_slot)
+            logger.debug(f"Добавлен последний свободный слот: {free_slot}")
+        else:
+            logger.debug(f"Пропущен пустой последний слот: {free_slot}")
+
+    logger.debug(
+        f"Возвращено {len(free_slots)} свободных слотов: {[str(s) for s in free_slots]}"
+    )
+    return free_slots
 
 
 def parse_query(query: str) -> RequestSchema:
@@ -105,7 +174,7 @@ def parse_query(query: str) -> RequestSchema:
     return RequestSchema(**obj)
 
 
-def parse_query_v2(query: Dict) -> RequestSchema:
+def parse_query_v2(query: Dict) -> RequestSchemaV2:
     """
     Парсит входной словарь и преобразует его в RequestSchema, удаляя словари в data,
     где t, q или d пустые или None.
@@ -181,7 +250,7 @@ def parse_query_v2(query: Dict) -> RequestSchema:
 
     print(f"Парсинг завершен, результат: {obj}")
     try:
-        return RequestSchema(**obj)
+        return RequestSchemaV2(**obj)
     except Exception as e:
         print(f"Ошибка при создании RequestSchema: {e}")
         raise

@@ -1,3 +1,4 @@
+import asyncio
 import json
 from fastapi import Body, FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -5,10 +6,11 @@ from openai import BaseModel
 from app.handler import Handler
 from app.handler.handler_v2 import HandlerV2
 from app.schemas import RequestSchema
-
 from api.router import router as api_router
 from app.utils import parse_query, parse_query_v2
 
+
+# asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 app = FastAPI(
     title="Слово - автоматизация заполнения расписания.",
@@ -44,6 +46,7 @@ async def test_echo(data: str = Query(...)):
     parsed = json.loads(data)
     return json.dumps(parsed, ensure_ascii=False)
 
+
 class TestV2(BaseModel):
     deal_id: int = 202
     user_id: int = 1
@@ -53,7 +56,7 @@ class TestV2(BaseModel):
 
 @app.post("/test-V2", status_code=200, tags=["test-v2"])
 async def test_v2(data: TestV2 = Body(...)):
-    return await handle_appointments_v2(data)
+    return await handle_appointments_v2(data.dict())
 
 
 @app.get("/test", status_code=200, tags=["Main"])
