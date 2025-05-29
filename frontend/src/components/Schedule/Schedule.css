@@ -1,6 +1,7 @@
 #schedule-table {
     width: auto;
     table-layout: auto;
+    margin-top: 1rem;
 }
 
 #schedule-table td {

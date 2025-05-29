@@ -13,6 +13,43 @@ import {ChildrenContextProvider} from "../../contexts/Children/provider.jsx";
 import "./Schedule.css"
 
 
+
+const Legenda = () => {
+    const style = {
+        listStyle: 'none', 
+        height: 30, 
+        display: "flex",
+        justifyContent: "space-around", 
+        marginTop: '.75rem'
+    };
+    const items = {'free': 'Свободно', 'booked': "Забронировано", 'confirmed': "Подтверждено"};
+    return (
+        <ul
+            style={style}
+        >
+            {Object.entries(items).map(
+                ([status, label]) => {
+                    return (
+                        <li 
+                            className={`me-2 d-flex align-items-center justify-content-between`}
+                            style={{float: "left"}}
+                            key={`${status}_${label}`}
+                        >
+                            <span 
+                                className={`status-${status}`}
+                                style={{width: 12, height: 12, float: "left", marginRight: ".5rem"}}
+                            >
+                                {label}
+                            </span>
+                        </li>
+                    )
+                }
+            )}
+        </ul>
+    );
+}
+
+
 const Schedule = ({fromDate, toDate}) => {
     const [specialists, setSpecialists] = useState({});
     const [children, setChildren] = useState({})
@@ -105,28 +142,6 @@ const Schedule = ({fromDate, toDate}) => {
     );
     return (fromDate && toDate) && (
         <Suspense fallback={<Spinner animation={"grow"}/>}>
-            <ul
-                style={{
-                    listStyle: 'none', height: 30, display: "flex",
-                    justifyContent: "space-around", marginTop: '.75rem'
-                }}
-            >
-                {Object.entries({'free': 'Свободно', 'booked': "Забронировано", 'confirmed': "Подтверждено"}).map(
-                    ([status, label]) => {
-                        return (
-                            <li className={`me-2 d-flex align-items-center justify-content-between`}
-                                style={{float: "left"}}
-                                key={`${status}_${label}`}
-                            >
-                                <span className={`status-${status}`}
-                                      style={{width: 12, height: 12, float: "left", marginRight: ".5rem"}}
-                                ></span>
-                                {label}
-                            </li>
-                        )
-                    }
-                )}
-            </ul>
             <AllSpecialistsContextProvider specialists={specialists}>
                 <ChildrenContextProvider childrenElements={children}>
                     <Table 

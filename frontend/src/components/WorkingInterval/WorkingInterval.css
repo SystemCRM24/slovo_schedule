@@ -8,6 +8,24 @@
 }
 
 .status-free {
+    background-color: #AEE9FF;
+}
+
+.status-booked {
+    background-color: #AEFFAE;
+}
+
+.status-confirmed {
+    background-color: #AEFFAE;
+}
+
+.status-na {
+    color: rgb(108, 117, 125);
+}
+
+/*
+Старый цвет
+.status-free {
     background-color: #AEFFAE;
 }
 
@@ -18,7 +36,4 @@
 .status-confirmed {
     background-color: #AEE9FF;
 }
-
-.status-na {
-    color: rgb(108, 117, 125);
-}
+*/
