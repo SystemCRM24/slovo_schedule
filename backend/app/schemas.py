@@ -25,3 +25,9 @@ class RequestSchema(BaseModel):
     user_id: int
     start_date: str
     data: Dict[str, StageSchema]  # first_stage, second_stage, и всякое другое
+
+
+class RequestSchemaV2(BaseModel):
+    deal_id: int
+    user_id: int
+    data: Dict[str, StageSchema]  # first_stage, second_stage, и всякое другое
