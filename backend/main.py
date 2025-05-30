@@ -2,7 +2,7 @@ import asyncio
 import json
 from fastapi import Body, FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-from openai import BaseModel
+from pydantic import BaseModel
 from app.handler import Handler
 from app.handler.handler_v2 import HandlerV2
 from app.schemas import RequestSchema
