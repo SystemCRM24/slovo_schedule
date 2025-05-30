@@ -44,7 +44,7 @@ class Specialist:
         all_slots = []
         specialists_data = getattr(self, "specialists_data", {})
         now = datetime.now(Settings.TIMEZONE)
-        total_duration = self.stage_duration * 7 * 2  # 56 дней для двух этапов
+        total_duration = self.stage_duration * 7 * 2  # залуппа
         max_date = now + timedelta(days=total_duration)
         logger.debug(f"Поиск свободных слотов для code={self.code}, now={now}, max_date={max_date}")
 
