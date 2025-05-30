@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import logging
-from typing import Dict, List, Tuple
+from typing import Dict, Dict, List, Tuple
 from app.settings import Settings
 from app.schemas import RequestSchemaV2
 from app import bitrix
@@ -8,7 +8,6 @@ from app.utils import BatchBuilder
 from api.constants import constants
 from .specialist import Specialist
 
-# Настройка логирования
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
@@ -22,8 +21,8 @@ class HandlerV2:
             for stage in self.data.data.values()
             for appoint in stage.data
         )
-        self.min_break = 15  # Минимальный перерыв между занятиями в минутах
-        self.max_break = 45  # Максимальный перерыв между занятиями в день
+        self.min_break = 15
+        self.max_break = 45
         logger.info(
             f"Инициализирован Handler для deal_id={self.data.deal_id}, user_id={self.data.user_id}, "
             f"всего занятий={self.total_required}"
@@ -100,119 +99,252 @@ class HandlerV2:
             f"Найдено {len(free_slots)} свободных слотов для специалиста типа {type_code}"
         )
 
-        if not free_slots:
-            logger.warning(f"Нет свободных слотов для типа {type_code}")
-            return None
-
-        for spec_id, slot in free_slots:
-            slot_duration = (slot.end - slot.start).total_seconds() / 60
-            if slot_duration < duration:
-                logger.debug(
-                    f"Слот {slot.start} — {slot.end} слишком короткий ({slot_duration} мин < {duration} мин)"
-                )
-                continue
-
-            data = chosen.specialists_data.get(spec_id, {})
-            appointments = data.get("appointments", [])
-
-            new_start = slot.start
-            new_end = new_start + timedelta(minutes=duration)
-
-            # Проверка: не более 2 занятий у ребенка в день
-            child_appointments_today = self.get_appointments_on_day(
-                appointments, user_id, new_start
-            )
-            if len(child_appointments_today) >= 2:
-                logger.debug(
-                    f"Отклонено: уже 2 занятия у ребенка в день {new_start.date()}"
-                )
-                continue
-
-            # Проверка: не более 6 занятий у специалиста в день
-            spec_appointments_today = self.get_specialist_appointments_on_day(
-                appointments, new_start
-            )
-            if len(spec_appointments_today) >= 6:
-                logger.debug(
-                    f"Отклонено: уже 6 занятий у специалиста {spec_id} в день {new_start.date()}"
-                )
-                continue
-
-            # Проверка: слот не конфликтует с существующими занятиями
-            if not self.is_slot_ok(
-                new_start, new_end, appointments, min_break=self.min_break
-            ):
-                logger.debug(f"Отклонено: не подходит из-за минимального перерыва")
-                continue
-
-            # Проверка на максимальный перерыв для пользователя
-            user_appointments_same_day = [
-                a
-                for a in appointments
-                if a["user_id"] == user_id
-                and datetime.fromisoformat(a["ufCrm3StartDate"]).date()
-                == new_start.date()
-            ]
-            new_appt = {
-                "ufCrm3StartDate": new_start.isoformat(),
-                "ufCrm3EndDate": new_end.isoformat(),
-                "user_id": user_id,
-                "ufCrm3Type": type_code,
-            }
-            all_user_same_day = user_appointments_same_day + [new_appt]
-            sorted_all = sorted(
-                all_user_same_day,
-                key=lambda x: datetime.fromisoformat(x["ufCrm3StartDate"]),
-            )
-            ok = True
-            for i in range(1, len(sorted_all)):
-                prev_end = datetime.fromisoformat(sorted_all[i - 1]["ufCrm3EndDate"])
-                curr_start = datetime.fromisoformat(sorted_all[i]["ufCrm3StartDate"])
-                gap = (curr_start - prev_end).total_seconds() / 60
-                if gap > self.max_break:
-                    ok = False
+        if free_slots:
+            for spec_id, slot in free_slots:
+                slot_duration = (slot.end - slot.start).total_seconds() / 60
+                if slot_duration < duration:
                     logger.debug(
-                        f"Слот {new_start} — {new_end} создает слишком большой перерыв > {self.max_break} мин "
-                        f"для пользователя {user_id} на {new_start.date()}"
-                    )
-                    break
-            if not ok:
-                continue
-
-            # Проверка: максимум 2 занятия типа R в день
-            if type_code == "R":
-                r_appointments_today = [
-                    a for a in child_appointments_today if a.get("ufCrm3Type") == "R"
-                ]
-                if len(r_appointments_today) >= 2:
-                    logger.debug(
-                        f"У ребенка уже 2 занятия типа R в день {new_start.date()}"
+                        f"Слот {slot.start} — {slot.end} слишком короткий ({slot_duration} мин < {duration} мин)"
                     )
                     continue
 
-            # Формируем поля для создания занятия
-            fields = {
-                "assignedById": int(spec_id),
-                "ufCrm3StartDate": new_start.isoformat(),
-                "ufCrm3EndDate": new_end.isoformat(),
-                "ufCrm3ParentDeal": self.data.deal_id,
-                "ufCrm3Child": user_id,
-                "user_id": user_id,
-                "ufCrm3Type": type_code,
-                "ufCrm3Code": type_code,
+                data = chosen.specialists_data.get(spec_id, {})
+                appointments = data.get("appointments", [])
+
+                new_start = slot.start
+                new_end = new_start + timedelta(minutes=duration)
+
+                child_appointments_today = self.get_appointments_on_day(
+                    appointments, user_id, new_start
+                )
+                if len(child_appointments_today) >= 2:
+                    logger.debug(
+                        f"Отклонено: уже 2 занятия у ребенка в день {new_start.date()}"
+                    )
+                    continue
+
+                spec_appointments_today = self.get_specialist_appointments_on_day(
+                    appointments, new_start
+                )
+                if len(spec_appointments_today) >= 6:
+                    logger.debug(
+                        f"Отклонено: уже 6 занятий у специалиста {spec_id} в день {new_start.date()}"
+                    )
+                    continue
+
+                if not self.is_slot_ok(
+                    new_start, new_end, appointments, min_break=self.min_break
+                ):
+                    logger.debug(f"Отклонено: не подходит из-за минимального перерыва")
+                    continue
+
+                user_appointments_same_day = [
+                    a
+                    for a in appointments
+                    if a["user_id"] == user_id
+                    and datetime.fromisoformat(a["ufCrm3StartDate"]).date()
+                    == new_start.date()
+                ]
+                new_appt = {
+                    "ufCrm3StartDate": new_start.isoformat(),
+                    "ufCrm3EndDate": new_end.isoformat(),
+                    "user_id": user_id,
+                    "ufCrm3Type": type_code,
+                }
+                all_user_same_day = user_appointments_same_day + [new_appt]
+                sorted_all = sorted(
+                    all_user_same_day,
+                    key=lambda x: datetime.fromisoformat(x["ufCrm3StartDate"]),
+                )
+                ok = True
+                for i in range(1, len(sorted_all)):
+                    prev_end = datetime.fromisoformat(sorted_all[i - 1]["ufCrm3EndDate"])
+                    curr_start = datetime.fromisoformat(sorted_all[i]["ufCrm3StartDate"])
+                    gap = (curr_start - prev_end).total_seconds() / 60
+                    if gap > self.max_break:
+                        ok = False
+                        logger.debug(
+                            f"Слот {new_start} — {new_end} создает слишком большой перерыв > {self.max_break} мин "
+                            f"для пользователя {user_id} на {new_start.date()}"
+                        )
+                        break
+                if not ok:
+                    continue
+
+                if type_code == "R":
+                    r_appointments_today = [
+                        a for a in child_appointments_today if a.get("ufCrm3Type") == "R"
+                    ]
+                    if len(r_appointments_today) >= 2:
+                        logger.debug(
+                            f"У ребенка уже 2 занятия типа R в день {new_start.date()}"
+                        )
+                        continue
+
+                fields = {
+                    "assignedById": int(spec_id),
+                    "ufCrm3StartDate": new_start.isoformat(),
+                    "ufCrm3EndDate": new_end.isoformat(),
+                    "ufCrm3ParentDeal": self.data.deal_id,
+                    "ufCrm3Child": user_id,
+                    "user_id": user_id,
+                    "ufCrm3Type": type_code,
+                    "ufCrm3Code": type_code,
+                }
+
+                appointments.append(new_appt)
+                chosen.specialists_data[spec_id]["appointments"] = appointments
+                logger.info(
+                    f"Запланировано занятие для специалиста {spec_id} на {new_start} — {new_end}"
+                )
+                return fields
+
+        # Поиск альтернативных специалистов через call_batch
+        logger.warning(f"Нет свободных слотов для типа {type_code}, ищем альтернативных специалистов")
+        departments = await bitrix.get_all_departments()
+        department_id = None
+        for id, dept in departments.items():
+            if dept.get("NAME") == type_code:
+                department_id = id
+                break
+        if department_id:
+            cmd = {
+                "get_specs": BatchBuilder(
+                    "user.get",
+                    {"filter": {"ACTIVE": True, "UF_DEPARTMENT": department_id}}
+                ).build()
             }
+            try:
+                response = await bitrix.call_batch(cmd)
+                batch_result = response.get('result', {}).get('result', {})
+                alternative_specs = batch_result.get('get_specs', [])
+                if isinstance(alternative_specs, dict):
+                    alternative_specs = list(alternative_specs.values())
+                logger.debug(f"Найдено {len(alternative_specs)} альтернативных специалистов для отдела {department_id}")
+            except Exception as e:
+                logger.error(f"Ошибка при получении альтернативных специалистов: {e}")
+                return None
 
-            # Добавляем запланированное занятие
-            appointments.append(new_appt)
-            chosen.specialists_data[spec_id]["appointments"] = appointments
-            logger.info(
-                f"Запланировано занятие для специалиста {spec_id} на {new_start} — {new_end}"
-            )
-            return fields
+            for spec in alternative_specs:
+                spec_id = spec.get("ID")
+                if not spec_id:
+                    continue
+                if spec_id not in chosen.specialists_data:
+                    chosen.specialists_data[spec_id] = {"schedule": [], "appointments": []}
+                date_start = self.initial_time.replace(hour=0, minute=0, second=0, microsecond=0)
+                date_end = date_start + timedelta(days=chosen.stage_duration * 7)
+                date_start_iso = date_start.isoformat()
+                date_end_iso = date_end.isoformat()
+                cmd = {
+                    f"schedule_{spec_id}": BatchBuilder(
+                        "crm.item.list",
+                        {
+                            "entityTypeId": 1042,
+                            "filter": {
+                                ">=ufCrm4Date": date_start_iso,
+                                "<ufCrm4Date": date_end_iso,
+                                "assignedById": spec_id,
+                            },
+                            "order": {"ufCrm4Date": "ASC"},
+                        }
+                    ).build(),
+                    f"appointments_{spec_id}": BatchBuilder(
+                        "crm.item.list",
+                        {
+                            "entityTypeId": 1036,
+                            "filter": {
+                                ">=ufCrm3StartDate": date_start_iso,
+                                "<ufCrm3StartDate": date_end_iso,
+                                "assignedById": spec_id,
+                            },
+                            "order": {"ufCrm3StartDate": "ASC"},
+                        }
+                    ).build()
+                }
+                try:
+                    response = await bitrix.call_batch(cmd)
+                    batch_result = response.get('result', {}).get('result', {})
+                    schedule_data = batch_result.get(f"schedule_{spec_id}", {})
+                    chosen.specialists_data[str(spec_id)]["schedule"] = schedule_data.get("items", []) if isinstance(schedule_data, dict) else []
+                    appointments_data = batch_result.get(f"appointments_{spec_id}", {})
+                    chosen.specialists_data[str(spec_id)]["appointments"] = appointments_data.get("items", []) if isinstance(appointments_data, dict) else []
+                    logger.debug(f"Загружены графики и занятия для специалиста {spec_id}")
+                except Exception as e:
+                    logger.error(f"Ошибка при получении данных для специалиста {spec_id}: {e}")
+                    continue
 
-        logger.warning(
-            f"Не удалось найти подходящий слот для type={type_code}, user_id={user_id}"
-        )
+                free_slots = chosen.get_all_free_slots()
+                if free_slots:
+                    for alt_spec_id, slot in free_slots:
+                        slot_duration = (slot.end - slot.start).total_seconds() / 60
+                        if slot_duration < duration:
+                            continue
+                        data = chosen.specialists_data.get(alt_spec_id, {})
+                        appointments = data.get("appointments", [])
+                        new_start = slot.start
+                        new_end = new_start + timedelta(minutes=duration)
+                        child_appointments_today = self.get_appointments_on_day(
+                            appointments, user_id, new_start
+                        )
+                        if len(child_appointments_today) >= 2:
+                            continue
+                        spec_appointments_today = self.get_specialist_appointments_on_day(
+                            appointments, new_start
+                        )
+                        if len(spec_appointments_today) >= 6:
+                            continue
+                        if not self.is_slot_ok(new_start, new_end, appointments, min_break=self.min_break):
+                            continue
+                        user_appointments_same_day = [
+                            a
+                            for a in appointments
+                            if a["user_id"] == user_id
+                            and datetime.fromisoformat(a["ufCrm3StartDate"]).date() == new_start.date()
+                        ]
+                        new_appt = {
+                            "ufCrm3StartDate": new_start.isoformat(),
+                            "ufCrm3EndDate": new_end.isoformat(),
+                            "user_id": user_id,
+                            "ufCrm3Type": type_code,
+                        }
+                        all_user_same_day = user_appointments_same_day + [new_appt]
+                        sorted_all = sorted(
+                            all_user_same_day,
+                            key=lambda x: datetime.fromisoformat(x["ufCrm3StartDate"]),
+                        )
+                        ok = True
+                        for i in range(1, len(sorted_all)):
+                            prev_end = datetime.fromisoformat(sorted_all[i - 1]["ufCrm3EndDate"])
+                            curr_start = datetime.fromisoformat(sorted_all[i]["ufCrm3StartDate"])
+                            gap = (curr_start - prev_end).total_seconds() / 60
+                            if gap > self.max_break:
+                                ok = False
+                                break
+                        if not ok:
+                            continue
+                        if type_code == "R":
+                            r_appointments_today = [
+                                a for a in child_appointments_today if a.get("ufCrm3Type") == "R"
+                            ]
+                            if len(r_appointments_today) >= 2:
+                                continue
+                        fields = {
+                            "assignedById": int(alt_spec_id),
+                            "ufCrm3StartDate": new_start.isoformat(),
+                            "ufCrm3EndDate": new_end.isoformat(),
+                            "ufCrm3ParentDeal": self.data.deal_id,
+                            "ufCrm3Child": user_id,
+                            "user_id": user_id,
+                            "ufCrm3Type": type_code,
+                            "ufCrm3Code": type_code,
+                        }
+                        appointments.append(new_appt)
+                        chosen.specialists_data[alt_spec_id]["appointments"] = appointments
+                        logger.info(
+                            f"Запланировано занятие для альтернативного специалиста {alt_spec_id} на {new_start} — {new_end}"
+                        )
+                        return fields
+        logger.warning(f"Не удалось найти подходящий слот для type={type_code}, user_id={user_id}")
         return None
 
     async def run(self) -> Dict:
@@ -225,7 +357,7 @@ class HandlerV2:
         created_ids = []
 
         for stage_name, stage in self.data.data.items():
-            max_days = stage.duration * 7  # Длительность этапа в днях
+            max_days = stage.duration * 7
             current_day = 0
             logger.info(f"Обработка этапа: {stage_name} (длительность {max_days} дней)")
 
@@ -275,7 +407,6 @@ class HandlerV2:
             )
             return {"error": "Не удалось запланировать все занятия"}
 
-        # Создание всех занятий через batch
         logger.info(f"Создание {len(appointments_to_create)} занятий в Bitrix")
         cmd = {}
         for i, fields in enumerate(appointments_to_create):
@@ -314,15 +445,16 @@ class HandlerV2:
                     created_ids.append(item_id)
                 else:
                     logger.error(f"Не удалось создать занятие {i}: {result}")
-                    # Откат созданных записей
                     for created_id in created_ids:
-                        await bitrix.call(
-                            "crm.item.delete",
-                            {
-                                "id": created_id,
-                                "entityTypeId": constants.entityTypeId.appointment,
-                            },
-                        )
+                        await bitrix.call_batch({
+                            f"delete_{created_id}": BatchBuilder(
+                                "crm.item.delete",
+                                {
+                                    "id": created_id,
+                                    "entityTypeId": constants.entityTypeId.appointment,
+                                }
+                            ).build()
+                        })
                         logger.info(f"Удалено занятие с ID {created_id}")
                     return {"error": "Не удалось создать все занятия, выполнен откат"}
 
@@ -331,15 +463,16 @@ class HandlerV2:
 
         except Exception as e:
             logger.error(f"Ошибка при создании занятий: {e}")
-            # Откат созданных записей
             for created_id in created_ids:
-                await bitrix.call(
-                    "crm.item.delete",
-                    {
-                        "id": created_id,
-                        "entityTypeId": constants.entityTypeId.appointment,
-                    },
-                )
+                await bitrix.call_batch({
+                    f"delete_{created_id}": BatchBuilder(
+                        "crm.item.delete",
+                        {
+                            "id": created_id,
+                            "entityTypeId": constants.entityTypeId.appointment,
+                        }
+                    ).build()
+                })
                 logger.info(f"Удалено занятие с ID {created_id}")
             return {"error": f"Ошибка при создании занятий: {str(e)}"}
 
@@ -353,29 +486,22 @@ class HandlerV2:
         try:
             response = await bitrix.call_batch(cmd)
             logger.debug(f"Ответ Bitrix в update_specialists_info: {response}")
-
             for index, specs in enumerate(self.specialists):
                 spec_key = f"spec_{index}"
-                specs_list = response.get(spec_key, {}).get("result", [])
+                specs_list = response.get("result", {}).get("result", {}).get(spec_key, [])
                 if not isinstance(specs_list, list):
-                    logger.error(
-                        f"Некорректный формат ответа для {spec_key}: {specs_list}"
-                    )
+                    logger.error(f"Некорректный формат ответа для {spec_key}: {specs_list}")
                     specs_list = []
                 specs.possible_specs = specs_list
                 logger.debug(
                     f"Загружено {len(specs.possible_specs)} специалистов для code={specs.code}"
                 )
-
                 if not specs.possible_specs:
-                    logger.error(f"Не найдено специалистов для code={specs.code}")
-                    specs.possible_specs = []
-
+                    logger.warning(f"Не найдено специалистов для code={specs.code}")
         except Exception as e:
             logger.error(f"Ошибка при получении информации о специалистах: {e}")
             for specs in self.specialists:
                 specs.possible_specs = []
-
         logger.info("Информация о специалистах обновлена")
 
     async def update_specialists_schedules(self):
@@ -393,7 +519,6 @@ class HandlerV2:
         batch_index = 0
         mapping = {}
 
-        # Инициализируем specialists_data
         for spec in self.specialists:
             for possible_spec in spec.possible_specs:
                 specialist_id = possible_spec.get("ID")
@@ -403,7 +528,6 @@ class HandlerV2:
                         "appointments": [],
                     }
 
-        # Формируем батчи для запроса графиков и занятий
         for spec in self.specialists:
             for possible_spec in spec.possible_specs:
                 specialist_id = possible_spec.get("ID")
@@ -445,7 +569,9 @@ class HandlerV2:
             try:
                 response = await bitrix.call_batch(cmd)
                 logger.debug(f"Ответ Bitrix в update_specialists_schedules: {response}")
-
+                if not response:
+                    logger.error("Пустой ответ от Bitrix в update_specialists_schedules")
+                    return
                 for key, (spec, specialist_id, typ) in mapping.items():
                     result = response.get(key, {}).get("result", {}).get("items", [])
                     if not isinstance(result, list):
@@ -465,5 +591,26 @@ class HandlerV2:
                         spec.specialists_data[spec_id]["appointments"] = []
         else:
             logger.warning("Нет батчей для запроса графиков")
+
+        for spec in self.specialists:
+            for spec_id, data in spec.specialists_data.items():
+                if not data["schedule"]:
+                    logger.warning(f"Нет графика для специалиста {spec_id}, создаю дефолтные")
+                    data["schedule"] = []
+                    current_date = date_start
+                    while current_date <= date_end:
+                        start_time = current_date.replace(hour=9, minute=0, second=0, microsecond=0)
+                        end_time = current_date.replace(hour=18, minute=0, second=0, microsecond=0)
+                        start_ms = int(start_time.timestamp() * 1000)
+                        end_ms = int(end_time.timestamp() * 1000)
+                        data["schedule"].append(
+                            {
+                                "ufCrm4Date": start_time.isoformat(),
+                                "ufCrm4DateEnd": end_time.isoformat(),
+                                "ufCrm4Intervals": [f"{start_ms}:{end_ms}"],
+                            }
+                        )
+                        current_date += timedelta(days=1)
+                    logger.debug(f"Создано {len(data['schedule'])} дефолтных графиков для {spec_id}")
 
         logger.info("Графики и расписания специалистов обновлены")
