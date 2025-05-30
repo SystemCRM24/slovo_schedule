@@ -44,8 +44,13 @@ class Specialist:
         all_slots = []
         specialists_data = getattr(self, "specialists_data", {})
         now = datetime.now(Settings.TIMEZONE)
-        max_date = now + timedelta(days=self.stage_duration * 7)
+        total_duration = self.stage_duration * 7 * 2  # 56 дней для двух этапов
+        max_date = now + timedelta(days=total_duration)
         logger.debug(f"Поиск свободных слотов для code={self.code}, now={now}, max_date={max_date}")
+
+        if not specialists_data:
+            logger.error(f"Нет данных о специалистах для code={self.code}")
+            return []
 
         for spec_id, data in specialists_data.items():
             schedule = data.get("schedule", [])
@@ -53,32 +58,23 @@ class Specialist:
             intervals = []
 
             if not schedule:
-                logger.warning(f"Нет графика для специалиста {spec_id}")
+                logger.error(f"Нет графика для специалиста {spec_id}")
                 continue
 
-            # Обработка графиков
             for s in schedule:
                 intervals_ms = s.get("ufCrm4Intervals", [])
                 if intervals_ms:
                     for pair in intervals_ms:
                         try:
                             start_ms, end_ms = map(int, pair.split(":"))
-                            start = datetime.fromtimestamp(
-                                start_ms / 1000, tz=Settings.TIMEZONE
-                            )
-                            end = datetime.fromtimestamp(
-                                end_ms / 1000, tz=Settings.TIMEZONE
-                            )
+                            start = datetime.fromtimestamp(start_ms / 1000, tz=Settings.TIMEZONE)
+                            end = datetime.fromtimestamp(end_ms / 1000, tz=Settings.TIMEZONE)
                             if now <= start <= max_date:
                                 intervals.append(Interval(start, end))
                             else:
-                                logger.debug(
-                                    f"Пропущен интервал {start} — {end}: вне периода"
-                                )
+                                logger.debug(f"Пропущен интервал {start} — {end}: вне периода")
                         except (ValueError, TypeError) as e:
-                            logger.error(
-                                f"Ошибка обработки интервала {pair} для {spec_id}: {e}"
-                            )
+                            logger.error(f"Ошибка обработки интервала {pair} для {spec_id}: {e}")
                             continue
                 else:
                     try:
@@ -92,7 +88,6 @@ class Specialist:
                         logger.error(f"Ошибка обработки графика {s} для {spec_id}: {e}")
                         continue
 
-            # Формируем занятые интервалы
             busy = []
             for a in appointments:
                 start_str = a.get("ufCrm3StartDate")
@@ -103,12 +98,9 @@ class Specialist:
                         if now <= start <= max_date:
                             busy.append(Interval.from_iso(start_str, end_str))
                     except ValueError as e:
-                        logger.error(
-                            f"Ошибка обработки занятия {start_str} — {end_str}: {e}"
-                        )
+                        logger.error(f"Ошибка обработки занятия {start_str} — {end_str}: {e}")
                         continue
 
-            # Вычисляем свободные слоты
             free_slots = []
             for work_interval in intervals:
                 slots = subtract_busy_from_interval(work_interval, busy)
@@ -117,15 +109,10 @@ class Specialist:
                     if duration_minutes >= self.duration:
                         free_slots.append(slot)
                     else:
-                        logger.debug(
-                            f"Слот {slot.start} — {slot.end} слишком короткий "
-                            f"({duration_minutes} мин < {self.duration} мин)"
-                        )
+                        logger.debug(f"Слот {slot.start} — {slot.end} слишком короткий ({duration_minutes} мин < {self.duration} мин)")
 
             all_slots += [(spec_id, slot) for slot in free_slots]
             logger.debug(f"Найдено {len(free_slots)} слотов для специалиста {spec_id}")
 
-        logger.info(
-            f"Всего найдено {len(all_slots)} свободных слотов для code={self.code}"
-        )
+        logger.info(f"Всего найдено {len(all_slots)} свободных слотов для code={self.code}")
         return all_slots
