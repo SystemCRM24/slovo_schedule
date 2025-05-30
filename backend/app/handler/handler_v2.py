@@ -12,7 +12,6 @@ from .specialist import Specialist
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-
 class HandlerV2:
     def __init__(self, data: RequestSchemaV2):
         self.initial_time = datetime.now(Settings.TIMEZONE) + timedelta(days=1)
@@ -24,7 +23,7 @@ class HandlerV2:
             for appoint in stage.data
         )
         self.min_break = 15  # Минимальный перерыв между занятиями в минутах
-        self.max_break = 45  # Максимальный перерыв между занятиями пользователя в день
+        self.max_break = 45  # Максимальный перерыв между занятиями в день
         logger.info(
             f"Инициализирован Handler для deal_id={self.data.deal_id}, user_id={self.data.user_id}, "
             f"всего занятий={self.total_required}"
@@ -32,10 +31,10 @@ class HandlerV2:
 
     def create_specialists(self) -> Tuple[Specialist]:
         specialists = []
-        for stage in self.data.data.values():
-            for d in stage.data:
+        for stage_name, stage in self.data.data.items():
+            for appoint in stage.data:
                 specialists.append(
-                    Specialist(self.initial_time, d.type, d.quantity, d.duration)
+                    Specialist(self.initial_time, appoint.type, appoint.quantity, appoint.duration, stage.duration)
                 )
         logger.info(f"Создано {len(specialists)} специалистов")
         return tuple(specialists)
@@ -119,10 +118,6 @@ class HandlerV2:
             new_start = slot.start
             new_end = new_start + timedelta(minutes=duration)
 
-            logger.debug(
-                f"Проверяем слот {new_start} — {new_end} для специалиста {spec_id}"
-            )
-
             # Проверка: не более 2 занятий у ребенка в день
             child_appointments_today = self.get_appointments_on_day(
                 appointments, user_id, new_start
@@ -203,7 +198,7 @@ class HandlerV2:
                 "ufCrm3ParentDeal": self.data.deal_id,
                 "ufCrm3Child": user_id,
                 "user_id": user_id,
-                "ufCrm3Type": appoint.t if hasattr(appoint, "t") else type_code,
+                "ufCrm3Type": type_code,
                 "ufCrm3Code": type_code,
             }
 
@@ -227,11 +222,13 @@ class HandlerV2:
 
         user_id = self.data.user_id
         appointments_to_create = []
-        max_days = 30  # Ограничение на количество дней
-        current_day = 0
+        created_ids = []
 
         for stage_name, stage in self.data.data.items():
-            logger.info(f"Обработка этапа: {stage_name}")
+            max_days = stage.duration * 7  # Длительность этапа в днях
+            current_day = 0
+            logger.info(f"Обработка этапа: {stage_name} (длительность {max_days} дней)")
+
             for appoint in stage.data:
                 type_code = appoint.type
                 quantity = appoint.quantity
@@ -244,16 +241,16 @@ class HandlerV2:
                     spec for spec in self.specialists if spec.code == type_code
                 ]
                 if not candidates:
-                    logger.warning(f"Не найдено специалистов для типа {type_code}")
-                    continue
+                    logger.error(f"Не найдено специалистов для типа {type_code}")
+                    return {"error": f"Не найдено специалистов для типа {type_code}"}
 
                 for _ in range(quantity):
                     if current_day >= max_days:
                         logger.error(
-                            f"Превышен лимит дней ({max_days}) для планирования"
+                            f"Превышен лимит дней ({max_days}) для этапа {stage_name}"
                         )
                         return {
-                            "error": f"Не удалось запланировать все занятия за {max_days} дней"
+                            "error": f"Не удалось запланировать все занятия за {max_days} дней на этапе {stage_name}"
                         }
 
                     for candidate in candidates:
@@ -272,111 +269,112 @@ class HandlerV2:
                         await self.update_specialists_schedules()
                         continue
 
-        if len(appointments_to_create) == self.total_required:
-            logger.info(
-                f"Все {self.total_required} занятий успешно запланированы, создание в Bitrix"
-            )
-            cmd = {}
-            for i, fields in enumerate(appointments_to_create):
-                code = fields.get("ufCrm3Code", "")
-                code_id = constants.listFieldValues.appointment.idByCode.get(
-                    code, str(code)
-                )
-                batch_fields = {
-                    "ASSIGNED_BY_ID": str(fields["assignedById"]),
-                    "ufCrm3StartDate": str(fields["ufCrm3StartDate"]),
-                    "ufCrm3EndDate": str(fields["ufCrm3EndDate"]),
-                    "ufCrm3ParentDeal": str(fields["ufCrm3ParentDeal"]),
-                    "ufCrm3Child": str(fields["ufCrm3Child"]),
-                    "ufCrm3Type": str(fields["ufCrm3Type"]),
-                    "ufCrm3Code": str(code_id),
-                    "ufCrm3Status": "50",
-                }
-                cmd[i] = BatchBuilder(
-                    "crm.item.add",
-                    {
-                        "entityTypeId": constants.entityTypeId.appointment,
-                        "fields": batch_fields,
-                    },
-                ).build()
-
-            response = await bitrix.call_batch(cmd)
-            logger.info(f"response: {response}")
-            # Проверяем ответ как список словарей
-            all_succeeded = all(
-                isinstance(item, dict) and "item" in item and "id" in item["item"]
-                for item in response
-            )
-
-            if all_succeeded:
-                logger.info("Все занятия успешно созданы в Bitrix")
-                return {"appointments": appointments_to_create}
-            else:
-                logger.error("Не все занятия созданы, выполняется откат")
-                created = [
-                    i
-                    for i, item in enumerate(response)
-                    if isinstance(item, dict)
-                    and "item" in item
-                    and "id" in item["item"]
-                ]
-                for i in created:
-                    item_id = response[i]["item"]["id"]
-                    await bitrix.call(
-                        "crm.item.delete",
-                        {
-                            "id": item_id,
-                            "entityTypeId": constants.entityTypeId.appointment,
-                        },
-                    )
-                    logger.info(f"Удалено занятие с ID {item_id}")
-                return {"error": "Не все занятия удалось создать, выполнен откат"}
-        else:
+        if len(appointments_to_create) != self.total_required:
             logger.error(
                 f"Запланировано {len(appointments_to_create)} из {self.total_required} занятий"
             )
-            return {"error": "Не все занятия удалось запланировать"}
+            return {"error": "Не удалось запланировать все занятия"}
+
+        # Создание всех занятий через batch
+        logger.info(f"Создание {len(appointments_to_create)} занятий в Bitrix")
+        cmd = {}
+        for i, fields in enumerate(appointments_to_create):
+            code = fields.get("ufCrm3Code", "")
+            code_id = constants.listFieldValues.appointment.idByCode.get(
+                code, str(code)
+            )
+            batch_fields = {
+                "ASSIGNED_BY_ID": str(fields["assignedById"]),
+                "ufCrm3StartDate": str(fields["ufCrm3StartDate"]),
+                "ufCrm3EndDate": str(fields["ufCrm3EndDate"]),
+                "ufCrm3ParentDeal": str(fields["ufCrm3ParentDeal"]),
+                "ufCrm3Child": str(fields["ufCrm3Child"]),
+                "ufCrm3Type": str(fields["ufCrm3Type"]),
+                "ufCrm3Code": str(code_id),
+                "ufCrm3Status": "50",
+            }
+            cmd[f"create_{i}"] = BatchBuilder(
+                "crm.item.add",
+                {
+                    "entityTypeId": constants.entityTypeId.appointment,
+                    "fields": batch_fields,
+                },
+            ).build()
+
+        try:
+            response = await bitrix.call_batch(cmd)
+            logger.info(f"Ответ от Bitrix: {response}")
+
+            for i, fields in enumerate(appointments_to_create):
+                result = response.get(f"create_{i}", {})
+                item = result.get("result", {}).get("item", {})
+                item_id = item.get("id")
+                if item_id:
+                    fields["id"] = item_id
+                    created_ids.append(item_id)
+                else:
+                    logger.error(f"Не удалось создать занятие {i}: {result}")
+                    # Откат созданных записей
+                    for created_id in created_ids:
+                        await bitrix.call(
+                            "crm.item.delete",
+                            {
+                                "id": created_id,
+                                "entityTypeId": constants.entityTypeId.appointment,
+                            },
+                        )
+                        logger.info(f"Удалено занятие с ID {created_id}")
+                    return {"error": "Не удалось создать все занятия, выполнен откат"}
+
+            logger.info("Все занятия успешно созданы в Bitrix")
+            return {"appointments": appointments_to_create}
+
+        except Exception as e:
+            logger.error(f"Ошибка при создании занятий: {e}")
+            # Откат созданных записей
+            for created_id in created_ids:
+                await bitrix.call(
+                    "crm.item.delete",
+                    {
+                        "id": created_id,
+                        "entityTypeId": constants.entityTypeId.appointment,
+                    },
+                )
+                logger.info(f"Удалено занятие с ID {created_id}")
+            return {"error": f"Ошибка при создании занятий: {str(e)}"}
 
     async def update_specialists_info(self):
+        logger.info("Обновление информации о специалистах")
         departments = await bitrix.get_all_departments()
         batches = tuple(
             s.get_specialists_info_batch(departments) for s in self.specialists
         )
-        cmd = {index: value for index, value in enumerate(batches)}
-        response = await bitrix.call_batch(cmd)
-        logger.debug(f"Ответ Bitrix в update_specialists_info: {response}")
+        cmd = {f"spec_{index}": value for index, value in enumerate(batches)}
+        try:
+            response = await bitrix.call_batch(cmd)
+            logger.debug(f"Ответ Bitrix в update_specialists_info: {response}")
 
-        for index, specs in enumerate(self.specialists):
-            try:
-                # Ответ — список списков специалистов
-                specs_list = response[index] if index < len(response) else []
+            for index, specs in enumerate(self.specialists):
+                spec_key = f"spec_{index}"
+                specs_list = response.get(spec_key, {}).get("result", [])
                 if not isinstance(specs_list, list):
                     logger.error(
-                        f"Некорректный формат ответа для index={index}: {specs_list}"
+                        f"Некорректный формат ответа для {spec_key}: {specs_list}"
                     )
                     specs_list = []
                 specs.possible_specs = specs_list
                 logger.debug(
                     f"Загружено {len(specs.possible_specs)} специалистов для code={specs.code}"
                 )
-            except (IndexError, TypeError) as e:
-                logger.error(f"Ошибка обработки ответа для index={index}: {e}")
-                specs.possible_specs = []
 
-        # Если possible_specs пустое, используем дефолтные ID специалистов
-        for specs in self.specialists:
-            if not specs.possible_specs:
-                logger.warning(
-                    f"Нет специалистов для code={specs.code}, задаю дефолтные"
-                )
-                default_specs = {
-                    "R": [{"ID": "12"}],
-                    "LM": [{"ID": "19"}, {"ID": "20"}, {"ID": "21"}, {"ID": "22"}],
-                }.get(specs.code, [])
-                specs.possible_specs = default_specs
-                logger.debug(
-                    f"Установлено {len(default_specs)} дефолтных специалистов для code={specs.code}"
-                )
+                if not specs.possible_specs:
+                    logger.error(f"Не найдено специалистов для code={specs.code}")
+                    specs.possible_specs = []
+
+        except Exception as e:
+            logger.error(f"Ошибка при получении информации о специалистах: {e}")
+            for specs in self.specialists:
+                specs.possible_specs = []
 
         logger.info("Информация о специалистах обновлена")
 
@@ -386,13 +384,16 @@ class HandlerV2:
         date_start = self.initial_time.replace(
             hour=0, minute=0, second=0, microsecond=0
         )
-        date_end = date_start + timedelta(days=30)
+        max_duration = max(
+            stage.duration * 7 for stage in self.data.data.values()
+        )
+        date_end = date_start + timedelta(days=max_duration)
         date_start_iso = date_start.isoformat()
         date_end_iso = date_end.isoformat()
         batch_index = 0
         mapping = {}
 
-        # Инициализируем specialists_data для всех возможных специалистов
+        # Инициализируем specialists_data
         for spec in self.specialists:
             for possible_spec in spec.possible_specs:
                 specialist_id = possible_spec.get("ID")
@@ -410,7 +411,7 @@ class HandlerV2:
                     logger.warning(f"Отсутствует ID специалиста для code={spec.code}")
                     continue
 
-                cmd[batch_index] = BatchBuilder(
+                cmd[f"schedule_{batch_index}"] = BatchBuilder(
                     "crm.item.list",
                     {
                         "entityTypeId": 1042,
@@ -422,10 +423,10 @@ class HandlerV2:
                         "order": {"ufCrm4Date": "ASC"},
                     },
                 ).build()
-                mapping[batch_index] = (spec, specialist_id, "schedule")
+                mapping[f"schedule_{batch_index}"] = (spec, specialist_id, "schedule")
                 batch_index += 1
 
-                cmd[batch_index] = BatchBuilder(
+                cmd[f"appointments_{batch_index}"] = BatchBuilder(
                     "crm.item.list",
                     {
                         "entityTypeId": 1036,
@@ -437,91 +438,32 @@ class HandlerV2:
                         "order": {"ufCrm3StartDate": "ASC"},
                     },
                 ).build()
-                mapping[batch_index] = (spec, specialist_id, "appointments")
+                mapping[f"appointments_{batch_index}"] = (spec, specialist_id, "appointments")
                 batch_index += 1
 
         if cmd:
-            response = await bitrix.call_batch(cmd)
-            logger.debug(f"Ответ Bitrix в update_specialists_schedules: {response}")
+            try:
+                response = await bitrix.call_batch(cmd)
+                logger.debug(f"Ответ Bitrix в update_specialists_schedules: {response}")
 
-            # Обрабатываем ответ как список
-            for idx, (spec, specialist_id, typ) in mapping.items():
-                try:
-                    result = response[idx] if idx < len(response) else {}
-                    items = result.get("result", {}).get("items", [])
-                    if not isinstance(items, list):
+                for key, (spec, specialist_id, typ) in mapping.items():
+                    result = response.get(key, {}).get("result", {}).get("items", [])
+                    if not isinstance(result, list):
                         logger.error(
-                            f"Некорректный формат данных для специалиста {specialist_id}: {items}"
+                            f"Некорректный формат данных для специалиста {specialist_id}: {result}"
                         )
-                        items = []
+                        result = []
+                    spec.specialists_data[specialist_id][typ] = result
                     logger.debug(
-                        f"Загружено {len(items)} {typ} для специалиста {specialist_id}"
+                        f"Загружено {len(result)} {typ} для специалиста {specialist_id}"
                     )
-                    spec.specialists_data[specialist_id][typ] = items
-                except (IndexError, TypeError) as e:
-                    logger.error(
-                        f"Ошибка обработки ответа для специалиста {specialist_id}, тип {typ}: {e}"
-                    )
-                    spec.specialists_data[specialist_id][typ] = []
+            except Exception as e:
+                logger.error(f"Ошибка при получении графиков: {e}")
+                for spec in self.specialists:
+                    for spec_id in spec.specialists_data:
+                        spec.specialists_data[spec_id]["schedule"] = []
+                        spec.specialists_data[spec_id]["appointments"] = []
         else:
             logger.warning("Нет батчей для запроса графиков")
 
-        # Добавление fallback-графиков
-        for spec in self.specialists:
-            for spec_id, data in spec.specialists_data.items():
-                if not data["schedule"]:
-                    logger.warning(
-                        f"Нет графика для специалиста {spec_id}, создаю дефолтные"
-                    )
-                    data["schedule"] = []
-                    current_date = date_start
-                    while current_date <= date_end:
-                        start_time = current_date.replace(
-                            hour=9, minute=0, second=0, microsecond=0
-                        )
-                        end_time = current_date.replace(
-                            hour=18, minute=0, second=0, microsecond=0
-                        )
-                        start_ms = int(start_time.timestamp() * 1000)
-                        end_ms = int(end_time.timestamp() * 1000)
-                        data["schedule"].append(
-                            {
-                                "ufCrm4Date": start_time.isoformat(),
-                                "ufCrm4DateEnd": end_time.isoformat(),
-                                "ufCrm4Intervals": [f"{start_ms}:{end_ms}"],
-                            }
-                        )
-                        current_date += timedelta(days=1)
-                    logger.debug(
-                        f"Создано {len(data['schedule'])} дефолтных графиков для {spec_id}"
-                    )
-
         logger.info("Графики и расписания специалистов обновлены")
-
-    async def create_schedule_entry(self, fields: Dict, specialist=None) -> Dict:
-        entityTypeId = constants.entityTypeId.appointment
-        code = fields.get("ufCrm3Code") or (
-            specialist.code if specialist and hasattr(specialist, "code") else None
-        )
-        code_id = constants.listFieldValues.appointment.idByCode.get(code, str(code))
-        status_id = 50
-
-        response = await bitrix.call(
-            "crm.item.add",
-            {
-                "entityTypeId": entityTypeId,
-                "fields": {
-                    "ASSIGNED_BY_ID": str(fields.get("assignedById")),
-                    "ufCrm3StartDate": str(fields.get("ufCrm3StartDate")),
-                    "ufCrm3EndDate": str(fields.get("ufCrm3EndDate")),
-                    "ufCrm3ParentDeal": str(fields.get("ufCrm3ParentDeal")),
-                    "ufCrm3Child": str(fields.get("ufCrm3Child")),
-                    "user_id": str(fields.get("user_id")),
-                    "ufCrm3Type": str(fields.get("ufCrm3Type")),
-                    "ufCrm3Status": str(status_id),
-                    "ufCrm3Code": str(code_id),
-                },
-            },
-        )
-        logger.info(f"Создано занятие в Bitrix: {response}")
-        return response

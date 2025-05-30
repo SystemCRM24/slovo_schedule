@@ -8,18 +8,18 @@ from app.settings import Settings
 
 logger = logging.getLogger(__name__)
 
-
 class Specialist:
     """Класс для работы с графиком и расписанием занятий специалиста"""
 
-    def __init__(self, now: datetime, code: str, qty: int, duration: int):
+    def __init__(self, now: datetime, code: str, qty: int, duration: int, stage_duration: int):
         self.now = now
         self.code = code
         self.qty = qty
         self.duration = duration
+        self.stage_duration = stage_duration
         self.possible_specs: List[dict] = []
         self.specialists_data: dict = {}
-        logger.debug(f"Создан Specialist: code={code}, qty={qty}, duration={duration}")
+        logger.debug(f"Создан Specialist: code={code}, qty={qty}, duration={duration}, stage_duration={stage_duration}")
 
     def get_specialists_info_batch(self, departments: dict[str, dict]) -> str:
         """Выдает батч на получение информации по спецам для этого кода"""
@@ -44,7 +44,8 @@ class Specialist:
         all_slots = []
         specialists_data = getattr(self, "specialists_data", {})
         now = datetime.now(Settings.TIMEZONE)
-        logger.debug(f"Поиск свободных слотов для code={self.code}, now={now}")
+        max_date = now + timedelta(days=self.stage_duration * 7)
+        logger.debug(f"Поиск свободных слотов для code={self.code}, now={now}, max_date={max_date}")
 
         for spec_id, data in specialists_data.items():
             schedule = data.get("schedule", [])
@@ -68,11 +69,11 @@ class Specialist:
                             end = datetime.fromtimestamp(
                                 end_ms / 1000, tz=Settings.TIMEZONE
                             )
-                            if start >= now:
+                            if now <= start <= max_date:
                                 intervals.append(Interval(start, end))
                             else:
                                 logger.debug(
-                                    f"Пропущен интервал {start} — {end}: в прошлом"
+                                    f"Пропущен интервал {start} — {end}: вне периода"
                                 )
                         except (ValueError, TypeError) as e:
                             logger.error(
@@ -83,10 +84,10 @@ class Specialist:
                     try:
                         start = datetime.fromisoformat(s.get("ufCrm4Date"))
                         end = datetime.fromisoformat(s.get("ufCrm4DateEnd"))
-                        if start >= now:
+                        if now <= start <= max_date:
                             intervals.append(Interval(start, end))
                         else:
-                            logger.debug(f"Пропущен график {start} — {end}: в прошлом")
+                            logger.debug(f"Пропущен график {start} — {end}: вне периода")
                     except (ValueError, TypeError) as e:
                         logger.error(f"Ошибка обработки графика {s} для {spec_id}: {e}")
                         continue
@@ -98,7 +99,9 @@ class Specialist:
                 end_str = a.get("ufCrm3EndDate")
                 if start_str and end_str:
                     try:
-                        busy.append(Interval.from_iso(start_str, end_str))
+                        start = datetime.fromisoformat(start_str)
+                        if now <= start <= max_date:
+                            busy.append(Interval.from_iso(start_str, end_str))
                     except ValueError as e:
                         logger.error(
                             f"Ошибка обработки занятия {start_str} — {end_str}: {e}"
