@@ -80,6 +80,12 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, pat
         await onChange(e.target.name, value);
     }
 
+    const handleSelectInputChange = async (e) => {
+        const minutes = e.target.value;
+        const end = new Date(appointment.start.getTime() + minutes * 60 * 1000);
+        await onChange('end', end);
+    };
+
     const onChange = async (attrName, value) => {
         setAppointment({...appointment, [attrName]: value});
     }
@@ -119,6 +125,26 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, pat
         }
     }
 
+    // время в минутах
+    const defaultSelectValues = useMemo(() => [15, 30, 45, 60], []);
+
+    const selectValue = useMemo(
+        () => (appointment.end - appointment.start) / 60000,
+        [appointment]
+    );
+
+    const selectOptions = useMemo(
+        () => {
+            const options = defaultSelectValues.map(
+                (value) => (<option value={value}>{value} минут</option>)
+            );
+            if (!defaultSelectValues.includes(selectValue)) {
+                options.push(<option value={selectValue}>{selectValue} минут</option>);
+            }
+            return options;
+        },
+        [selectValue, defaultSelectValues]
+    );
 
     return (
         <CustomModal
@@ -133,47 +159,70 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, pat
             primaryBtnText={'Сохранить'}
         >
             <div className="d-flex flex-column align-items-center justify-content-center w-100 h-100 gap-2">
-                <InputGroup hasValidation>
-                    <FormControl
-                        type={'time'}
-                        value={getTimeStringFromDate(appointment.start)}
-                        name={'start'}
-                        onChange={async (e) => {
-                            await handleInputChange(e);
-                        }}
-                        style={{textAlign: "center"}}
-                        required
-                        isInvalid={
-                            !appointment.start ||
-                            (
-                                !!appointment.start
-                                && !isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals)
-                            )
-                        }
-                    />
-                </InputGroup>
-                <span>-</span>
-                <InputGroup hasValidation className={'mb-4'}>
-                    <FormControl
-                        type={'time'}
-                        value={getTimeStringFromDate(appointment.end)}
-                        name={'end'}
-                        onChange={async (e) => {
-                            await handleInputChange(e);
-                        }}
-                        style={{textAlign: "center",}}
-                        disabled={!appointment.start}
-                        min={getTimeStringFromDate(appointment.start)}
-                        required
-                        isInvalid={
-                            appointment.start !== undefined &&
-                            (
-                                !isIntervalValid(appointment) ||
-                                !isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals)
-                            )
-                        }
-                    />
-                </InputGroup>
+                <div
+                    className="d-flex w-100 align-items-center"
+                    style={{gap: "1rem", whiteSpace: "nowrap"}}
+                >
+                    <label>Начало занятия</label>
+                    <InputGroup hasValidation>
+                        <FormControl
+                            type={'time'}
+                            value={getTimeStringFromDate(appointment.start)}
+                            name={'start'}
+                            onChange={async (e) => {
+                                await handleInputChange(e);
+                            }}
+                            style={{textAlign: "center"}}
+                            required
+                            isInvalid={
+                                !appointment.start ||
+                                (
+                                    !!appointment.start
+                                    && !isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals)
+                                )
+                            }
+                        />
+                    </InputGroup>
+                    <label>Продолжительность</label>
+                    <InputGroup hasValidation>
+                        <FormControl
+                            as={'select'}
+                            style={{textAlign: "center",}}
+                            disabled={!appointment.start}
+                            required
+                            value={selectValue}
+                            onChange={async e => await handleSelectInputChange(e)}
+                            isInvalid={
+                                appointment.start !== undefined &&
+                                (
+                                    !isIntervalValid(appointment) ||
+                                    !isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals)
+                                )
+                            }
+                        >
+                            {selectOptions}
+                        </FormControl>
+                        {/* <FormControl
+                            type={'time'}
+                            value={getTimeStringFromDate(appointment.end)}
+                            name={'end'}
+                            onChange={async (e) => {
+                                await handleInputChange(e);
+                            }}
+                            style={{textAlign: "center",}}
+                            
+                            min={getTimeStringFromDate(appointment.start)}
+                            required
+                            isInvalid={
+                                appointment.start !== undefined &&
+                                (
+                                    !isIntervalValid(appointment) ||
+                                    !isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals)
+                                )
+                            }
+                        /> */}
+                    </InputGroup>
+                </div>
                 <InputGroup hasValidation>
                     <FormSelect
                         name={'patientId'}

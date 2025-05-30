@@ -206,6 +206,44 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
         setLoading(false);
         setShow(false);
     }
+    
+    const selectOptions = useMemo(
+        () => {
+            const defaultSelectValues = [15, 30, 45, 60];
+            return defaultSelectValues.map(
+                (value) => (<option key={value + '_option'} value={value}>{value} минут</option>)
+            );
+        },
+        []
+    );
+
+    const handleSelectInputChange = async (e, idx) => {
+        const ms = e.target.value * 60 * 1000;
+        let currentSchedule;
+        newSchedules.forEach(
+            (value, index) => {
+                if (index == idx) {
+                    currentSchedule = value;
+                }
+            }
+        );
+        const end = new Date(currentSchedule.start.getTime() + ms);
+        onTimeInputChange(idx, e.target.name, end);
+    };
+
+    const selectValues = useMemo(
+        () => {
+            return newSchedules.map(
+                (newSchedule) => {
+                    if (newSchedule.start && newSchedule.end) {
+                        return (newSchedule.end - newSchedule.start) / 60000;
+                    }
+                    return '';
+                }
+            );
+        },
+        [newSchedules]
+    );
 
     return (
         <CustomModal
@@ -290,7 +328,25 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                             </InputGroup>
                             <span>-</span>
                             <InputGroup hasValidation>
-                                <FormControl
+                                <FormSelect
+                                    name={'end'}
+                                    style={{textAlign: "center",}}
+                                    disabled={!newSchedule.start}
+                                    required
+                                    value={selectValues[idx]}
+                                    onChange={async e => await handleSelectInputChange(e, idx)}
+                                    isInvalid={
+                                        newSchedule.start !== undefined &&
+                                        (
+                                            !isIntervalValid(newSchedule) ||
+                                            !isNewScheduleIntervalValid(newSchedule, newSchedulesWithoutCurrentElem, schedule, workInterval)
+                                        )
+                                    }
+                                >
+                                    <option disabled value={''}>Выберите длительность</option>
+                                    {selectOptions}
+                                </FormSelect>
+                                {/* <FormControl
                                     type={'time'}
                                     key={`${date}_new_interval_${idx}_end`}
                                     value={getTimeStringFromDate(newSchedule.end)}
@@ -310,7 +366,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                                             !isNewScheduleIntervalValid(newSchedule, newSchedulesWithoutCurrentElem, schedule, workInterval)
                                         )
                                     }
-                                />
+                                /> */}
                             </InputGroup>
                             <InputGroup hasValidation>
                                 <FormSelect
