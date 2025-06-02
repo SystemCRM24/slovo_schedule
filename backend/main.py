@@ -1,5 +1,6 @@
 import asyncio
 import json
+from typing import List
 from fastapi import Body, FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -9,8 +10,6 @@ from app.schemas import RequestSchema
 from api.router import router as api_router
 from app.utils import parse_query, parse_query_v2
 
-
-# asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 app = FastAPI(
     title="Слово - автоматизация заполнения расписания.",
@@ -53,27 +52,132 @@ class TestV2(BaseModel):
     first_stage: dict = {"duration": 4, "data": [{"t": "R", "q": 2, "d": 30}]}
     second_stage: dict = {"duration": 4, "data": [{"t": "LM", "q": 3, "d": 15}]}
 
+class AppointmentResponse(BaseModel):
+    assignedById: int
+    ufCrm3StartDate: str
+    ufCrm3EndDate: str
+    ufCrm3ParentDeal: int
+    ufCrm3Children: int
+    user_id: int
+    ufCrm3Type: str
+    ufCrm3Code: str
+    id: int
 
-@app.post("/test-V2", status_code=200, tags=["test-v2"])
-async def test_v2(data: TestV2 = Body(...)):
-    return await handle_appointments_v2(data.dict())
+class SuccessResponse(BaseModel):
+    appointments: List[AppointmentResponse]
 
+class ErrorResponse(BaseModel):
+    detail: str
+    error_code: int
 
-@app.get("/test", status_code=200, tags=["Main"])
-async def test():
-    test_string = """{
-        "deal_id":202, # ID сделки
-        "user_id":1, # ID юзера 
-        "first_stage": {"duration":4, # кол-во недель "data":[{"t":"R","q":2,"d":30}]}, ВАЛИДАЦИЯ # data "t" - type тип специалиста (может в нескольких подраздедениях) "q" - кол во занятий d - в минутах (не заполенено пропускаем) !!! КАК ТРАНЗАКЦИЯ !!! 
-        "second_stage": {"duration":4, # кол-во недель "data":[{"t":"LM","q":3,"d":15}]} # максимум 2 занатия максимум 2 занаятия с одинаковым кодом R в день максимум 6 занятий  перерыв максимум 45 мин 
+@app.post("/create-shedule-batch", 
+          status_code=200, 
+          tags=["test-v2"],
+          summary="Создание расписания занятий",
+          response_description="Результат создания расписания",
+          responses={
+              200: {
+                  "description": "Расписание успешно создано",
+                  "content": {
+                      "application/json": {
+                          "example": {
+                              "appointments": [
+                                  {
+                                      "assignedById": 12,
+                                      "ufCrm3StartDate": "2025-06-03T09:00:00+03:00",
+                                      "ufCrm3EndDate": "2025-06-03T09:30:00+03:00",
+                                      "ufCrm3ParentDeal": 202,
+                                      "ufCrm3Children": 158,
+                                      "user_id": 1,
+                                      "ufCrm3Type": "R",
+                                      "ufCrm3Code": "R",
+                                      "id": 312
+                                  }
+                              ]
+                          }
+                      }
+                  },
+                  "model": SuccessResponse
+              },
+              400: {
+                  "description": "Некорректные входные данные",
+                  "content": {
+                      "application/json": {
+                          "example": {
+                              "detail": "Invalid input data",
+                              "error_code": 400
+                          }
+                      }
+                  },
+                  "model": ErrorResponse
+              },
+              404: {
+                  "description": "Сделка или пользователь не найдены",
+                  "content": {
+                      "application/json": {
+                          "example": {
+                              "detail": "Deal not found",
+                              "error_code": 404
+                          }
+                      }
+                  },
+                  "model": ErrorResponse
+              },
+              500: {
+                  "description": "Ошибка сервера при обработке запроса",
+                  "content": {
+                      "application/json": {
+                          "example": {
+                              "detail": "Internal server error",
+                              "error_code": 500
+                          }
+                      }
+                  },
+                  "model": ErrorResponse
+              }
+          })
+async def test_v2(data: TestV2 = Body(..., example={
+    "deal_id": 202,
+    "user_id": 1,
+    "first_stage": {
+        "duration": 4,
+        "data": [{
+            "t": "R",
+            "q": 2,
+            "d": 30
+        }]
+    },
+    "second_stage": {
+        "duration": 4,
+        "data": [{
+            "t": "LM",
+            "q": 3,
+            "d": 15
+        }]
     }
-    1 плучаем пулл спецалоисто 
-    2 получаем их графиик и расписаение 
-    3 распределяем по специалистам
-    тестировать тестовая сделака с опрред id шником 202  
+})):
     """
-    return await handle_appointments(test_string)
+    API для формирования расписания занятий по двум этапам.
 
+    ### Описание параметров:
+    - **deal_id**: ID сделки в CRM (обязательный)
+    - **user_id**: ID пользователя (обязательный)
+    
+    ### Параметры first_stage (первый этап):
+    - **duration**: Длительность этапа в неделях
+    - **data**: Список типов занятий:
+        - **t**: Тип специалиста (код)
+        - **q**: Количество занятий в неделю
+        - **d**: Длительность занятия в минутах
+
+    ### Параметры second_stage (второй этап):
+    - **duration**: Длительность этапа в неделях
+    - **data**: Список типов занятий:
+        - **t**: Тип специалиста (код)
+        - **q**: Количество занятий в неделю
+        - **d**: Длительность занятия в минутах
+    """
+    return await handle_appointments_v2(data.dict())
 
 @app.post("/get-department-specialists", tags=["Debug", "Specialist"])
 async def get_department_specialists(data: str = Query(...)):
