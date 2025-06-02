@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import logging
-from typing import Dict, List, Tuple
+from pprint import pprint
+from typing import Dict, List, Optional, Tuple
 from app.settings import Settings
 from app.schemas import RequestSchemaV2
 from app import bitrix
@@ -19,8 +20,8 @@ class HandlerV2:
         self.total_required = sum(
             appoint.quantity for stage in self.data.data.values() for appoint in stage.data
         )
-        self.min_break = 15  # Минимальный перерыв в минутах
-        self.max_break = 45  # Максимальный перерыв в минутах
+        self.min_break = 1
+        self.max_break = 45 
         self.total_duration = sum(stage.duration * 7 for stage in self.data.data.values())
         logger.info(
             f"Инициализирован Handler: deal_id={self.data.deal_id}, user_id={self.data.user_id}, "
@@ -134,13 +135,13 @@ class HandlerV2:
 
             if not self.is_slot_ok(new_start, new_end, appointments):
                 continue
-
+            children_id = await self.get_children_id(self.data.deal_id)
             fields = {
                 "assignedById": int(spec_id),
                 "ufCrm3StartDate": new_start.isoformat(),
                 "ufCrm3EndDate": new_end.isoformat(),
                 "ufCrm3ParentDeal": self.data.deal_id,
-                "ufCrm3Child": 158,
+                "ufCrm3Children": children_id if children_id else 158,
                 "user_id": user_id,
                 "ufCrm3Type": type_code,
                 "ufCrm3Code": type_code,
@@ -165,81 +166,86 @@ class HandlerV2:
         date_start_iso = date_start.isoformat()
         date_end_iso = date_end.isoformat()
 
-        for dept_id in department_ids:
-            try:
-                specs = await bitrix.call("user.get", {"filter": {"ACTIVE": True, "UF_DEPARTMENT": dept_id}})
-                if not isinstance(specs, list):
-                    logger.error(f"Некорректный ответ для отдела {dept_id}: {specs}")
-                    continue
-            except Exception as e:
-                logger.error(f"Ошибка получения специалистов для отдела {dept_id}: {e}")
-                continue
-
-            for spec in specs:
-                spec_id = spec.get("ID")
-                if not spec_id or spec_id in chosen.specialists_data:
-                    continue
-
-                chosen.specialists_data[spec_id] = {"schedule": [], "appointments": []}
-                cmd = {
-                    f"schedule_{spec_id}": BatchBuilder("crm.item.list", {
-                        "entityTypeId": 1042,
-                        "filter": {">=ufCrm4Date": date_start_iso, "<ufCrm4Date": date_end_iso, "assignedById": spec_id},
-                    }).build(),
-                    f"appointments_{spec_id}": BatchBuilder("crm.item.list", {
-                        "entityTypeId": 1036,
-                        "filter": {">=ufCrm3StartDate": date_start_iso, "<ufCrm3StartDate": date_end_iso, "assignedById": spec_id},
+        try:
+            cmd = {
+                    f"dept_{dept_id}": BatchBuilder("user.get", {
+                        "filter": {
+                            "ACTIVE": True,
+                            "%UF_DEPARTMENT": dept_id 
+                        },
+                        "order": {"ID": "ASC"}  
                     }).build()
-                }
-                try:
-                    response = await bitrix.call_batch(cmd)
-                    chosen.specialists_data[spec_id]["schedule"] = response.get(f"schedule_{spec_id}", {}).get("items", [])
-                    chosen.specialists_data[spec_id]["appointments"] = response.get(f"appointments_{spec_id}", {}).get("items", [])
-                except Exception as e:
-                    logger.error(f"Ошибка загрузки данных для {spec_id}: {e}")
+                    for dept_id in department_ids
+            }
+            response = await bitrix.call_batch(cmd)
+            specs = []
+            for dept_id in department_ids:
+                key = f"dept_{dept_id}"
+                if key not in response:
                     continue
-
-                free_slots = chosen.get_all_free_slots()
-                for alt_spec_id, slot in free_slots:
-                    slot_duration = (slot.end - slot.start).total_seconds() / 60
-                    if slot_duration < duration:
-                        continue
-
-                    new_start = slot.start
-                    new_end = new_start + timedelta(minutes=duration)
-                    appointments = chosen.specialists_data.get(alt_spec_id, {}).get("appointments", [])
-
-                    child_appointments_today = self.get_child_appointments_on_day(user_id, new_start)
-                    if not self.check_child_schedule(child_appointments_today, new_start, new_end):
-                        continue
-
-                    spec_appointments_today = self.get_specialist_appointments_on_day(appointments, new_start)
-                    if len(spec_appointments_today) >= 6:
-                        continue
-
-                    if not self.is_slot_ok(new_start, new_end, appointments):
-                        continue
-
-                    fields = {
-                        "assignedById": int(alt_spec_id),
-                        "ufCrm3StartDate": new_start.isoformat(),
-                        "ufCrm3EndDate": new_end.isoformat(),
-                        "ufCrm3ParentDeal": self.data.deal_id,
-                        "ufCrm3Child": user_id,
-                        "user_id": user_id,
-                        "ufCrm3Type": type_code,
-                        "ufCrm3Code": type_code,
-                    }
-                    new_appt = {
-                        "ufCrm3StartDate": new_start.isoformat(),
-                        "ufCrm3EndDate": new_end.isoformat(),
-                        "user_id": user_id,
-                        "ufCrm3Type": type_code,
-                    }
-                    appointments.append(new_appt)
-                    chosen.specialists_data[alt_spec_id]["appointments"] = appointments
-                    logger.info(f"Назначено занятие для {alt_spec_id} на {new_start} — {new_end}")
-                    return fields
+                if isinstance(response[key], list):
+                    specs = response[key]
+        except Exception as e:
+            logger.error(f"Ошибка получения специалистов для отдела : {e}")
+        for spec in specs:
+            spec_id = spec.get("ID")
+            if not spec_id or spec_id in chosen.specialists_data:
+                continue
+            chosen.specialists_data[spec_id] = {"schedule": [], "appointments": []}
+            cmd = {
+                f"schedule_{spec_id}": BatchBuilder("crm.item.list", {
+                    "entityTypeId": 1042,
+                    "filter": {">=ufCrm4Date": date_start_iso, "<ufCrm4Date": date_end_iso, "assignedById": spec_id},
+                }).build(),
+                f"appointments_{spec_id}": BatchBuilder("crm.item.list", {
+                    "entityTypeId": 1036,
+                    "filter": {">=ufCrm3StartDate": date_start_iso, "<ufCrm3StartDate": date_end_iso, "assignedById": spec_id},
+                }).build()
+            }
+            try:
+                response = await bitrix.call_batch(cmd)
+                chosen.specialists_data[spec_id]["schedule"] = response.get(f"schedule_{spec_id}", {}).get("items", [])
+                chosen.specialists_data[spec_id]["appointments"] = response.get(f"appointments_{spec_id}", {}).get("items", [])
+            except Exception as e:
+                logger.error(f"Ошибка загрузки данных для {spec_id}: {e}")
+                continue
+            free_slots = chosen.get_all_free_slots()
+            for alt_spec_id, slot in free_slots:
+                slot_duration = (slot.end - slot.start).total_seconds() / 60
+                if slot_duration < duration:
+                    continue
+                new_start = slot.start
+                new_end = new_start + timedelta(minutes=duration)
+                appointments = chosen.specialists_data.get(alt_spec_id, {}).get("appointments", [])
+                child_appointments_today = self.get_child_appointments_on_day(user_id, new_start)
+                if not self.check_child_schedule(child_appointments_today, new_start, new_end):
+                    continue
+                spec_appointments_today = self.get_specialist_appointments_on_day(appointments, new_start)
+                if len(spec_appointments_today) >= 6:
+                    continue
+                if not self.is_slot_ok(new_start, new_end, appointments):
+                    continue
+                children_id = await self.get_children_id(self.data.deal_id)
+                fields = {
+                    "assignedById": int(alt_spec_id),
+                    "ufCrm3StartDate": new_start.isoformat(),
+                    "ufCrm3EndDate": new_end.isoformat(),
+                    "ufCrm3ParentDeal": self.data.deal_id,
+                    "ufCrm3Children": children_id if children_id else 158,
+                    "user_id": user_id,
+                    "ufCrm3Type": type_code,
+                    "ufCrm3Code": type_code,
+                }
+                new_appt = {
+                    "ufCrm3StartDate": new_start.isoformat(),
+                    "ufCrm3EndDate": new_end.isoformat(),
+                    "user_id": user_id,
+                    "ufCrm3Type": type_code,
+                }
+                appointments.append(new_appt)
+                chosen.specialists_data[alt_spec_id]["appointments"] = appointments
+                logger.info(f"Назначено занятие для {alt_spec_id} на {new_start} — {new_end}")
+                return fields
         logger.error(f"Не удалось назначить занятие для {type_code}")
         return None
 
@@ -285,6 +291,7 @@ class HandlerV2:
 
         logger.info(f"Создание {len(appointments_to_create)} занятий в Bitrix")
         cmd = {}
+        children_id = await self.get_children_id(self.data.deal_id)
         for i, fields in enumerate(appointments_to_create):
             code_id = constants.listFieldValues.appointment.idByCode.get(fields["ufCrm3Code"], fields["ufCrm3Code"])
             cmd[f"create_{i}"] = BatchBuilder("crm.item.add", {
@@ -294,7 +301,7 @@ class HandlerV2:
                     "ufCrm3StartDate": fields["ufCrm3StartDate"],
                     "ufCrm3EndDate": fields["ufCrm3EndDate"],
                     "ufCrm3ParentDeal": str(fields["ufCrm3ParentDeal"]),
-                    "ufCrm3Children": 158,
+                    "ufCrm3Children": children_id if children_id else 158,
                     "ufCrm3Type": fields["ufCrm3Type"],
                     "ufCrm3Code": str(code_id),
                     "ufCrm3Status": "50",
@@ -315,9 +322,17 @@ class HandlerV2:
             return {"appointments": appointments_to_create}
         except Exception as e:
             logger.error(f"Ошибка создания занятий: {e}")
-            for created_id in created_ids:
-                await bitrix.call("crm.item.delete", {"id": created_id, "entityTypeId": constants.entityTypeId.appointment})
-                logger.info(f"Удалено занятие {created_id}")
+            cmd = {
+                f"delete_appointment_{appointment_id}": {
+                    "method": "crm.item.delete",
+                    "params": {
+                        "id": appointment_id,
+                        "entityTypeId": constants.entityTypeId.appointment
+                    }
+                }
+                for appointment_id in created_ids
+            }
+            await bitrix.call_batch(cmd)
             return {"error": f"Ошибка создания занятий: {str(e)}"}
 
     async def update_specialists_info(self):
@@ -338,6 +353,26 @@ class HandlerV2:
             for spec in self.specialists:
                 spec.possible_specs = []
                 spec.specialists_data = {}
+
+    async def get_children_id(self, deal_id: int) -> Optional[int]:
+        cmd = {
+            "deal_info": BatchBuilder("crm.deal.list", {
+                "filter": {"ID": deal_id},
+                "select": ["*"]
+            }).build()
+        }
+        try:
+            response = await bitrix.call_batch(cmd=cmd)
+            if response.get("deal_info"):
+                contact_id = response["deal_info"][0]["CONTACT_ID"]
+                if contact_id != "": 
+                    try:
+                        return int(contact_id)
+                    except ValueError as e:
+                        return None
+        except Exception as e:
+            print(f"Error getting deal info: {e}")
+            return None
 
     async def update_specialists_schedules(self):
         """Обновляет графики специалистов на весь период."""
