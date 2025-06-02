@@ -12,7 +12,7 @@ import logging
 
 
 logging.basicConfig(level=logging.INFO)
-router = APIRouter(prefix="/schedule", tags=["Schedule"])
+router = APIRouter(prefix="/schedule")
 
 
 # Преобразование даты из ISO в формат Bitrix

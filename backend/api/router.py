@@ -118,6 +118,7 @@ async def get_schedules(date_range: DateRange = Depends()):
                         appointment.get(constants.uf.appointment.start),
                         appointment.get(constants.uf.appointment.end),
                         appointment.get(constants.uf.appointment.patient),
+                        appointment.get(constants.uf.appointment.old_patient),
                         appointment.get(constants.uf.appointment.code),
                     ]
                 ):
@@ -137,19 +138,14 @@ async def get_schedules(date_range: DateRange = Depends()):
                     appointment[constants.uf.appointment.end]
                 )
                 patient_id = appointment[constants.uf.appointment.patient]
-                patient_type_id = (appointment[constants.uf.appointment.code] or [""])[
-                    0
-                ]
+                patient_type_id = (appointment[constants.uf.appointment.code] or [""])[0]
+                old_patient = appointment[constants.uf.appointment.old_patient]
                 patient_type = constants.listFieldValues.appointment.codeById.get(
                     patient_type_id, ""
                 )
-                raw_status = appointment[constants.uf.appointment.status]
-                status = constants.listFieldValues.appointment.statusById.get(
-                    raw_status, ""
-                )
 
                 # Пропускаем, если patient_type или status не найдены
-                if not patient_type or not status:
+                if not patient_type:
                     logging.debug(
                         f"Пропуск записи с id={appointment.get('id')} из-за некорректных patient_type или status"
                     )
@@ -160,7 +156,7 @@ async def get_schedules(date_range: DateRange = Depends()):
                     start=start_time,
                     end=end_time,
                     patient=Patient(id=int(patient_id), type=patient_type),
-                    status=status,
+                    old_patient=old_patient,
                 )
                 if specialist_id not in schedule_dict:
                     schedule_dict[specialist_id] = {}

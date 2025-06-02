@@ -14,6 +14,7 @@ class constants:
     class uf:
         class appointment:
             patient = "ufCrm3Children"
+            old_patient = "ufCrm3HistoryClient"
             start = "ufCrm3StartDate"
             end = "ufCrm3EndDate"
             status = "ufCrm3Status"

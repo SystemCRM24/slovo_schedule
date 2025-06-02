@@ -10,7 +10,7 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
-router = APIRouter(prefix="/appointment", tags=["Appointment"])
+router = APIRouter(prefix="/appointment")
 
 
 @router.post("/", status_code=201, response_model=AppointmentCreateResponse)
@@ -21,9 +21,6 @@ async def create_appointment(appointment: AppointmentCreate):
             constants.uf.appointment.patient: appointment.patient,
             constants.uf.appointment.start: appointment.start,
             constants.uf.appointment.end: appointment.end,
-            constants.uf.appointment.status: constants.listFieldValues.appointment.idByStatus[
-                appointment.status
-            ],
             constants.uf.appointment.code: constants.listFieldValues.appointment.idByCode[
                 appointment.code
             ],
@@ -76,9 +73,6 @@ async def update_appointment(appointment: AppointmentCreate, id: int = Query(...
             constants.uf.appointment.patient: appointment.patient,
             constants.uf.appointment.start: appointment.start,
             constants.uf.appointment.end: appointment.end,
-            constants.uf.appointment.status: constants.listFieldValues.appointment.idByStatus[
-                appointment.status
-            ],
             constants.uf.appointment.code: constants.listFieldValues.appointment.idByCode[
                 appointment.code
             ],

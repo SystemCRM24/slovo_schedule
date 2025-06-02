@@ -29,7 +29,7 @@ class Appointment(BaseModel):
     start: datetime
     end: datetime
     patient: Patient
-    status: str
+    old_patient: int
 
 
 class AppointmentNoStatus(BaseModel):

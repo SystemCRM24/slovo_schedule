@@ -8,16 +8,7 @@ class AppointmentCreate(BaseModel):
     patient: int = Field(..., description="ID пациента")
     start: str = Field(..., description="Время начала в формате ISO")
     end: str = Field(..., description="Время окончания в формате ISO")
-    status: str = Field(
-        ..., description="Статус записи (например, 'booked', 'confirmed')"
-    )
     code: str = Field(..., description="Код записи (например, 'L', 'A')")
-
-    @validator("status")
-    def validate_status(cls, v):
-        if v not in constants.listFieldValues.appointment.idByStatus:
-            raise ValueError("Недопустимый статус")
-        return v
 
     @validator("code")
     def validate_code(cls, v):
@@ -32,7 +23,6 @@ class Appointment(BaseModel):
     patient: Optional[int]
     start: Optional[str]
     end: Optional[str]
-    status: str
     code: str
 
     @classmethod
@@ -45,9 +35,6 @@ class Appointment(BaseModel):
             patient=data.get(constants.uf.appointment.patient),
             start=data.get(constants.uf.appointment.start),
             end=data.get(constants.uf.appointment.end),
-            status=constants.listFieldValues.appointment.statusById.get(
-                data.get(constants.uf.appointment.status), "unknown"
-            ),
             code=constants.listFieldValues.appointment.codeById.get(
                 code_value, "unknown"
             ),
