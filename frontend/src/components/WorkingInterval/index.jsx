@@ -5,10 +5,23 @@ import EditWorkScheduleModal from "../EditWorkScheduleModal/index.jsx";
 import EditAppointmentModal from '../EditAppointmentModal/index.jsx';
 import {useChildrenContext} from "../../contexts/Children/provider.jsx";
 import EditNAIntervalModal from "../EditNAIntervalModal/index.jsx";
+import useSchedules from '../../hooks/useSchedules.js';
 
 
 const WorkingInterval = ({id, startDt, endDt, percentOfWorkingDay, status, patientId, patientType}) => {
     const [showModal, setShowModal] = useState(false);
+    const {schedule} = useSchedules();
+    
+    const intervalStatus = useMemo(
+        () => {
+            if ( schedule.length === 0) {
+                return 'na';
+            }
+            
+        },
+        [schedule]
+    );
+
     const patients = useChildrenContext();
     const patientName = useMemo(() => {
         const patientName = patients?.[patientId];
