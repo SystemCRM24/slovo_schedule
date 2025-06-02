@@ -126,7 +126,7 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, pat
     }
 
     // время в минутах
-    const defaultSelectValues = useMemo(() => [15, 30, 45, 60], []);
+    const defaultSelectValues = useMemo(() => [15, 30, 45, 60, 90, 120, 130], []);
 
     const selectValue = useMemo(
         () => (appointment.end - appointment.start) / 60000,

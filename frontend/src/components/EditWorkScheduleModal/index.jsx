@@ -209,7 +209,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
     
     const selectOptions = useMemo(
         () => {
-            const defaultSelectValues = [15, 30, 45, 60];
+            const defaultSelectValues = [15, 30, 45, 60, 90, 120, 130];
             return defaultSelectValues.map(
                 (value) => (<option key={value + '_option'} value={value}>{value} минут</option>)
             );
