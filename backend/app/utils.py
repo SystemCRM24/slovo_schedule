@@ -174,7 +174,7 @@ def parse_query(query: str) -> RequestSchema:
     return RequestSchema(**obj)
 
 
-def parse_query_v2(query: Dict) -> RequestSchemaV2:
+def parse_query_v2(query: str) -> RequestSchemaV2:
     """
     Парсит входной словарь и преобразует его в RequestSchema, удаляя словари в data,
     где t, q или d пустые или None.
@@ -189,7 +189,7 @@ def parse_query_v2(query: Dict) -> RequestSchemaV2:
         KeyError: Если отсутствуют обязательные ключи (deal_id, user_id).
         ValueError: Если преобразование в int невозможно.
     """
-    obj = query.copy()  # Создаем копию, чтобы не изменять исходный словарь
+    obj = json.loads(query)
 
     # Преобразование deal_id и user_id
     try:
