@@ -11,8 +11,6 @@ from api.router import router as api_router
 from app.utils import parse_query, parse_query_v2
 
 
-# asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
 app = FastAPI(
     title="Слово - автоматизация заполнения расписания.",
     description="На основе данных сделки создает новый элемент смарт-процесса.",
