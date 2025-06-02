@@ -78,7 +78,6 @@ const Schedule = ({fromDate, toDate}) => {
                     apiClient.getSchedules(fromDate, toDate),
                     apiClient.getWorkSchedules(fromDate, toDate)
                 ]);
-                console.log(scheduleData);
                 setSchedule(scheduleData);
                 setWorkSchedule(workScheduleData);
             }

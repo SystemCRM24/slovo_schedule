@@ -189,7 +189,7 @@ def parse_query_v2(query: str) -> RequestSchemaV2:
         KeyError: Если отсутствуют обязательные ключи (deal_id, user_id).
         ValueError: Если преобразование в int невозможно.
     """
-    obj = json.loads(query)
+    obj = json.loads(query)  # Создаем копию, чтобы не изменять исходный словарь
 
     # Преобразование deal_id и user_id
     try:
