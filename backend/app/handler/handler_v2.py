@@ -147,45 +147,23 @@ class HandlerV2:
     def _check_child_schedule(
         self, child_appointments: List[Dict], new_start: datetime, new_end: datetime
     ) -> bool:
-        """Проверяет расписание ребенка на соответствие ограничениям.
+        """Проверяет расписание ребенка на возможность добавления занятия.
 
         Args:
-            child_appointments (List[Dict]): Список текущих занятий ребенка.
+            child_appointments (List[Dict]): Список текущих занятий ребенка за день.
             new_start (datetime): Начало нового занятия.
             new_end (datetime): Окончание нового занятия.
 
         Returns:
-            bool: True, если расписание позволяет добавить занятие, иначе False.
+            bool: True, если можно добавить занятие, иначе False.
         """
-        if len(child_appointments) >= 2:
-            logger.debug(f"Уже 2 занятия на {new_start.date()}")
-            return False
-
+        # Проверяем пересечения с существующими занятиями
         for existing in child_appointments:
             exist_start = datetime.fromisoformat(existing["ufCrm3StartDate"])
             exist_end = datetime.fromisoformat(existing["ufCrm3EndDate"])
             if not (new_end <= exist_start or new_start >= exist_end):
                 logger.debug(f"Пересечение с {exist_start} — {exist_end}")
                 return False
-
-        if not child_appointments:
-            return True
-
-        existing = child_appointments[0]
-        exist_start = datetime.fromisoformat(existing["ufCrm3StartDate"])
-        exist_end = datetime.fromisoformat(existing["ufCrm3EndDate"])
-        if new_end <= exist_start:
-            gap = (exist_start - new_end).total_seconds() / 60
-        elif new_start >= exist_end:
-            gap = (new_start - exist_end).total_seconds() / 60
-        else:
-            return False
-
-        if not (self.min_break <= gap <= self.max_break):
-            logger.debug(
-                f"Перерыв {gap} минут вне диапазона {self.min_break}–{self.max_break}"
-            )
-            return False
         return True
 
     async def _fetch_alternative_specialists(
@@ -279,23 +257,35 @@ class HandlerV2:
             logger.error(f"Ошибка загрузки данных для {spec_id}: {e}")
 
     async def _try_assign_appointment(
-        self, chosen: Specialist, user_id: int, type_code: str, duration: int
+        self,
+        chosen: Specialist,
+        user_id: int,
+        type_code: str,
+        duration: int,
+        target_date: datetime,
     ) -> Optional[Dict]:
-        """Пытается назначить занятие для выбранного специалиста.
+        """Пытается назначить занятие для выбранного специалиста в указанный день.
 
         Args:
             chosen (Specialist): Объект специалиста.
             user_id (int): ID ребенка.
             type_code (str): Код типа занятия.
             duration (int): Длительность занятия в минутах.
+            target_date (datetime): Целевая дата для назначения.
 
         Returns:
             Optional[Dict]: Данные о назначенном занятии или None, если назначить не удалось.
         """
         free_slots = chosen.get_all_free_slots()
-        logger.debug(f"Найдено {len(free_slots)} слотов для типа {type_code}")
+        logger.debug(
+            f"Найдено {len(free_slots)} слотов для типа {type_code} на {target_date}"
+        )
 
         for spec_id, slot in free_slots:
+            # Проверяем, что слот находится в целевой день
+            if slot.start.date() != target_date:
+                continue
+
             slot_duration = (slot.end - slot.start).total_seconds() / 60
             if slot_duration < duration:
                 continue
@@ -306,6 +296,7 @@ class HandlerV2:
                 "appointments", []
             )
 
+            # Проверяем расписание ребенка
             child_appointments_today = self._get_child_appointments_on_day(
                 user_id, new_start
             )
@@ -314,6 +305,7 @@ class HandlerV2:
             ):
                 continue
 
+            # Проверяем, не превышен ли лимит занятий специалиста в день (6)
             spec_appointments_today = self._get_specialist_appointments_on_day(
                 appointments, new_start
             )
@@ -323,6 +315,7 @@ class HandlerV2:
                 )
                 continue
 
+            # Проверяем, подходит ли слот (пересечения и перерывы)
             if not self._is_slot_ok(new_start, new_end, appointments):
                 continue
 
@@ -479,41 +472,72 @@ class HandlerV2:
         appointments_to_create = []
         failed_appointments = []
 
+        # Собираем все назначения по типам
+        appointments_by_type = []
         for stage_name, stage in self.data.data.items():
             logger.info(f"Обработка этапа: {stage_name}")
             for appoint in stage.data:
-                type_code = appoint.type
-                quantity = appoint.quantity
-                duration = appoint.duration
-                logger.info(f"Планирование {quantity} занятий типа {type_code}")
+                for _ in range(appoint.quantity):
+                    appointments_by_type.append(
+                        {
+                            "type_code": appoint.type,
+                            "duration": appoint.duration,
+                            "candidates": [
+                                spec
+                                for spec in self.specialists
+                                if spec.code == appoint.type
+                            ],
+                        }
+                    )
 
-                candidates = [
-                    spec for spec in self.specialists if spec.code == type_code
-                ]
+        # Планируем занятия по дням, стараясь заполнить максимально
+        current_day = self.initial_time.date()
+        end_date = current_day + timedelta(days=self.total_duration)
+        remaining_appointments = appointments_by_type.copy()
+
+        while remaining_appointments and current_day <= end_date:
+            logger.info(f"Планирование занятий на {current_day}")
+            # Перемешиваем назначения для равномерного распределения типов
+            import random
+
+            random.shuffle(remaining_appointments)
+
+            for appt in remaining_appointments[:]:  # Копируем список для удаления
+                type_code = appt["type_code"]
+                duration = appt["duration"]
+                candidates = appt["candidates"]
+
                 if not candidates:
                     logger.error(f"Нет специалистов для типа {type_code}")
-                    return {"error": f"Нет специалистов для типа {type_code}"}
+                    failed_appointments.append(
+                        {"type": type_code, "duration": duration}
+                    )
+                    remaining_appointments.remove(appt)
+                    continue
 
-                for _ in range(quantity):
-                    for candidate in candidates:
-                        fields = await self.assign_appointment(
-                            candidate, user_id, type_code, duration
+                for candidate in candidates:
+                    fields = await self._try_assign_appointment(
+                        candidate, user_id, type_code, duration, current_day
+                    )
+                    if fields:
+                        appointments_to_create.append(fields)
+                        remaining_appointments.remove(appt)
+                        logger.info(
+                            f"Назначено занятие типа {type_code} на {current_day}"
                         )
-                        if fields:
-                            appointments_to_create.append(fields)
-                            break
-                    else:
-                        failed_appointments.append(
-                            {"type": type_code, "duration": duration}
-                        )
-                        logger.warning(
-                            f"Не удалось запланировать занятие типа {type_code}"
-                        )
+                        break
+                else:
+                    logger.debug(
+                        f"Не удалось назначить занятие типа {type_code} на {current_day}"
+                    )
 
-        if failed_appointments:
+            # Переходим к следующему дню
+            current_day += timedelta(days=1)
+
+        if remaining_appointments:
             error_msg = "Не удалось запланировать занятия:\n" + "\n".join(
-                f"- Тип: {fa['type']}, Длительность: {fa['duration']} мин"
-                for fa in failed_appointments
+                f"- Тип: {appt['type_code']}, Длительность: {appt['duration']} мин"
+                for appt in remaining_appointments
             )
             logger.error(error_msg)
             return {"error": error_msg}
