@@ -159,6 +159,11 @@ const EditAppointmentModal = ({id, show, setShow, startDt, endDt, patientId, pat
             primaryBtnText={'Сохранить'}
         >
             <div className="d-flex flex-column align-items-center justify-content-center w-100 h-100 gap-2">
+                {status === 'replace' && (
+                    <div>
+                        {children[schedule[0].old_patient]} заменен на {patientName}
+                    </div>
+                )}
                 <div
                     className="d-flex w-100 align-items-center"
                     style={{gap: "1rem", whiteSpace: "nowrap"}}

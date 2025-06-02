@@ -14,12 +14,20 @@ const WorkingInterval = ({id, startDt, endDt, percentOfWorkingDay, status, patie
     
     const intervalStatus = useMemo(
         () => {
-            if ( schedule.length === 0) {
-                return 'na';
+            if ( status ) {
+                return status;
             }
+            if ( schedule.length > 0) {
+                const oldPatient = schedule[0].old_patient;
+                if ( oldPatient && oldPatient !== patientId ) {
+                    return 'replace';
+                } 
+                return 'booked';
+            }
+            return 'na';
             
         },
-        [schedule]
+        [schedule, status, patientId]
     );
 
     const patients = useChildrenContext();
@@ -36,7 +44,7 @@ const WorkingInterval = ({id, startDt, endDt, percentOfWorkingDay, status, patie
 
     return (
         <div
-            className={`interval status-${status}`}
+            className={`interval status-${intervalStatus}`}
             style={{height: '2.5rem'}}
             onClick={() => { !showModal && setShowModal(true) }}
         >
@@ -58,15 +66,23 @@ const WorkingInterval = ({id, startDt, endDt, percentOfWorkingDay, status, patie
                     </div>
                 }
             </div> 
-            {status === "na" &&
+            {intervalStatus === "na" &&
                 <EditNAIntervalModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt}/>
             }
-            {status === "free" &&
+            {intervalStatus === "free" &&
                 <EditWorkScheduleModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt}/>
             }
-            {(status === "booked" || status === 'confirmed') &&
-                <EditAppointmentModal id={id} show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt}
-                                      patientId={patientId} patientType={patientType} status={status}/>
+            {(intervalStatus === "booked" || intervalStatus === 'skip' || intervalStatus === 'replace') &&
+                <EditAppointmentModal 
+                    id={id} 
+                    show={showModal} 
+                    setShow={setShowModal} 
+                    startDt={startDt} 
+                    endDt={endDt}
+                    patientId={patientId} 
+                    patientType={patientType} 
+                    status={intervalStatus}
+                />
             }
 
         </div>
