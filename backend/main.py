@@ -29,9 +29,9 @@ app.add_middleware(
 
 @app.post("/handle", status_code=200, tags=["Main"])
 async def handle_appointments(data: str):
-    parsed_data = parse_query(data)
-    handler = Handler(parsed_data)
-    return await handler.run()
+    # parsed_data = parse_query(data)
+    # handler = Handler(parsed_data)
+    return await handle_appointments_v2(data)
 
 
 async def handle_appointments_v2(data: dict):

@@ -7,33 +7,22 @@
     opacity: .5;
 }
 
-.status-free {
-    background-color: #AEE9FF;
-}
-
-.status-booked {
-    background-color: #AEFFAE;
-}
-
-.status-confirmed {
-    background-color: #AEFFAE;
-}
-
 .status-na {
     color: rgb(108, 117, 125);
 }
 
-/*
-Старый цвет
 .status-free {
-    background-color: #AEFFAE;
+    background-color: #AEE9FF;
 }
 
 .status-booked {
-    background-color: yellow;
+    background-color: #AEFFAE;
 }
 
-.status-confirmed {
-    background-color: #AEE9FF;
+.status-replace {
+    background-color: #dceb0c;
 }
-*/
+
+.status-skip {
+    background-color: #eb533c;
+}
