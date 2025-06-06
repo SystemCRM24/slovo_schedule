@@ -10,8 +10,8 @@ logger.remove()
 debug_template = (
     "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
     "<level>{level}</level> | "
-    "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan>"
-    "\n{message}"
+    "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
+    "{message}"
 )
 
 # Основной логгер
@@ -19,7 +19,7 @@ logger.add(
     sys.stdout,
     level='DEBUG' if Settings.MODE == 'dev' else 'INFO',
     format=debug_template,
-    filter=lambda r: r['level'].no <= logger.level('INFO').no
+    filter=lambda r: r['level'].no < logger.level('ERROR').no
 )
 
 # HTTPException, которые сами рейзим

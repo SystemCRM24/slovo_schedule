@@ -712,3 +712,1148 @@ Traceback (most recent call last):
     loop = events.get_running_loop()
 RuntimeError: no running event loop
 
+2025-06-06 14:35:29.035 | CRITICAL | /home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/applications.py:112 (__call__)
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 148, in call_next
+    message = await recv_stream.receive()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/anyio/streams/memory.py", line 126, in receive
+    raise EndOfStream from None
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/middleware.py", line 32, in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 156, in call_next
+    raise app_exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 141, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 714, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 734, in app
+    await route.handle(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/api/appointment.py", line 50, in get_appointment
+    return Appointment.from_bitrix(data)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/schemas/api/appointment.py", line 23, in from_bitrix
+    specialist=data.get(BXConstants.appointment.uf.specialist, None),
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'uf' has no attribute 'specialist'
+
+2025-06-06 14:36:37.548 | CRITICAL | /home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/applications.py:112 (__call__)
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 148, in call_next
+    message = await recv_stream.receive()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/anyio/streams/memory.py", line 126, in receive
+    raise EndOfStream from None
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/middleware.py", line 32, in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 156, in call_next
+    raise app_exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 141, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 714, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 734, in app
+    await route.handle(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/api/appointment.py", line 50, in get_appointment
+    return Appointment.from_bitrix(data)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/schemas/api/appointment.py", line 21, in from_bitrix
+    return cls(
+        id=data.get('id', None),
+        specialist=data.get(BXConstants.appointment.uf.specialist, None),
+    
+    )
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/pydantic/main.py", line 253, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 5 validation errors for Appointment
+code
+  Field required [type=missing, input_value={'id': 437, 'specialist': 1}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+patient
+  Field required [type=missing, input_value={'id': 437, 'specialist': 1}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+start
+  Field required [type=missing, input_value={'id': 437, 'specialist': 1}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+end
+  Field required [type=missing, input_value={'id': 437, 'specialist': 1}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+history_client
+  Field required [type=missing, input_value={'id': 437, 'specialist': 1}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+2025-06-06 14:37:09.801 | CRITICAL | /home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/applications.py:112 (__call__)
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 148, in call_next
+    message = await recv_stream.receive()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/anyio/streams/memory.py", line 126, in receive
+    raise EndOfStream from None
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/middleware.py", line 32, in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 156, in call_next
+    raise app_exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 141, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 714, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 734, in app
+    await route.handle(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/api/appointment.py", line 50, in get_appointment
+    return Appointment.from_bitrix(data)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/schemas/api/appointment.py", line 21, in from_bitrix
+    return cls(
+        id=data.get('id', None),
+        specialist=data.get(BXConstants.appointment.uf.specialist, None),
+    
+    )
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/pydantic/main.py", line 253, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 5 validation errors for Appointment
+code
+  Field required [type=missing, input_value={'id': 437, 'specialist': 1}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+patient
+  Field required [type=missing, input_value={'id': 437, 'specialist': 1}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+start
+  Field required [type=missing, input_value={'id': 437, 'specialist': 1}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+end
+  Field required [type=missing, input_value={'id': 437, 'specialist': 1}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+history_client
+  Field required [type=missing, input_value={'id': 437, 'specialist': 1}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+2025-06-06 14:47:17.576 | CRITICAL | /home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/applications.py:112 (__call__)
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 148, in call_next
+    message = await recv_stream.receive()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/anyio/streams/memory.py", line 126, in receive
+    raise EndOfStream from None
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/middleware.py", line 32, in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 156, in call_next
+    raise app_exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 141, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 714, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 734, in app
+    await route.handle(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/api/appointment.py", line 50, in get_appointment
+    return Appointment.from_bitrix(data)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/schemas/api/appointment.py", line 23, in from_bitrix
+    return cls(
+        id=data.get('id', None),
+        specialist=data.get(BXConstants.appointment.uf.specialist, None),
+        code=code,
+    )
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/pydantic/main.py", line 253, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 5 validation errors for Appointment
+code
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+patient
+  Field required [type=missing, input_value={'id': 437, 'specialist': 1, 'code': None}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+start
+  Field required [type=missing, input_value={'id': 437, 'specialist': 1, 'code': None}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+end
+  Field required [type=missing, input_value={'id': 437, 'specialist': 1, 'code': None}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+history_client
+  Field required [type=missing, input_value={'id': 437, 'specialist': 1, 'code': None}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+2025-06-06 15:42:21.251 | CRITICAL | /home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/applications.py:112 (__call__)
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 148, in call_next
+    message = await recv_stream.receive()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/anyio/streams/memory.py", line 126, in receive
+    raise EndOfStream from None
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/middleware.py", line 32, in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 156, in call_next
+    raise app_exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 141, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 714, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 734, in app
+    await route.handle(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/api/appointment.py", line 93, in delete_appointment
+    bt.add(logger.debug(f'Appointment id={id} was deleted.'))
+    ^^^^^^
+AttributeError: 'BackgroundTasks' object has no attribute 'add'
+
+2025-06-06 15:43:30.785 | CRITICAL | /home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/applications.py:112 (__call__)
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 148, in call_next
+    message = await recv_stream.receive()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/anyio/streams/memory.py", line 126, in receive
+    raise EndOfStream from None
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/middleware.py", line 32, in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 156, in call_next
+    raise app_exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 141, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 714, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 734, in app
+    await route.handle(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/api/appointment.py", line 91, in delete_appointment
+    result = await BitrixClient.delete_crm_item(aety, id)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/core/bitrix.py", line 21, in delete_crm_item
+    response = await BITRIX.call("crm.item.delete", items)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fast_bitrix24/logger.py", line 19, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fast_bitrix24/bitrix.py", line 201, in call
+    return await self.srh.run_async(request_cls(self, method, items).run())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fast_bitrix24/srh.py", line 129, in run_async
+    return await coroutine
+           ^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fast_bitrix24/user_request.py", line 330, in run
+    raw_results = await MultipleServerRequestHandlerPreserveIDs(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+    ).run()
+    ^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fast_bitrix24/mult_request.py", line 67, in run
+    extracted_len = self.process_done_tasks(done)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fast_bitrix24/mult_request.py", line 97, in process_done_tasks
+    ).extract_results()
+      ~~~~~~~~~~~~~~~^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fast_bitrix24/server_response.py", line 45, in extract_results
+    self.raise_for_errors()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fast_bitrix24/server_response.py", line 64, in raise_for_errors
+    raise ErrorInServerResponseException(errors)
+fast_bitrix24.server_response.ErrorInServerResponseException: {'order0000000000': {'error': 'NOT_FOUND', 'error_description': 'Элемент не найден'}}
+
+2025-06-06 15:44:07.550 | CRITICAL | /home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/applications.py:112 (__call__)
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 148, in call_next
+    message = await recv_stream.receive()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/anyio/streams/memory.py", line 126, in receive
+    raise EndOfStream from None
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/middleware.py", line 32, in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 156, in call_next
+    raise app_exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 141, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 714, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 734, in app
+    await route.handle(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/api/appointment.py", line 91, in delete_appointment
+    result = await BitrixClient.delete_crm_item(aety, id)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/core/bitrix.py", line 21, in delete_crm_item
+    response = await BITRIX.call("crm.item.delete", items, raw=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fast_bitrix24/logger.py", line 19, in wrapper
+    return await func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fast_bitrix24/bitrix.py", line 201, in call
+    return await self.srh.run_async(request_cls(self, method, items).run())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fast_bitrix24/srh.py", line 129, in run_async
+    return await coroutine
+           ^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fast_bitrix24/user_request.py", line 380, in run
+    return await self.srh.single_request(self.method, self.item)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fast_bitrix24/srh.py", line 166, in single_request
+    result = await self.request_attempt(method.strip().lower(), params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fast_bitrix24/srh.py", line 189, in request_attempt
+    async with self.session.post(
+               ~~~~~~~~~~~~~~~~~^
+        url=self.webhook + method, json=params_with_auth, ssl=self.ssl
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ) as response:
+    ^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/aiohttp/client.py", line 1425, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/aiohttp/client.py", line 834, in _request
+    resp.raise_for_status()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/aiohttp/client_reqrep.py", line 1161, in raise_for_status
+    raise ClientResponseError(
+    ...<5 lines>...
+    )
+aiohttp.client_exceptions.ClientResponseError: 400, message='Bad Request', url='https://bx24.neuroslovo.ru/rest/1/8s38ofulujczao7p/crm.item.delete'
+
+2025-06-06 16:11:14.420 | CRITICAL | /home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/applications.py:112 (__call__)
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 148, in call_next
+    message = await recv_stream.receive()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/anyio/streams/memory.py", line 126, in receive
+    raise EndOfStream from None
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/middleware.py", line 32, in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 156, in call_next
+    raise app_exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 141, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 714, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 734, in app
+    await route.handle(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 327, in app
+    content = await serialize_response(
+              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<9 lines>...
+    )
+    ^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 176, in serialize_response
+    raise ResponseValidationError(
+        errors=_normalize_errors(errors), body=response_content
+    )
+fastapi.exceptions.ResponseValidationError: 1 validation errors:
+  {'type': 'model_attributes_type', 'loc': ('response',), 'msg': 'Input should be a valid dictionary or object to extract fields from', 'input': None}
+
+
+2025-06-06 16:26:31.806 | CRITICAL | /home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/applications.py:112 (__call__)
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 148, in call_next
+    message = await recv_stream.receive()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/anyio/streams/memory.py", line 126, in receive
+    raise EndOfStream from None
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/middleware.py", line 32, in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 156, in call_next
+    raise app_exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 141, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 714, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 734, in app
+    await route.handle(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/api/appointment.py", line 56, in update_appointment
+    print(appointment.to_bitrix())
+          ~~~~~~~~~~~~~~~~~~~~~^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/schemas/api/appointment.py", line 37, in to_bitrix
+    code_id = BXConstants.appointment.lfv.idByCode[self.code]
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+KeyError: None
+
+2025-06-06 16:34:30.567 | CRITICAL | /home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/applications.py:112 (__call__)
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 148, in call_next
+    message = await recv_stream.receive()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/anyio/streams/memory.py", line 126, in receive
+    raise EndOfStream from None
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/middleware.py", line 32, in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 156, in call_next
+    raise app_exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 141, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 714, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 734, in app
+    await route.handle(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/api/appointment.py", line 59, in update_appointment
+    return Appointment.from_bitrix(updated_data)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/schemas/api/appointment.py", line 24, in from_bitrix
+    return cls(
+        id=data.get('id', None),
+    ...<5 lines>...
+        old_patient=data.get(app_uf.old_patient)
+    )
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/pydantic/main.py", line 253, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 2 validation errors for Appointment
+patient
+  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='None', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/int_parsing
+old_patient
+  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='None', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/int_parsing
+
+2025-06-06 16:37:01.402 | CRITICAL | /home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/applications.py:112 (__call__)
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 148, in call_next
+    message = await recv_stream.receive()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/anyio/streams/memory.py", line 126, in receive
+    raise EndOfStream from None
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/middleware.py", line 32, in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 156, in call_next
+    raise app_exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 141, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 714, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 734, in app
+    await route.handle(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/api/appointment.py", line 59, in update_appointment
+    return Appointment.from_bitrix(updated_data)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/schemas/api/appointment.py", line 24, in from_bitrix
+    return cls(
+        id=data.get('id', None),
+    ...<5 lines>...
+        old_patient=data.get(app_uf.old_patient)
+    )
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/pydantic/main.py", line 253, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 2 validation errors for Appointment
+patient
+  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='None', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/int_parsing
+old_patient
+  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='None', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/int_parsing
+
+2025-06-06 16:42:34.509 | CRITICAL | /home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/applications.py:112 (__call__)
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 148, in call_next
+    message = await recv_stream.receive()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/anyio/streams/memory.py", line 126, in receive
+    raise EndOfStream from None
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/middleware.py", line 32, in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 156, in call_next
+    raise app_exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 141, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 714, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 734, in app
+    await route.handle(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/api/appointment.py", line 59, in update_appointment
+    return Appointment.from_bitrix(updated_data)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/schemas/api/appointment.py", line 19, in from_bitrix
+    obj = cls()
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/pydantic/main.py", line 253, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 7 validation errors for Appointment
+id
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+specialist
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+code
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+patient
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+start
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+end
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+old_patient
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+2025-06-06 16:46:43.235 | CRITICAL | /home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/applications.py:112 (__call__)
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 148, in call_next
+    message = await recv_stream.receive()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/anyio/streams/memory.py", line 126, in receive
+    raise EndOfStream from None
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/middleware.py", line 32, in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 156, in call_next
+    raise app_exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 141, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 714, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 734, in app
+    await route.handle(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/api/appointment.py", line 59, in update_appointment
+    return Appointment.from_bitrix(updated_data)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/schemas/api/appointment.py", line 33, in from_bitrix
+    return cls(
+        id=data.get('id', None),
+    ...<5 lines>...
+        old_patient=data.get(app_uf.old_patient)
+    )
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/pydantic/main.py", line 253, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 2 validation errors for Appointment
+patient
+  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='None', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/int_parsing
+old_patient
+  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='None', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/int_parsing
+
+2025-06-06 16:48:07.518 | CRITICAL | /home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/applications.py:112 (__call__)
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 148, in call_next
+    message = await recv_stream.receive()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/anyio/streams/memory.py", line 126, in receive
+    raise EndOfStream from None
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/middleware.py", line 32, in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 156, in call_next
+    raise app_exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 141, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 714, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 734, in app
+    await route.handle(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/api/appointment.py", line 59, in update_appointment
+    return Appointment.from_bitrix(updated_data)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/schemas/api/appointment.py", line 19, in from_bitrix
+    print(cls.model_fields())
+          ~~~~~~~~~~~~~~~~^^
+TypeError: 'dict' object is not callable
+
+2025-06-06 16:48:17.957 | CRITICAL | /home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/applications.py:112 (__call__)
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 148, in call_next
+    message = await recv_stream.receive()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/anyio/streams/memory.py", line 126, in receive
+    raise EndOfStream from None
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/middleware.py", line 32, in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 156, in call_next
+    raise app_exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 141, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 714, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 734, in app
+    await route.handle(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/api/appointment.py", line 59, in update_appointment
+    return Appointment.from_bitrix(updated_data)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/schemas/api/appointment.py", line 34, in from_bitrix
+    return cls(
+        id=data.get('id', None),
+    ...<5 lines>...
+        old_patient=data.get(app_uf.old_patient)
+    )
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/pydantic/main.py", line 253, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+pydantic_core._pydantic_core.ValidationError: 2 validation errors for Appointment
+patient
+  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='None', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/int_parsing
+old_patient
+  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='None', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/int_parsing
+
+2025-06-06 16:55:14.332 | CRITICAL | /home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/applications.py:112 (__call__)
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 148, in call_next
+    message = await recv_stream.receive()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/anyio/streams/memory.py", line 126, in receive
+    raise EndOfStream from None
+anyio.EndOfStream
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/middleware.py", line 32, in dispatch
+    return await call_next(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 156, in call_next
+    raise app_exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/base.py", line 141, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 93, in __call__
+    await self.simple_response(scope, receive, send, request_headers=headers)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/cors.py", line 144, in simple_response
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 62, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 714, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 734, in app
+    await route.handle(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 288, in handle
+    await self.app(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 76, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/starlette/routing.py", line 73, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 301, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/.venv/lib/python3.13/site-packages/fastapi/routing.py", line 212, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/api/appointment.py", line 59, in update_appointment
+    return Appointment.from_bitrix(updated_data)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/home/dfx_17/Projects/Slovo/schedule/backend/src/schemas/api/appointment.py", line 36, in from_bitrix
+    end = data.get(app_uf.emd)
+                   ^^^^^^^^^^
+AttributeError: type object 'uf' has no attribute 'emd'. Did you mean: 'end'?
+

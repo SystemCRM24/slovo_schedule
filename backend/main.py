@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.middleware import AppExceptionHandlerMiddleware
 from src.utils import handle_http_exception
 from src.description import description
+from src.services import on_startup
+
 from src.api import api_router
 from src.appointplan import appointplan_router
 
@@ -21,14 +23,9 @@ app.add_middleware(
 )
 app.add_middleware(AppExceptionHandlerMiddleware)
 
+app.add_event_handler('startup', on_startup)
+
 app.include_router(appointplan_router)
 app.include_router(api_router)
 
 app.add_exception_handler(HTTPException, handle_http_exception)
-
-# @app.exception_handler(HTTPException)
-# async def handle_exception(request, exc: HTTPException):
-#     pass
-
-
-# app.add_exception_handler(Exception, lambda r, e: print(e))
