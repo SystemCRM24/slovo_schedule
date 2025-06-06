@@ -7,7 +7,8 @@ from pathlib import Path
 ROOT_PATH = Path(__file__).parent.parent.parent.parent
 
 
-class Settings(BaseSettings):
+class _Settings(BaseSettings):
+    MODE: str = 'dev'
     BITRIX_WEBHOOK: str
     TIMEZONE: ZoneInfo = ZoneInfo('Europe/Moscow')
 
@@ -23,4 +24,4 @@ class Settings(BaseSettings):
         return ZoneInfo("Europe/Moscow")
     
 
-settings = Settings()
+Settings = _Settings()

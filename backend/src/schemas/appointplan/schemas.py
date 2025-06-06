@@ -1,10 +1,12 @@
 from pydantic import BaseModel, Field, model_validator
 from typing import List, Dict
 
+
 class AppointmentSchema(BaseModel):
     type: str = Field(alias='t')
     quantity: int = Field(alias='q')
     duration: int = Field(alias='d')
+
 
 class StageSchema(BaseModel):
     duration: int
@@ -19,6 +21,7 @@ class StageSchema(BaseModel):
         ]
         values['data'] = filtered
         return values
+
 
 class RequestSchema(BaseModel):
     deal_id: int

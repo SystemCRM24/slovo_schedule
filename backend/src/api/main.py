@@ -1,3 +1,6 @@
+from fastapi import APIRouter
+
+
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime
@@ -12,21 +15,17 @@ from .models.base_models import (
     WorkSchedule,
     WorkScheduleResponse,
 )
-from .appointment import router as appointment_router
-from .schedule import router as schedule_router
 from app.bitrix import BITRIX
 from app.settings import Settings
 import logging
 from .constants import constants
 
 
+router = APIRouter(prefix="")
+
+
 logging.basicConfig(level=logging.INFO)
 
-
-router = APIRouter(prefix="/front", tags=["front"])
-
-router.include_router(appointment_router)
-router.include_router(schedule_router)
 
 
 @router.get("/get_specialist", status_code=200, response_model=List[SpecialistResponse])
@@ -279,12 +278,3 @@ async def get_work_schedules(date_range: DateRange = Depends()):
             status_code=500,
             detail=f"Ошибка при получении рабочих расписаний специалистов: {str(e)}",
         )
-
-
-@router.get("/get_deals", status_code=200)
-async def get_deals():
-    """Заглушка для получения сделок из Bitrix CRM."""
-    # const deals = await this.bx.callListMethod('crm.deal.list', {'FILTER': filter});
-    # console.log(deals);
-    # return deals;
-    pass
