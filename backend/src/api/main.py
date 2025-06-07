@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from src.core import BitrixClient
-from src.schemas.api import BXSpecialist
+from src.schemas.api import BXSpecialist, BXClient
 
 
 router = APIRouter(prefix="")
@@ -14,31 +14,12 @@ async def get_specialists() -> list[BXSpecialist]:
     return [BXSpecialist(**s) for s in specialists]
 
 
-# @router.get("/get_clients", status_code=200, response_model=List[ClientResponse])
-# async def get_clients():
-#     """Получение списка клиентов из Bitrix CRM."""
-#     try:
-#         params = {
-#             "filter": {"TYPE_ID": "CLIENT"},
-#             "select": ["ID", "NAME", "LAST_NAME"],
-#         }
-#         clients = await BITRIX.get_all("crm.contact.list", params)
-#         logging.debug(f"\n[ BITRIX RESPONSE ]\n{clients}")
-#         return [
-#             ClientResponse(
-#                 id=int(client["ID"]),
-#                 full_name=(
-#                     f"{client['NAME']} {client['LAST_NAME']}"
-#                     if client["LAST_NAME"]
-#                     else client["NAME"]
-#                 ),
-#             )
-#             for client in clients
-#         ]
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=500, detail=f"Ошибка при получении клиентов: {str(e)}"
-#         )
+@router.get("/get_clients", status_code=200)
+async def get_clients() -> list[BXClient]:
+    """Получение списка клиентов из Bitrix CRM."""
+    clients = await BitrixClient.get_all_clients()
+    return [BXClient(**c) for c in clients]
+
 
 
 # @router.get("/get_schedules", status_code=200, response_model=List[ScheduleResponse])

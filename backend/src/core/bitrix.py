@@ -59,6 +59,14 @@ class BitrixClient:
             'ACTIVE': 'Y'
         }
         return await BITRIX.get_all('user.get', params)
+    
+    @staticmethod
+    async def get_all_clients() -> list[dict]:
+        params = {
+            "select": ["ID", "NAME", "LAST_NAME"],
+            "filter": {"TYPE_ID": "CLIENT"},
+        }
+        return await BITRIX.get_all("crm.contact.list", params)
 
     @staticmethod
     async def get_all_departments() -> dict[str, dict]:

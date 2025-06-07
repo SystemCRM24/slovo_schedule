@@ -26,3 +26,24 @@ class BXSpecialist(BaseModel):
     def name(self) -> str:
         """Возвращает полное имя"""
         return f'{self.last_name.strip()} {self.first_name[0]}.'
+
+
+class BXClient(BaseModel):
+    id: int = Field(validation_alias='ID')
+    name: str = Field(validation_alias='NAME', exclude=True)
+    last_name: str = Field(validation_alias='LAST_NAME', exclude=True)
+
+    @field_validator('last_name', mode='before')
+    @classmethod
+    def last_name_validator(cls, value) -> str:
+        if isinstance(value, str):
+            return value
+        return ''
+
+    @computed_field
+    def full_name(self) -> str:
+        name = self.name
+        if self.last_name:
+            name = f'{self.name} {self.last_name}'
+        return name
+ 

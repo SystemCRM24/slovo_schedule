@@ -7,7 +7,6 @@ from src.middleware import AppExceptionHandlerMiddleware
 from src.utils import handle_http_exception
 from src.description import description
 from src.services import on_startup
-
 from src.api import api_router
 from src.appointplan import appointplan_router
 
@@ -24,13 +23,14 @@ app.add_middleware(
 app.add_middleware(AppExceptionHandlerMiddleware)
 
 app.add_event_handler('startup', on_startup)
+app.add_exception_handler(HTTPException, handle_http_exception)
 
 app.include_router(appointplan_router)
 app.include_router(api_router)
 
-app.add_exception_handler(HTTPException, handle_http_exception)
 
 
-@app.get('/ping', status_code=200)
+
+@app.get('/ping', status_code=200, tags=['Main'])
 async def ping() -> str:
     return 'pong'
