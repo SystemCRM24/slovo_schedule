@@ -8,8 +8,7 @@ from .core import Settings
 logger.remove()
 
 debug_template = (
-    "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
-    "<level>{level}</level> | "
+    "<level>{level:<7}</level> | "
     "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | "
     "{message}"
 )
@@ -19,22 +18,28 @@ logger.add(
     sys.stdout,
     level='DEBUG' if Settings.MODE == 'dev' else 'INFO',
     format=debug_template,
-    filter=lambda r: r['level'].no < logger.level('ERROR').no
+    filter=lambda r: r['level'].no < logger.level('CRITICAL').no,
+    enqueue=True
 )
 
-# HTTPException, которые сами рейзим
-error_template = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level}</level> | {message}"
+critical_template = (
+    "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
+    "<level>{level}</level> | "
+    "{message}"
+)
+
 logger.add(
     sys.stdout,
-    level='ERROR',
-    format=error_template
+    level='CRITICAL',
+    format=critical_template,
+    enqueue=True
 )
 
 # На ошибки приложения
 logger.add(
     "error.log",
     level='CRITICAL',
-    format=error_template,
+    format=critical_template,
     rotation='10 MB',
     enqueue=True
     # backtrace=True,

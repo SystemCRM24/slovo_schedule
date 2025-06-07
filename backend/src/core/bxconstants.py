@@ -25,6 +25,7 @@ class schedule:
     entityTypeId = 1042
 
     class uf:
+        specialist = 'assignedById'
         date = "ufCrm4Date"
         intervals = "ufCrm4Intervals"
 

@@ -201,3 +201,89 @@ async def handle_http_exception(request, exc: HTTPException) -> JSONResponse:
 #     except Exception as e:
 #         print(f"Ошибка при создании RequestSchema: {e}")
 #         raise
+
+
+# # Преобразование даты из ISO в формат Bitrix
+# def iso_date_to_bitrix(date_str: str) -> str:
+#     dt = datetime.strptime(date_str, "%Y-%m-%d").date()
+#     return dt.strftime("%d.%m.%Y")
+
+
+# # Преобразование интервала из ISO в формат Bitrix
+# def interval_to_bitrix(intervals: List[str]) -> str:
+#     start_dt = datetime.fromisoformat(intervals[0].replace("+03:00", ""))
+#     end_dt = datetime.fromisoformat(intervals[1].replace("+03:00", ""))
+#     start_ms = int(start_dt.timestamp() * 1000)
+#     end_ms = int(end_dt.timestamp() * 1000)
+#     return f"{start_ms}:{end_ms}"
+
+
+# # Преобразование списка интервалов из ISO в формат Bitrix
+# def intervals_to_bitrix(intervals: List[str]) -> List[str]:
+#     return [interval_to_bitrix(i) for i in intervals]
+
+
+# # Преобразование даты из формата Bitrix в ISO
+# def bitrix_date_to_iso(bitrix_date: str) -> Optional[str]:
+#     if bitrix_date:
+#         try:
+#             dt = datetime.fromisoformat(bitrix_date.replace("+03:00", ""))
+#             return dt.strftime("%Y-%m-%d")
+#         except ValueError:
+#             logging.error(f"Неверный формат даты Bitrix: {bitrix_date}")
+#             return None
+#     return None
+
+
+# # Преобразование интервала из формата Bitrix в ISO
+# def bitrix_to_interval(bitrix_
+# # Преобразование даты из ISO в формат Bitrix
+# def iso_date_to_bitrix(date_str: str) -> str:
+#     dt = datetime.strptime(date_str, "%Y-%m-%d").date()
+#     return dt.strftime("%d.%m.%Y")
+
+
+# # Преобразование интервала из ISO в формат Bitrix
+# def interval_to_bitrix(intervals: List[str]) -> str:
+#     start_dt = datetime.fromisoformat(intervals[0].replace("+03:00", ""))
+#     end_dt = datetime.fromisoformat(intervals[1].replace("+03:00", ""))
+#     start_ms = int(start_dt.timestamp() * 1000)
+#     end_ms = int(end_dt.timestamp() * 1000)
+#     return f"{start_ms}:{end_ms}"
+
+
+# # Преобразование списка интервалов из ISO в формат Bitrix
+# def intervals_to_bitrix(intervals: List[str]) -> List[str]:
+#     return [interval_to_bitrix(i) for i in intervals]
+
+
+# # Преобразование даты из формата Bitrix в ISO
+# def bitrix_date_to_iso(bitrix_date: str) -> Optional[str]:
+#     if bitrix_date:
+#         try:
+#             dt = datetime.fromisoformat(bitrix_date.replace("+03:00", ""))
+#             return dt.strftime("%Y-%m-%d")
+#         except ValueError:
+#             logging.error(f"Неверный формат даты Bitrix: {bitrix_date}")
+#             return None
+#     return None
+
+
+# # Преобразование интервала из формата Bitrix в ISO
+# def bitrix_to_interval(bitrix_str: str) -> List[str]:
+#     start_ms, end_ms = map(int, bitrix_str.split(":"))
+#     start_dt = datetime.fromtimestamp(start_ms / 1000)
+#     end_dt = datetime.fromtimestamp(end_ms / 1000)
+#     return [start_dt.isoformat() + "+03:00", end_dt.isoformat() + "+03:00"]
+
+
+# def bitrix_to_intervals(bitrix_list: List[str]) -> List[str]:
+#     return [bitrix_to_interval(s) for s in bitrix_list]str: str) -> List[str]:
+#     start_ms, end_ms = map(int, bitrix_str.split(":"))
+#     start_dt = datetime.fromtimestamp(start_ms / 1000)
+#     end_dt = datetime.fromtimestamp(end_ms / 1000)
+#     return [start_dt.isoformat() + "+03:00", end_dt.isoformat() + "+03:00"]
+
+
+# def bitrix_to_intervals(bitrix_list: List[str]) -> List[str]:
+#     return [bitrix_to_interval(s) for s in bitrix_list]

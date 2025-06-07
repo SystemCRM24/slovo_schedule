@@ -1,1 +1,2 @@
-from .appointment import Appointment
+from .appointment import Appointment, BXAppointment
+from .schedule import Schedule

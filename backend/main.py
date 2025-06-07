@@ -29,3 +29,8 @@ app.include_router(appointplan_router)
 app.include_router(api_router)
 
 app.add_exception_handler(HTTPException, handle_http_exception)
+
+
+@app.get('/ping', status_code=200)
+async def ping() -> str:
+    return 'pong'
