@@ -22,4 +22,3 @@ async def update_constants():
         code = item['VALUE']
         BXConstants.appointment.lfv.idByCode[code] = id
         BXConstants.appointment.lfv.codeById[id] = code
-    logger.info('Constants was updated.')

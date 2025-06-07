@@ -46,4 +46,8 @@ class BXClient(BaseModel):
         if self.last_name:
             name = f'{self.name} {self.last_name}'
         return name
- 
+
+
+class QueryDateRange(BaseModel):
+    start: str
+    end: str

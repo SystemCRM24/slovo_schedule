@@ -67,6 +67,28 @@ class BitrixClient:
             "filter": {"TYPE_ID": "CLIENT"},
         }
         return await BITRIX.get_all("crm.contact.list", params)
+    
+    @staticmethod
+    async def get_all_appointments(start: str, end: str) -> list[dict]:
+        params = {
+            "entityTypeId": BXConstants.appointment.entityTypeId,
+            "filter": {
+                f">={BXConstants.appointment.uf.start}": start,
+                f"<={BXConstants.appointment.uf.end}": end,
+            }
+        }
+        return await BITRIX.get_all("crm.item.list", params)
+    
+    @staticmethod
+    async def get_all_schedules(start: str, end: str) -> list[dict]:
+        params = {
+            "entityTypeId": BXConstants.schedule.entityTypeId,
+            "filter": {
+                f">={BXConstants.schedule.uf.date}": start,
+                f"<={BXConstants.schedule.uf.date}": end,
+            }
+        }
+        return await BITRIX.get_all("crm.item.list", params)
 
     @staticmethod
     async def get_all_departments() -> dict[str, dict]:
