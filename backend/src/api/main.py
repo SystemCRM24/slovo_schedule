@@ -1,56 +1,17 @@
 from fastapi import APIRouter
 
-
-# # from typing import List
-# # from fastapi import APIRouter, Depends, HTTPException
-# # from datetime import datetime
-# # from .models.base_models import (
-# #     DateRange,
-# #     SpecialistResponse,
-# #     ClientResponse,
-# #     Patient,
-# #     Appointment,
-# #     ScheduleResponse,
-# #     WorkInterval,
-# #     WorkSchedule,
-# #     WorkScheduleResponse,
-# # )
-# # from app.bitrix import BITRIX
-# # from app.settings import Settings
-# # from .constants import constants
+from src.core import BitrixClient
+from src.schemas.api import BXSpecialist
 
 
 router = APIRouter(prefix="")
 
 
-
-
-
-# @router.get("/get_specialist", status_code=200, response_model=List[SpecialistResponse])
-# async def get_specialist():
-#     """Получение списка специалистов из Bitrix."""
-#     try:
-#         response = await BITRIX.call(
-#             "user.get", {"@UF_DEPARTMENT": list(constants.departments.keys())}, raw=True
-#         )
-#         logging.debug(f"\n[ BITRIX RESPONSE ]\n{response}")
-#         specialists = [
-#             SpecialistResponse(
-#                 id=int(user["ID"]),
-#                 name=f"{user['LAST_NAME']} {user['NAME'][0]}.",
-#                 departments=[
-#                     constants.departments.get(str(d))
-#                     for d in user.get("UF_DEPARTMENT", [])
-#                 ],
-#             )
-#             for user in response["result"]
-#         ]
-#         return specialists
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=500,
-#             detail=f"Ошибка при получении списка специалистов из Bitrix: {str(e)}",
-#         )
+@router.get("/get_specialist", status_code=200)
+async def get_specialists() -> list[BXSpecialist]:
+    """Получение списка специалистов из Bitrix."""
+    specialists = await BitrixClient.get_all_specialist()
+    return [BXSpecialist(**s) for s in specialists]
 
 
 # @router.get("/get_clients", status_code=200, response_model=List[ClientResponse])

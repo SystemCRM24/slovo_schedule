@@ -2,12 +2,26 @@ from fast_bitrix24 import BitrixAsync
 # from aiocache import cached
 
 from .settings import Settings
+from .bxconstants import BXConstants
 
 
 BITRIX = BitrixAsync(Settings.BITRIX_WEBHOOK, verbose=False)
 
 
 class BitrixClient:
+
+    # Методы для приложения
+    @staticmethod
+    async def get_crm_item_fields(entityTypeId: int) -> dict:
+        """Получает значения полей элемента црм"""
+        params = {"entityTypeId": entityTypeId}
+        return await BITRIX.get_all('crm.item.fields', params)
+
+    @staticmethod
+    async def call_batch(cmd: dict) -> dict:
+        """Делает батч запрос"""
+        return await BITRIX.call_batch(params={'halt': 0, 'cmd': cmd})
+
 
     # Методы для CRUD-функционала
     @staticmethod
@@ -36,17 +50,15 @@ class BitrixClient:
         items = {"entityTypeId": entityTypeId, "id": id, "fields": fields}
         return await BITRIX.call('crm.item.update', items)
 
-    # Методы для get - фронта
-    @staticmethod
-    async def call_batch(cmd: dict) -> dict:
-        """Делает батч запрос"""
-        return await BITRIX.call_batch(params={'halt': 0, 'cmd': cmd})
 
+    # Методы для фронта
     @staticmethod
-    async def get_crm_item_fields(entityTypeId: int) -> dict:
-        """Получает значения полей элемента црм"""
-        params = {"entityTypeId": entityTypeId}
-        return await BITRIX.get_all('crm.item.fields', params)
+    async def get_all_specialist() -> list[dict]:
+        params = {
+            '@UF_DEPARTMENT': list(BXConstants.departments.keys()),
+            'ACTIVE': 'Y'
+        }
+        return await BITRIX.get_all('user.get', params)
 
     @staticmethod
     async def get_all_departments() -> dict[str, dict]:

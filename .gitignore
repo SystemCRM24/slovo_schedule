@@ -112,3 +112,4 @@ backend/error.log
 backend/.pytest_cache
 
 __pycache__
+.venv
