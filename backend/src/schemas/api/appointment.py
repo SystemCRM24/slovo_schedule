@@ -1,5 +1,4 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from typing import Self
 
 from src.core import BXConstants
 

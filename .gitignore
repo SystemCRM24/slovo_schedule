@@ -108,5 +108,6 @@ Temporary Items
 .idea/
 
 .env
+error.log
 
 __pycache__

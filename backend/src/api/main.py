@@ -1,30 +1,28 @@
 from fastapi import APIRouter
 
 
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException
-from datetime import datetime
-from .models.base_models import (
-    DateRange,
-    SpecialistResponse,
-    ClientResponse,
-    Patient,
-    Appointment,
-    ScheduleResponse,
-    WorkInterval,
-    WorkSchedule,
-    WorkScheduleResponse,
-)
-from app.bitrix import BITRIX
-from app.settings import Settings
-import logging
-from .constants import constants
+# from typing import List
+# from fastapi import APIRouter, Depends, HTTPException
+# from datetime import datetime
+# from .models.base_models import (
+#     DateRange,
+#     SpecialistResponse,
+#     ClientResponse,
+#     Patient,
+#     Appointment,
+#     ScheduleResponse,
+#     WorkInterval,
+#     WorkSchedule,
+#     WorkScheduleResponse,
+# )
+# from app.bitrix import BITRIX
+# from app.settings import Settings
+# from .constants import constants
 
 
 router = APIRouter(prefix="")
 
 
-logging.basicConfig(level=logging.INFO)
 
 
 
