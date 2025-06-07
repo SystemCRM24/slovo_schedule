@@ -49,19 +49,19 @@ class SetupAppointment:
 class TestGetAppointment(SetupAppointment):
 
     def test_one(self, test_client, test_appointment):
-        print(test_appointment)
         response = test_client.get(f'/front/appointment/{test_appointment['id']}')
         assert response.status_code == 200
-        json = response.json()
-        assert json == test_appointment
+        json_data = response.json()
+        assert json_data == test_appointment
 
-# class TestUpdateAppointment:
 
-#     def test_one(test_client, test_appointment):
-#         test_appointment['old_client'] = 19
-#         import json
-#         content = json.dumps(test_appointment)
-#         response = test_client.put(f'/front/appointment/{appointment_id}', content=content)
-#         assert response.status_code == 200
-#         json = response.json()
-#         assert json == test_appointment
+class TestUpdateAppointment(SetupAppointment):
+
+    def test_one(self, test_client, test_appointment):
+        test_appointment['patient'] = 100
+        content = json.dumps(test_appointment)
+        response = test_client.put(f'/front/appointment/{test_appointment['id']}', content=content)
+        assert response.status_code == 200
+        json_data = response.json()
+        assert json_data == test_appointment
+
