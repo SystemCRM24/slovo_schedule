@@ -108,6 +108,7 @@ Temporary Items
 .idea/
 
 .env
-error.log
+backend/error.log
+backend/.pytest_cache
 
 __pycache__
