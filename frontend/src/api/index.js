@@ -44,6 +44,7 @@ class APIClient {
 
     constructor() {
         this.serverUrl = 'https://3638421-ng03032.twc1.net/slovo_schedule_api/front/';
+        this.serverUrl = 'http://localhost:8000/front/';
         this.testFrom = new Date('2025-04-27T21:00:00.000Z');
         this.testTo = new Date('2025-04-30T20:59:59.167Z');
     }
@@ -141,16 +142,23 @@ class APIClient {
         const url = this.getUrl('get_schedules', {start: from.toISOString(), end: to.toISOString()});
         const response = await this.get(url);
         const data = {};
-        for ( const item of response ) {
-            const specialist = data[item.specialist_id] ??= {};
-            const day = specialist[new Date(item.date)] ??= [];
-            for ( const dayData of item.appointments ) {
-                day.push({
-                    ...dayData,
-                    start: new Date(dayData.start),
-                    end: new Date(dayData.end)
-                });
-            }
+        for ( const appointment of response ) {
+            const specialist = data[appointment.specialist] ??= {};
+            const start = new Date(appointment.start);
+            const end = new Date(appointment.end);
+            // const startOfDay = new Date(start)
+            startOfDay.setHours(3, 0, 0, 0);
+            const day = specialist[startOfDay] ??= [];
+            day.push({
+                id: appointment.id,
+                start,
+                end,
+                patient: {
+                    id: appointment.patient, 
+                    type: appointment.code
+                },
+                old_patient: appointment.old_patient
+            });
         }
         return data;
     }
@@ -177,12 +185,14 @@ class APIClient {
         const response = await this.get(url);
         const data = {};
         for ( const item of response ) {
-            const specialist = data[item.specialist_id] ??= {};
-            const day = specialist[new Date(item.date)] ??= item.schedule;
-            day.intervals.forEach(
-                interval => {
-                    interval.start = new Date(interval.start);
-                    interval.end = new Date(interval.end);
+            const specialist = data[item.specialist] ??= {};
+            const date = new Date(item.date);
+            const dateObj = specialist[date] ??= {};
+            dateObj.id = item.id;
+            dateObj.intervals = item.intervals.map(
+                i => {
+                    const [start, end] = i.split(':').map(el => Number(el))
+                    return {start: new Date(start), end: new Date(end)}
                 }
             );
         }
@@ -219,13 +229,10 @@ class APIClient {
         if (!constants.listFieldValues.appointment.idByCode[body.code]) {
             throw new Error(`Недопустимый код: ${body.code}`);
         }
-
         const response = await this.post(url, body);
-
         if (!response.id) {
             throw new Error(`Ошибка API: ${response}`);
         }
-
         return { id: response.id };
     }
     // TODO 
