@@ -27,7 +27,6 @@ class AppExceptionHandlerMiddleware(BaseHTTPMiddleware):
         asyncio.create_task(coro())
 
     async def dispatch(self, request: Request, call_next: Coroutine):
-        status_code = 500
         try:
             return await call_next(request)
         except Exception as app_exception:
@@ -35,4 +34,4 @@ class AppExceptionHandlerMiddleware(BaseHTTPMiddleware):
             trace_format = traceback.format_exc()
             self._log_app_exception(stack, trace_format)
             self.error_content['error'] = str(app_exception)
-        return JSONResponse(status_code=status_code, content=self.error_content)
+        return JSONResponse(status_code=500, content=self.error_content)

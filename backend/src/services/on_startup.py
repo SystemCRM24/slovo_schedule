@@ -6,7 +6,7 @@ from src.logger import logger
 
 async def on_startup():
     """Закидывает корутины в фон, которые нужно выполнить при старте приложения"""
-    logger.warning('Initialization in progress. The application will be available shortly.')
+    logger.warning('Updating Bitrix constants.')
     await asyncio.gather(
         update_constants()
     )
