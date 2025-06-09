@@ -27,23 +27,44 @@ class Handler:
     async def run(self):
         """Проставляем занятия и отправляем сообщение. Обернуто в транзакцию."""
         try:
-            await self._run()
+            context = Context(self)
+            await context.fill()
+            self._run()
             self.message = "Занятия были расставлены успешно."
         except AppointplanException as app_exc:
-            self.message = str(AppointplanException)
+            self.message = str(app_exc)
             logger.error(self.message)
         except Exception as e:
-            message = str(e)
+            self.message = str(e)
             stack = traceback.extract_stack()
             trace_format = traceback.format_exc()
             AEHM._log_app_exception(stack, trace_format)
         asyncio.create_task(self.send_message())
-        return await send_appointments()
+        return await self.send_appointments()
     
-    async def _run(self):
+    def _run(self):
         """Непосредственно, сама работа обработчика"""
-        context = ContextFiller(self)
-        await context.fill()
+        for stage in self.stages:
+            for app_set in stage.sets:
+                qty = app_set.quantity
+                department = self.departments[app_set.type]
+                while qty > 0:
+                    slot = self.find_slot(department, stage, app_set)
+                    if slot is None:
+                        raise AppointplanException(f'Не найден свободный слот для занятия {app_set.type}.')
+                    print(slot)
+                    qty -= 1
+    
+    def find_slot(self, department: Department, stage: Stage, app_set: AppointmentSet) -> BXAppointment | None:
+        """Ищет и отдает свободный слот, который подходит по времени и продолжительности."""
+        set_duration = timedelta(minutes=app_set.duration)
+        for slot in department.free_slots():
+            is_inner = stage.start <= slot.start and stage.end >= slot.end
+            appointment_end = slot.start + set_duration
+            correct_duration = slot.end >= appointment_end
+            if is_inner and correct_duration:
+                slot.end = appointment_end
+                return slot
 
     async def send_message(self):
         """Посылает сообщение пользователю в битру"""
@@ -58,7 +79,7 @@ class Handler:
         logger.info(f'Занятия для отправки:\n' + '\n'.join(self.appointments))
 
 
-class ContextFiller:
+class Context:
     """Определяет контекст выполнения для обработчика"""
 
     __slots__ = ('handler', 'data')
@@ -97,7 +118,6 @@ class ContextFiller:
             if stage.is_empty():
                 continue
             if not stage.is_valid():
-                print(stage)
                 raise AppointplanException(f"Данные по {stage_name} заполнены некорректно.")
             self.handler.stages.append(stage)
             start = stage.end
@@ -145,7 +165,9 @@ class ContextFiller:
             BitrixClient.get_specialists_schedules(start_iso, end_iso, specialists_ids),
             BitrixClient.get_specialists_appointments(start_iso, end_iso, specialists_ids)
         )
-        return [BXSchedule(**s) for s in schedules], [BXAppointment(**a) for a in appointments]
+        schedules = [BXSchedule(**s) for s in schedules]
+        appointments = [BXAppointment(**a) for a in appointments]
+        return schedules, appointments
 
     def build_departments(
         self,
@@ -159,11 +181,11 @@ class ContextFiller:
             self.handler.departments[department_type] = Department()
         specialists_by_id: dict[int, Specialist] = {}
         for bxspec in specialists:
-            spec = Specialist(bxspec)
-            specialists_by_id[spec.info.id] = spec
+            spec = specialists_by_id[spec.info.id] = Specialist(bxspec)
             for department_type in spec.info.departments:
                 if department_type in self.handler.departments:
                     self.handler.departments[department_type].specialists.append(spec)
+        schedules.sort(key=lambda x: x.date)
         for schedule in schedules:
             if schedule.is_valid():
                 spec = specialists_by_id.get(schedule.specialist, None)
@@ -171,6 +193,9 @@ class ContextFiller:
                     spec.schedules.append(schedule)
         for appointment in appointments:
             if appointment.is_valid():
-                spec = specialists_by_id.get(schedule.specialist, None)
+                spec = specialists_by_id.get(appointment.specialist, None)
                 if spec is not None:
-                    spec.schedules.append(appointment)
+                    spec.appointments.append(appointment)
+        # Заполним интервалами тут
+        for specialist in specialists_by_id.values():
+            specialist.get_schedule_intervals()

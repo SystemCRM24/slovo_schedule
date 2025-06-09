@@ -26,7 +26,7 @@
 import pytest
 
 from src.appointplan.handler import Handler
-from src.appointplan.handler.handler import ContextFiller
+from src.appointplan.handler.handler import Context
 from src.schemas.appointplan import Deal
 
 
@@ -59,7 +59,6 @@ class TestHandlerContext:
 
     @pytest.mark.asyncio
     async def test_context_filling(self, test_handler: Handler):
-        context = ContextFiller(test_handler)
-        await context.fill()
+        await test_handler.run()
         assert isinstance(test_handler.deal, Deal)
         assert len(test_handler.stages) > 0

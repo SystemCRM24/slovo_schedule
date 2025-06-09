@@ -9,7 +9,7 @@ class BXSchedule(BaseModel):
     """Модель данных из битры"""
     id: int
     specialist: int = Field(validation_alias=BXConstants.schedule.uf.specialist)
-    date: str | None = Field(validation_alias=BXConstants.schedule.uf.date)
+    date: datetime | None = Field(validation_alias=BXConstants.schedule.uf.date)
     intervals: list[Interval] = Field(
         default_factory=list, 
         validation_alias=BXConstants.schedule.uf.intervals

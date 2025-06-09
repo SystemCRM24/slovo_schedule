@@ -5,15 +5,15 @@ from src.core.settings import Settings
 
 
 class Interval:
+
     __slots__ = ('start', 'end')
 
     @classmethod
     def from_timestamp(cls, start: float, end: float) -> Self:
         """Создает объект на основе таймстампов"""
-        return cls(
-            start=datetime.fromtimestamp(start, Settings.TIMEZONE),
-            end=datetime.fromtimestamp(end, Settings.TIMEZONE)
-        )
+        start = datetime.fromtimestamp(start, Settings.TIMEZONE)
+        end = datetime.fromtimestamp(end, Settings.TIMEZONE)
+        return cls(start, end)
     
     @classmethod
     def from_js_timestamp(cls, start: int | str, end: int | str) -> Self:
@@ -23,10 +23,9 @@ class Interval:
     
     @classmethod
     def from_iso(cls, start: str, end: str) -> Self:
-        return cls(
-            start=datetime.fromisoformat(start),
-            end=datetime.fromisoformat(end)
-        )
+        start=datetime.fromisoformat(start)
+        end=datetime.fromisoformat(end)
+        return cls(start, end)
 
     def __init__(self, start: datetime, end: datetime):
         self.start = start
@@ -46,3 +45,21 @@ class Interval:
     def duration(self) -> timedelta:
         """Возвращает длительность интервала"""
         return self.end - self.start
+
+    def is_intersecting(self, other) -> bool:
+        """Возвращает True, если интервалы пересекаются и False, в отбратном случае."""
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return self.start < other.end and self.end > other.start
+
+    def difference(self, other) -> tuple[None, Self]:
+        """Возвращает разницу интервалов"""
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        first = second = None
+        if self.is_intersecting(other):
+            if self.start < other.start:
+                first = self.__class__(self.start, other.start)
+            if self.end < other.end:
+                second = self.__class__(other.end, self.end)
+        return first, second
