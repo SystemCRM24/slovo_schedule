@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Self
 
-from app.settings.main import settings
+from src.core.settings import Settings
 
 
 class Interval:
@@ -11,8 +11,8 @@ class Interval:
     def from_timestamp(cls, start: float, end: float) -> Self:
         """Создает объект на основе таймстампов"""
         return cls(
-            start=datetime.fromtimestamp(start, settings.TIMEZONE),
-            end=datetime.fromtimestamp(end, settings.TIMEZONE)
+            start=datetime.fromtimestamp(start, Settings.TIMEZONE),
+            end=datetime.fromtimestamp(end, Settings.TIMEZONE)
         )
     
     @classmethod

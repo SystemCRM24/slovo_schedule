@@ -24,12 +24,14 @@
 """
 
 import pytest
+
 from src.appointplan.handler import Handler
 from src.appointplan.handler.handler import ContextFiller
+from src.schemas.appointplan import Deal
 
 
 sample_1 = (
-    '{"deal_id": "267", "user_id": "1", "start_date": "", '
+    '{"deal_id": "267", "user_id": "1", "start_date": "2025-05-05T00:00:00+03:00", '
     '"first_stage": {"duration": "5", '
         '"data": [{"t": "L", "q": "3", "d": "30"}, {"t": "LM", "q": "", "d": ""}, {"t": "D1-3,5", "q": "", "d": ""}, {"t": "D 3,5 ", "q": "", "d": ""}, {"t": "R", "q": "2", "d": "90"}, {"t": "ABA", "q": "2", "d": "45"}, {"t": "Z", "q": "", "d": ""}, {"t": "A", "q": "", "d": ""}, {"t": "NT", "q": "", "d": ""}, {"t": "НДГ", "q": "", "d": ""}, {"t": "NP", "q": "", "d": ""}, {"t": "P", "q": "", "d": ""}, {"t": "СИ", "q": "", "d": ""}, {"t": "КИТ", "q": "", "d": ""}, {"t": "АВА-Р", "q": "", "d": ""}, {"t": "i", "q": "", "d": ""}, {"t": "К", "q": "", "d": ""}, {"t": "d", "q": "", "d": ""}, {"t": "КК", "q": "", "d": ""}, {"t": "d-ава", "q": "", "d": ""}, {"t": "dNP", "q": "", "d": ""}, {"t": "dd", "q": "", "d": ""}, {"t": "dL", "q": "", "d": ""}, {"t": "dP", "q": "", "d": ""}]}, '
     '"second_stage": {"duration": "0", '
@@ -39,7 +41,7 @@ samples = (sample_1, )
 
 
 @pytest.fixture(scope='class', params=samples)
-def test_handler(request):
+def test_handler(request, test_client):
     return Handler(request.param)
 
 
@@ -59,3 +61,5 @@ class TestHandlerContext:
     async def test_context_filling(self, test_handler: Handler):
         context = ContextFiller(test_handler)
         await context.fill()
+        assert isinstance(test_handler.deal, Deal)
+        assert len(test_handler.stages) > 0

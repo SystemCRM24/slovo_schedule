@@ -1,3 +1,4 @@
+from typing import Iterable
 from fast_bitrix24 import BitrixAsync
 # from aiocache import cached
 
@@ -90,9 +91,40 @@ class BitrixClient:
         }
         return await BITRIX.get_all("crm.item.list", params)
 
+    
+    # Методы для AppointPlan
     @staticmethod
-    async def get_all_departments() -> dict[str, dict]:
-        """Выдает список всех подразделений"""
-        response: dict = await BITRIX.call('department.get', {}, raw=True)
-        departments: list[dict] = response.get('result', [])
-        return {d['ID']: d for d in departments}
+    async def get_deal_info(id: int) -> dict:
+        response = await BITRIX.call('crm.deal.get', {'id': id}, raw=True)
+        return response.get('result')
+
+    @staticmethod
+    async def get_specialists_by_department(names: Iterable) -> list[dict]:
+        ids = [BXConstants.department_ids.get(n, '0') for n in names]
+        params = {'@UF_DEPARTMENT': ids, 'ACTIVE': 'Y'}
+        return await BITRIX.get_all('user.get', params)
+    
+    @staticmethod
+    async def get_specialists_schedules(start, end, spec_ids) -> list[dict]:
+        params = {
+            "entityTypeId": BXConstants.schedule.entityTypeId,
+            'filter': {
+                f"@{BXConstants.schedule.uf.specialist}": spec_ids,
+                f">={BXConstants.schedule.uf.date}": start,
+                f"<={BXConstants.schedule.uf.date}": end,
+            }
+        }
+        return await BITRIX.get_all("crm.item.list", params)
+    
+    @staticmethod
+    async def get_specialists_appointments(start, end, spec_ids) -> list[dict]:
+        params = {
+            "entityTypeId": BXConstants.appointment.entityTypeId,
+            'filter': {
+                f"@{BXConstants.appointment.uf.specialist}": spec_ids,
+                f">={BXConstants.appointment.uf.start}": start,
+                f"<={BXConstants.appointment.uf.end}": end,
+            }
+        }
+        return await BITRIX.get_all("crm.item.list", params)
+    

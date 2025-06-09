@@ -39,3 +39,4 @@ class BXConstants:
         "22": "LM", "32": "NP", "30": "NТ", "33": "P", "25": "R", "27": "Z",
         "37": "АВА-Р", "39": "К", "36": "КИТ", "41": "КК", "31": "НДГ", "35": "СИ"
     }
+    department_ids = {v: k for k, v in departments.items()}

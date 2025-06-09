@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from datetime import datetime, timedelta
 from functools import cached_property
 
@@ -54,3 +54,10 @@ class Stage(BaseModel):
     def is_empty(self) -> bool:
         """Используется для определения пустой стадии, т.е. которую надо пропустить."""
         return self.duration == 0 and len(self.sets) == 0
+
+
+class Deal(BaseModel):
+    id: int = Field(validation_alias='ID')
+    patient: int = Field(validation_alias='CONTACT_ID')
+
+    model_config = ConfigDict(extra='ignore')
