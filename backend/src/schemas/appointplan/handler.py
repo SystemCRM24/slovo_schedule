@@ -8,14 +8,22 @@ from typing import Self
 class AppointmentSet(BaseModel):
     type: str = Field(validation_alias='t')
     quantity: int = Field(validation_alias='q')
-    duration: int = Field(validation_alias='d')
+    duration: timedelta = Field(validation_alias='d', description="Время в минутах")
 
-    @field_validator('quantity', 'duration', mode='before')
-    @classmethod
-    def empty_string_validator(cls, value: str) -> int:
-        if value == "":
+    @staticmethod
+    def reduction_to_int(value: str) -> int:
+        if value == "" or value is None:
             value = "0"
         return int(value)
+
+    @field_validator('quantity', mode='before')
+    @classmethod
+    def quantity_validator(cls, value: str) -> int:
+        return cls.reduction_to_int(value)
+    
+    @field_validator('duration', mode='before')
+    def duration_validator(cls, value: str):
+        return timedelta(minutes=cls.reduction_to_int(value))
 
     def is_valid(self):
         return all((self.type, self.quantity, self.duration))
@@ -24,12 +32,12 @@ class AppointmentSet(BaseModel):
 
 class Stage(BaseModel):
     start: datetime
-    duration: int
+    duration: timedelta = Field(description='Время в неделях')
     sets: list[AppointmentSet] = Field(default_factory=list)
 
     @cached_property
     def end(self) -> datetime:
-        return self.start + timedelta(weeks=self.duration)
+        return self.start + self.duration
 
     @classmethod
     def from_raw(cls, start: datetime, raw_stage: dict) -> Self:
@@ -40,8 +48,8 @@ class Stage(BaseModel):
     
     @field_validator('duration', mode='before')
     @classmethod
-    def duration_validator(cls, value: str) -> int:
-        return int(value)
+    def duration_validator(cls, value: str) -> timedelta:
+        return timedelta(weeks=int(value))
     
     @field_validator('sets', mode='before')
     @classmethod
@@ -49,11 +57,11 @@ class Stage(BaseModel):
         return [a for s in sets if (a := AppointmentSet(**s)).is_valid()]
 
     def is_valid(self) -> bool:
-        return self.duration > 0 and len(self.sets) > 0
+        return self.duration.days > 0 and len(self.sets) > 0
     
     def is_empty(self) -> bool:
         """Используется для определения пустой стадии, т.е. которую надо пропустить."""
-        return self.duration == 0 and len(self.sets) == 0
+        return self.duration.days == 0 and len(self.sets) == 0
 
 
 class Deal(BaseModel):

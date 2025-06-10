@@ -32,7 +32,7 @@ class Interval:
         self.end = end
     
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}(start={repr(self.start)}, end={repr(self.end)})'
+        return f'{self.__class__.__name__}(start={self.start.isoformat()}, end={self.end.isoformat()})'
 
     def __contains__(self, other) -> bool:
         if isinstance(other, datetime):
@@ -49,17 +49,15 @@ class Interval:
     def is_intersecting(self, other) -> bool:
         """Возвращает True, если интервалы пересекаются и False, в отбратном случае."""
         if not isinstance(other, self.__class__):
-            return NotImplemented
+            raise NotImplemented
         return self.start < other.end and self.end > other.start
 
     def difference(self, other) -> tuple[None, Self]:
         """Возвращает разницу интервалов"""
-        if not isinstance(other, self.__class__):
-            return NotImplemented
         first = second = None
         if self.is_intersecting(other):
             if self.start < other.start:
                 first = self.__class__(self.start, other.start)
-            if self.end < other.end:
+            if self.end > other.end:
                 second = self.__class__(other.end, self.end)
         return first, second

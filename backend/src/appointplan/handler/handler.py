@@ -29,7 +29,9 @@ class Handler:
         try:
             context = Context(self)
             await context.fill()
-            self._run()
+            for stage in self.stages:
+                for app_set in stage.sets:
+                    self.plan_appointments(stage, app_set)
             self.message = "Занятия были расставлены успешно."
         except AppointplanException as app_exc:
             self.message = str(app_exc)
@@ -41,30 +43,37 @@ class Handler:
             AEHM._log_app_exception(stack, trace_format)
         asyncio.create_task(self.send_message())
         return await self.send_appointments()
-    
-    def _run(self):
+
+    def plan_appointments(self, stage: Stage, app_set: AppointmentSet):
         """Непосредственно, сама работа обработчика"""
-        for stage in self.stages:
-            for app_set in stage.sets:
-                qty = app_set.quantity
-                department = self.departments[app_set.type]
-                while qty > 0:
-                    slot = self.find_slot(department, stage, app_set)
-                    if slot is None:
-                        raise AppointplanException(f'Не найден свободный слот для занятия {app_set.type}.')
-                    print(slot)
-                    qty -= 1
+        # qty = app_set.quantity
+        # department = self.departments[app_set.type]
+        # while qty > 0:
+        #     slot = self.find_slot(department, stage, app_set)
+        #     if slot is None:
+        #         raise AppointplanException(f'Не найден свободный слот для занятия {app_set.type}.')
+        #     print(slot)
+        #     qty -= 1
     
     def find_slot(self, department: Department, stage: Stage, app_set: AppointmentSet) -> BXAppointment | None:
-        """Ищет и отдает свободный слот, который подходит по времени и продолжительности."""
+        """Ищет и отдает занятие, которое подходит по времени и продолжительности."""
         set_duration = timedelta(minutes=app_set.duration)
         for slot in department.free_slots():
-            is_inner = stage.start <= slot.start and stage.end >= slot.end
-            appointment_end = slot.start + set_duration
-            correct_duration = slot.end >= appointment_end
+            is_inner = stage.start <= slot.interval.start and stage.end >= slot.interval.end
+            appointment_end = slot.interval.start + set_duration
+            correct_duration = slot.interval.end >= appointment_end
             if is_inner and correct_duration:
-                slot.end = appointment_end
-                return slot
+                appointment = BXAppointment(
+                    id=-1,
+                    assignedById=slot.specialist.id,
+                    ufCrm3Code=None,
+                    ufCrm3Children=self.deal.patient,
+                    ufCrm3StartDate=slot.interval.start,
+                    ufCrm3EndDate=slot.interval.end,
+                    ufCrm3HistoryClient=self.deal.patient
+                )
+                appointment.code = app_set.type
+                return appointment
 
     async def send_message(self):
         """Посылает сообщение пользователю в битру"""
@@ -185,7 +194,6 @@ class Context:
             for department_type in spec.info.departments:
                 if department_type in self.handler.departments:
                     self.handler.departments[department_type].specialists.append(spec)
-        schedules.sort(key=lambda x: x.date)
         for schedule in schedules:
             if schedule.is_valid():
                 spec = specialists_by_id.get(schedule.specialist, None)
@@ -198,4 +206,4 @@ class Context:
                     spec.appointments.append(appointment)
         # Заполним интервалами тут
         for specialist in specialists_by_id.values():
-            specialist.get_schedule_intervals()
+            specialist.rebuild_map()
