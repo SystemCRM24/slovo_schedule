@@ -10,7 +10,8 @@ from .service import AppointplanException
 from src.schemas.appointplan import Stage, AppointmentSet, Deal
 from src.schemas.api import BXSpecialist
 from src.schemas.appointplan import BXSchedule, BXAppointment
-from .service import Department, Specialist
+from .service import Department, Specialist, AppointmentValidator, DaySlots
+from src.utils import BatchBuilder
 
 
 class Handler:
@@ -36,56 +37,124 @@ class Handler:
         except AppointplanException as app_exc:
             self.message = str(app_exc)
             logger.error(self.message)
+            self.appointments.clear()
         except Exception as e:
             self.message = str(e)
             stack = traceback.extract_stack()
             trace_format = traceback.format_exc()
             AEHM._log_app_exception(stack, trace_format)
-        asyncio.create_task(self.send_message())
+            self.appointments.clear()
+        await self.send_message()
         return await self.send_appointments()
 
     def plan_appointments(self, stage: Stage, app_set: AppointmentSet):
-        """Непосредственно, сама работа обработчика"""
-        # qty = app_set.quantity
-        # department = self.departments[app_set.type]
-        # while qty > 0:
-        #     slot = self.find_slot(department, stage, app_set)
-        #     if slot is None:
-        #         raise AppointplanException(f'Не найден свободный слот для занятия {app_set.type}.')
-        #     print(slot)
-        #     qty -= 1
-    
-    def find_slot(self, department: Department, stage: Stage, app_set: AppointmentSet) -> BXAppointment | None:
-        """Ищет и отдает занятие, которое подходит по времени и продолжительности."""
-        set_duration = timedelta(minutes=app_set.duration)
-        for slot in department.free_slots():
-            is_inner = stage.start <= slot.interval.start and stage.end >= slot.interval.end
-            appointment_end = slot.interval.start + set_duration
-            correct_duration = slot.interval.end >= appointment_end
-            if is_inner and correct_duration:
-                appointment = BXAppointment(
-                    id=-1,
-                    assignedById=slot.specialist.id,
-                    ufCrm3Code=None,
-                    ufCrm3Children=self.deal.patient,
-                    ufCrm3StartDate=slot.interval.start,
-                    ufCrm3EndDate=slot.interval.end,
-                    ufCrm3HistoryClient=self.deal.patient
-                )
-                appointment.code = app_set.type
-                return appointment
+        """
+        Непосредственно, сама работа обработчика.
+        Логика поможет реализовать правило не больше 2х занятий в день
+        """
+        department = self.departments[app_set.type]
+        set_qty = app_set.quantity
+        start = stage.start
+        validator = AppointmentValidator(self.appointments)
+        while set_qty > 0:
+            days = department.get_slots(start, app_set.duration)
+            is_find = None
+            for slots_of_day in days:
+                print(slots_of_day)
+                if set_qty > 2:     # В рамках дня пытаемся найти время для 2х занятий
+                    first, second = self.find_double(slots_of_day)
+                    is_first_valid = is_second_valid = False
+                    if first is not None:
+                        is_first_valid = validator.check(first)
+                        if is_first_valid:
+                            set_qty -= 1
+                            is_find = self.put_appointment(first)
+                    if second is not None:
+                        is_second_valid = validator.check(second)
+                        if is_second_valid:
+                            set_qty -= 1
+                            is_find = self.put_appointment(second)
+                    if is_first_valid or is_second_valid:
+                        break
+                appointment = self.find_one(slots_of_day, app_set)
+                if validator.check(appointment):
+                    set_qty -= 1
+                    is_find = self.put_appointment(appointment)
+                    break
+            if is_find is None:
+                start += app_set.duration
+            else:
+                start = is_find.end
+            if stage.end < start:
+                raise AppointplanException(f'Не найден свободный слот для занятия {app_set.type}.')
+
+    def find_one(self, slots_of_day: list[DaySlots], app_set: AppointmentSet):
+        for slot_of_day in slots_of_day:
+            for interval in slot_of_day.intervals:
+                if interval.duration >= app_set.duration:
+                    appointment = BXAppointment(
+                        id=-1,
+                        assignedById=slot_of_day.specialist.id,
+                        ufCrm3Code=None,
+                        ufCrm3Children=self.deal.patient,
+                        ufCrm3StartDate=interval.start,
+                        ufCrm3EndDate=interval.start + app_set.duration,
+                        ufCrm3HistoryClient=self.deal.patient  
+                    )
+                    appointment.code = app_set.type
+                    return appointment
+
+    def find_double(self, slots_of_day: list[DaySlots]):
+        return None, None
+
+    def put_appointment(self, appointment: BXAppointment):
+        self.appointments.append(appointment)
+        department = self.departments[appointment.code]
+        department.rebuild_map_of_specialist(appointment.specialist)
+        return appointment
+
+    def build_appointment(self, slot: DaySlots, app_set: AppointmentSet, interval) -> BXAppointment:
+        appointment = BXAppointment(
+            id=-1,
+            assignedById=slot.specialist.id,
+            ufCrm3Code=None,
+            ufCrm3Children=self.deal.patient,
+            ufCrm3StartDate=interval.start,
+            ufCrm3EndDate=interval.end,
+            ufCrm3HistoryClient=self.deal.patient            
+        )
+        appointment.code = app_set.type
+        return appointment
 
     async def send_message(self):
         """Посылает сообщение пользователю в битру"""
-        # logger.info('Message was sent')
-        logger.warning('Метод отправки сообщений не написан.')
-        logger.info(f"Сообщение: {self.message}")
+        batches = {}
+        for index, user in enumerate(self.users):
+            batch = BatchBuilder(
+                'im.notify.personal.add',
+                {'USER_ID': user, 'MESSAGE': self.message}
+            )
+            batches[index] = batch.build()
+        await BitrixClient.call_batch(batches)
     
     async def send_appointments(self):
         """Посылает батч-запрос на расстановку занятий в битру."""
-        # logger.info('The appointments were scheduled.')
-        logger.warning('Метод отправки занятий в битру не написан.')
-        logger.info(f'Занятия для отправки:\n' + '\n'.join(self.appointments))
+        for appointment in self.appointments:
+            fields = {
+                'assignedById': appointment.specialist,
+                'ufCrm3Code': [BXConstants.appointment.lfv.idByCode.get(appointment.code)],
+                'ufCrm3Children': appointment.patient,
+                'ufCrm3StartDate': appointment.start.isoformat(),
+                'ufCrm3EndDate': appointment.end.isoformat(),
+                'ufCrm3HistoryClient': appointment.patient      
+            }
+            result = await BitrixClient.create_crm_item(
+                BXConstants.appointment.entityTypeId,
+                fields
+            )
+            appointment.id = result.get('id')
+        logger.info('The appointments were scheduled.')
+        return self.appointments
 
 
 class Context:

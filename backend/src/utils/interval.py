@@ -42,6 +42,7 @@ class Interval:
     def __bool__(self) -> bool:
         return self.start < self.end
     
+    @property
     def duration(self) -> timedelta:
         """Возвращает длительность интервала"""
         return self.end - self.start
@@ -49,7 +50,7 @@ class Interval:
     def is_intersecting(self, other) -> bool:
         """Возвращает True, если интервалы пересекаются и False, в отбратном случае."""
         if not isinstance(other, self.__class__):
-            raise NotImplemented
+            raise ValueError()
         return self.start < other.end and self.end > other.start
 
     def difference(self, other) -> tuple[None, Self]:

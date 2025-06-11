@@ -127,4 +127,3 @@ class BitrixClient:
             }
         }
         return await BITRIX.get_all("crm.item.list", params)
-    

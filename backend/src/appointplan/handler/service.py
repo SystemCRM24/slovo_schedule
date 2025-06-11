@@ -1,4 +1,5 @@
 from typing import Generator
+from datetime import date, timedelta, datetime
 
 from src.schemas.api import BXSpecialist
 from src.schemas.appointplan import BXSchedule, BXAppointment
@@ -13,14 +14,27 @@ class AppointplanException(Exception):
     pass
 
 
-class Slot:
+class DaySlots:
     """Описывает свободный временной слот"""
 
-    __slots__ = ('specialist', 'interval')
+    __slots__ = ('date', 'specialist', 'intervals')
 
-    def __init__(self, specialist: BXSpecialist, interval: Interval):
+    def __init__(self, date: date, specialist: BXSpecialist, intervals: list[Interval]):
+        self.date = date
         self.specialist = specialist
-        self.interval = interval
+        self.intervals = intervals
+    
+    def __str__(self):
+        return f'{self.__class__.__name__}({self.date})'
+    
+    def __repr__(self):
+        return str(self)
+
+    def find(self, duration: timedelta) -> Interval | None:
+        """Возвращает интервал, если он больше длительности или None"""
+        for interval in self.intervals:
+            if interval.duration > duration:
+                return interval
 
 
 class Department:
@@ -28,15 +42,38 @@ class Department:
     def __init__(self):
         self.specialists: list[Specialist] = []
     
-    def free_slots(self) -> Generator[Slot]:
+    def get_slots(self, start: datetime, set_duration: timedelta) -> list[DaySlots]:
         """Выдает свободный слот"""
+        start_date = start.date()
+        dates = set()
         for specialist in self.specialists:
-            yield from specialist.free_slots()
-    
-    def sort_specialists_appointments(self):
-        """Сортирует занятия специалистов по возрастанию времени."""
-        for specialist in self.specialists:
-            specialist.appointments.sort(lambda x: x.start)
+            for slot_date in specialist.map.keys():
+                if slot_date >= start_date:
+                    dates.add(slot_date)
+        dates = sorted(dates)
+        for slot_date in dates:
+            slots = []
+            for specialist in self.specialists:
+                intervals = specialist.map.get(slot_date, None)
+                if intervals is None:
+                    continue
+                slot = DaySlots(slot_date, specialist.info, [])
+                for interval in intervals:
+                    if interval.end < start:
+                        continue
+                    slot_start = start if start > interval.start else interval.start
+                    slot_end = slot_start + set_duration
+                    while slot_end < interval.end:
+                        slot.intervals.append(Interval(slot_start, slot_end))
+                        slot_start = slot_end
+                        slot_end = slot_start + set_duration
+                slots.append(slot)
+            yield slots
+
+    def rebuild_map_of_specialist(self, id: int):
+        for spec in self.specialists:
+            if spec.info.id == id:
+                spec.rebuild_map()
 
 
 class Specialist:
@@ -49,7 +86,6 @@ class Specialist:
     
     def rebuild_map(self):
         """Создает карту (словарь) из свободных промежутков по дням"""
-        print('\n --------', self.info)
         self.map.clear()
         for schedule in self.schedules:
             for interval in schedule.intervals:
@@ -82,76 +118,74 @@ class Specialist:
                 else:
                     schedule_intervals.insert(index + 1, right)
 
-    def free_slots(self) -> Generator[Slot]:
-        """Выдает свободный слот"""
-        for s_interval in self.schedules_intervals:
-            was_intersected = False
-            for appointment in self.appointments:
-                a_interval = appointment.interval
-                # Для оптимизации. Ха-ха-ха, кто бы говорил про оптимизацию скриптов в спецсистеме
-                if not s_interval.is_intersecting(a_interval):           
-                    continue       
-                # Если был пересечен, то выдаем части, оставшиеся от разности интервалов.
-                was_intersected = True
-                result_intervals = s_interval.difference(a_interval)
-                for interval in result_intervals:
-                    if interval is not None:
-                        yield Slot(self.info, interval)
-            # Если не был пересечен, то можно отдать интервал графика
-            if not was_intersected:
-                yield Slot(self.info, s_interval)
-
 
 class AppointmentValidator:
     """Валидирует возможное занятие"""
 
     __slots__ = ('other', 'appointment')
 
-    def __init__(self, other: list[BXAppointment], appointment: BXAppointment):
+    def __init__(self, other: list[BXAppointment]):
         self.other = other
-        self.appointment = appointment
+        self.appointment: BXAppointment = None
 
-    def is_valid(self) -> bool:
+    def check(self, appointment: BXAppointment) -> bool:
         """Валидация занятия"""
+        self.appointment = appointment
         return all(self._validate())
     
     def _validate(self) -> Generator[bool]:
         """Непосредственно, валидирует занятия."""
         # Если список пустой, то можно сразу True возвращать для всего. Сравнивать не с чем
-        if len(self.appointments) == 0:
+        if len(self.other) == 0:
             return True
-        # Проверка на типы занятия
+        if self.appointment is None:
+            return False
         yield self.check_type_limit()
-    
-    def check_same_time(self) -> bool:
-        """Поставить занятие в пересекающиеся временные интервалы мы не можем"""
-        current_interval = self.appointment.interval
-        for appointment in self.other:
-            if current_interval.is_intersecting(appointment.interval):
-                return False
+        yield self.check_day_limit()
+        yield self.check_same_time()
+        yield self.check_break_duration()
 
     def check_type_limit(self) -> bool:
-        """Не больше 2х занятий одного типа в 1 день"""
-        if len(self.other) < 2:         # Если не с чем сравнивать
-            return True
-        prelast, last = self.ohter[-2:]
-        if self.appointment.code != last.code:
-            return True
-
-
-        last_date = last.start.date()
-        current_date = self.appointment.start.date()
-        if current_date != last_date:
-            return True
-
-
-        prelast_date = prelast.start.date()
-        if prelast.start.date() != last.start.date():
-            return True
-        # Если коды отличаются то можно вернуть True сразу.
-        if prelast.code != last.code:
-            return True
-        return False
+        dct = {self.appointment.start.date(): {self.appointment.code: 1}}
+        for appointment in self.other:
+            appointment_date = appointment.start.date()
+            date_record = dct.get(appointment_date, None)
+            if date_record is None:
+                date_record = dct[appointment_date] = {}
+            count = date_record.get(appointment.code, None)
+            if count is None:
+                count = date_record[appointment.code] = 0
+            count += 1
+            if count == 3:
+                return False
+            date_record[appointment.code] = count
+        return True
 
     def check_day_limit(self) -> bool:
         """Не больше 6 занятий в 1 день"""
+        dct = {self.appointment.start.date(): 1}
+        for appointment in self.other:
+            appointment_date = appointment.start.date()
+            count = dct.get(appointment_date, None)
+            if count is None:
+                count = dct[appointment_date] = 0
+            count += 1
+            if count == 7:
+                return False
+        return True
+    
+    def check_same_time(self) -> bool:
+        """Проверяет, не попадают ли занятия на одно время."""
+        for appointment in self.other:
+            if appointment.interval.is_intersecting(self.appointment.interval):
+                return False
+        return True
+
+    def check_break_duration(self) -> bool:
+        """Проверяет занятия на длительность перерыва"""
+        last = self.other[-1]
+        if last.end.date() != self.appointment.end.date():
+            return True
+        break_duration = self.appointment.start - last.end
+        return break_duration < timedelta(minutes=45)
+        
