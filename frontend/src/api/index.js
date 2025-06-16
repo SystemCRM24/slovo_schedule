@@ -146,7 +146,7 @@ class APIClient {
             const specialist = data[appointment.specialist] ??= {};
             const start = new Date(appointment.start);
             const end = new Date(appointment.end);
-            // const startOfDay = new Date(start)
+            const startOfDay = new Date(start)
             startOfDay.setHours(3, 0, 0, 0);
             const day = specialist[startOfDay] ??= [];
             day.push({
