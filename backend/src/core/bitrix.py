@@ -59,7 +59,7 @@ class BitrixClient:
             '@UF_DEPARTMENT': list(BXConstants.departments.keys()),
             'ACTIVE': 'Y',
             'SORT': 'UF_USR_1750081359137',
-            'ORDER': 'asc'
+            'ORDER': {'UF_USR_1750081359137': 'asc'}
         }
         return await BITRIX.get_all('user.get', params)
     
