@@ -19,7 +19,7 @@ async def create_schedule(schedule: Schedule, bt: BackgroundTasks) -> Schedule:
     return schedule
 
 
-@router.get("/{id}", status_code=200)
+@router.get("/?{id}", status_code=200)
 async def get_schedule(id: int, bt: BackgroundTasks) -> BXSchedule:
     seti = BXConstants.schedule.entityTypeId
     data = await BitrixClient.get_crm_item(seti, id)
@@ -30,7 +30,7 @@ async def get_schedule(id: int, bt: BackgroundTasks) -> BXSchedule:
     return schedule
 
 
-@router.put("/{id}", status_code=200)
+@router.put("/?{id}", status_code=200)
 async def update_schedule(id: int, schedule: Schedule, bt: BackgroundTasks) -> Schedule:
     seti = BXConstants.schedule.entityTypeId
     fields = schedule.to_bx()
@@ -39,7 +39,7 @@ async def update_schedule(id: int, schedule: Schedule, bt: BackgroundTasks) -> S
     return schedule
 
 
-@router.delete("/{id}", status_code=204)
+@router.delete("/?{id}", status_code=204)
 async def delete_schedule(id: int, bt: BackgroundTasks):
     seti = BXConstants.schedule.entityTypeId
     result = await BitrixClient.delete_crm_item(seti, id)

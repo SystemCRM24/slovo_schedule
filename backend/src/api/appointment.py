@@ -20,7 +20,7 @@ async def create_appointment(appointment: Appointment, bt: BackgroundTasks) -> A
     return appointment
 
 
-@router.get("/{id}", status_code=200)
+@router.get("/?{id}", status_code=200)
 async def get_appointment(id: int, bt: BackgroundTasks) -> BXAppointment:
     """Получение элемента смарт-процесса Расписание"""
     aety = BXConstants.appointment.entityTypeId
@@ -32,7 +32,7 @@ async def get_appointment(id: int, bt: BackgroundTasks) -> BXAppointment:
     return appointment
 
 
-@router.put("/{id}", status_code=200)
+@router.put("/?{id}", status_code=200)
 async def update_appointment(id: int, appointment: Appointment, bt: BackgroundTasks) -> Appointment:
     """Обновление элемента смарт-процесса расписание"""
     aety = BXConstants.appointment.entityTypeId
@@ -42,7 +42,7 @@ async def update_appointment(id: int, appointment: Appointment, bt: BackgroundTa
     return appointment
 
 
-@router.delete("/{id}", status_code=204)
+@router.delete("/?{id}", status_code=204)
 async def delete_appointment(id: int, bt: BackgroundTasks):
     """Удаляет элемент смарт процесса расписание."""
     aety = BXConstants.appointment.entityTypeId
