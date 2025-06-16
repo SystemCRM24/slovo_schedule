@@ -44,7 +44,7 @@ class APIClient {
 
     constructor() {
         this.serverUrl = 'https://3638421-ng03032.twc1.net/slovo_schedule_api/front/';
-        this.serverUrl = 'http://localhost:8000/front/';
+        // this.serverUrl = 'http://localhost:8000/front/';
         this.testFrom = new Date('2025-04-27T21:00:00.000Z');
         this.testTo = new Date('2025-04-30T20:59:59.167Z');
     }
