@@ -61,7 +61,8 @@ class BitrixClient:
             'SORT': 'UF_USR_1750081359137',
             'ORDER': 'asc'
         }
-        return await BITRIX.call('user.get', params)
+        result = BITRIX.call('user.get', params, raw=True)
+        return await result['result']
     
     @staticmethod
     async def get_all_clients() -> list[dict]:
