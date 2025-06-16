@@ -2,6 +2,7 @@ x-app_environment: &app_env
   environment:
     # Backend
     - BITRIX_WEBHOOK
+    - DEFAULT_USER
     # Frontend
     - VITE_API_URL
     - VITE_BASE_PATH
