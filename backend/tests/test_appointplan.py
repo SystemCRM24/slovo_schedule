@@ -46,23 +46,15 @@ samples = parse_mock_data()
 
 
 @pytest.fixture(scope='class', params=samples)
-def test_handler(request, test_client):
-    return Handler(request.param)
+def test_data(request, test_client):
+    url = f'/test_handle?data={request.param}'
+    result = test_client.post(url).json()
+    yield result
+    for appointment in result:
+        test_client.delete(f'front/appointment/{appointment['id']}')
 
 
 class TestHandler:
 
-    def test_0(self):
-        pass
-
-    def test_1(self):
-        pass
-
-
-# class TestHandlerContext:
-
-#     @pytest.mark.asyncio
-#     async def test_context_filling(self, test_handler: Handler):
-#         result = await test_handler.run()
-#         for appointment in result:
-#             test_handler
+    def test_0(self, test_data):
+        print(test_data)
