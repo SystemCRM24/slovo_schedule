@@ -59,9 +59,9 @@ class BitrixClient:
             '@UF_DEPARTMENT': list(BXConstants.departments.keys()),
             'ACTIVE': 'Y',
             'SORT': 'UF_USR_1750081359137',
-            'ORDER': {'UF_USR_1750081359137': 'asc'}
+            'ORDER': 'asc'
         }
-        return await BITRIX.get_all('user.get', params)
+        return await BITRIX.call('user.get', params)
     
     @staticmethod
     async def get_all_clients() -> list[dict]:
