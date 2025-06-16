@@ -136,10 +136,10 @@ class AppointmentValidator:
     def _validate(self) -> Generator[bool]:
         """Непосредственно, валидирует занятия."""
         # Если список пустой, то можно сразу True возвращать для всего. Сравнивать не с чем
-        if len(self.other) == 0:
-            return True
         if self.appointment is None:
             return False
+        if len(self.other) == 0:
+            return True
         yield self.check_type_limit()
         yield self.check_day_limit()
         yield self.check_same_time()
