@@ -87,14 +87,15 @@ const Schedule = ({fromDate, toDate}) => {
     const headers = useMemo(
         () => {
             const headers = [];
-            console.log('spec',specialists);
-            for (const [id, specialist] of Object.entries(specialists)) {
+            const specValues = Object.values(specialists);
+            specValues.sort((a, b) => a.sort_index - b.sort_index);
+            for (const specialist of specValues) {
                 const codes = specialist.departments.join(', ');
                 headers.push((
                     <th
                         scope="col"
                         style={{minWidth: '220px', whiteSpace: 'pre-wrap'}}
-                        key={`specialist_${id}_header`}
+                        key={`specialist_${specialist.id}_header`}
                     >
                         {specialist.name + '\n' + codes}
                     </th>
