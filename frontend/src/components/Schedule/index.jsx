@@ -87,6 +87,7 @@ const Schedule = ({fromDate, toDate}) => {
     const headers = useMemo(
         () => {
             const headers = [];
+            console.log('spec',specialists);
             for (const [id, specialist] of Object.entries(specialists)) {
                 const codes = specialist.departments.join(', ');
                 headers.push((
