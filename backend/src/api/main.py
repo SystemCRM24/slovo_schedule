@@ -17,7 +17,7 @@ router = APIRouter(prefix="")
 async def get_specialists() -> list[BXSpecialist]:
     """Получение списка специалистов из Bitrix."""
     specialists = await BitrixClient.get_all_specialist()
-    return [BXSpecialist(**s) for s in specialists]
+    return [BXSpecialist(sort=i, **s) for i, s in enumerate(specialists)]
 
 
 @router.get("/get_clients", status_code=200)
