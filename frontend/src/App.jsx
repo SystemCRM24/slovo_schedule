@@ -1,26 +1,25 @@
-import './App.css'
+import './App.css';
 import DateRangePicker from "./components/ui/DateRangePicker/index.jsx";
-import React, {useState, useMemo} from "react";
-import {Container} from "react-bootstrap";
+import React from "react";
+import { Container } from "react-bootstrap";
 import Schedule from "./components/Schedule/index.jsx";
-import {WorkScheduleContextProvider} from "./contexts/WorkSchedule/provider.jsx";
-import {ScheduleContextProvider} from "./contexts/Schedule/provider.jsx";
+import { WorkScheduleContextProvider } from "./contexts/WorkSchedule/provider.jsx";
+import { ScheduleContextProvider } from "./contexts/Schedule/provider.jsx";
+import { AppContextProvider } from "./contexts/App/provider.jsx";
 
 function App() {
-    const [dates, setDates] = useState({fromDate: undefined, toDate: undefined});
-
     return (
-        <>
+        <AppContextProvider>
             <Container fluid className={'mt-2'}>
-                <DateRangePicker setDates={setDates}/>
+                <DateRangePicker />
             </Container>
             <WorkScheduleContextProvider schedule={{}}>
                 <ScheduleContextProvider schedule={{}}>
-                    <Schedule {...dates} />
+                    <Schedule  />
                 </ScheduleContextProvider>
             </WorkScheduleContextProvider>
-        </>
-    )
+        </AppContextProvider>
+    );
 }
 
-export default App
+export default App;

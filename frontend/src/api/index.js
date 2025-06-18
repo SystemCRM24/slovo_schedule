@@ -86,7 +86,7 @@ class APIClient {
             for ( const [key, value] of Object.entries(queries) ) {
                 params.append(key, value);
             }
-            url += `?${params.toString()}`
+            url += `?${params.toString()}`;
         }
         return url;
     }
@@ -210,22 +210,24 @@ class APIClient {
      * @param {string} data.code - код занятия
      */
     async createAppointment(data) {
-        const url = this.getUrl('appointment/');
+        const url = `${this.serverUrl}appointment/`
+        // const url = this.getUrl('appointment/');
         const body = {
             specialist: data.specialist,
             patient: data.patient,
             start: data.start.toISOString(), 
             end: data.end.toISOString(), 
             status: data.status,
-            code: data.code
+            code: data.code,
+            old_patient: data.patient
         };
 
-        if (!body.specialist || !body.patient || !body.start || !body.end || !body.status || !body.code) {
+        if (!body.specialist || !body.patient || !body.start || !body.end || !body.code) {
             throw new Error('Все поля (specialist, patient, start, end, status, code) должны быть заполнены');
         }
-        if (!constants.listFieldValues.appointment.idByStatus[body.status]) {
-            throw new Error(`Недопустимый статус: ${body.status}`);
-        }
+        // if (!constants.listFieldValues.appointment.idByStatus[body.status]) {
+        //     throw new Error(`Недопустимый статус: ${body.status}`);
+        // }
         if (!constants.listFieldValues.appointment.idByCode[body.code]) {
             throw new Error(`Недопустимый код: ${body.code}`);
         }
@@ -244,7 +246,8 @@ class APIClient {
      * @param {string} id
      */
     async getAppointment(id) {
-        const url = this.getUrl('appointment/', { id });
+        const url = `${this.serverUrl}appointment/${id}`
+        // const url = this.getUrl('appointment/', { id });
 
         const response = await this.get(url);
 
@@ -275,22 +278,25 @@ class APIClient {
      * @param {string} data.code - код занятия
      */
     async updateAppointment(id, data) {
-        const url = this.getUrl('appointment/', { id });
+        const url = `${this.serverUrl}appointment/${id}`
+        // const url = this.getUrl('appointment/', { id });
         const body = {
+            id: data.id,
             specialist: data.specialist,
             patient: data.patient,
             start: data.start.toISOString(),
             end: data.end.toISOString(),
             status: data.status,
-            code: data.code
+            code: data.code,
+            old_patient: data.old_patient
         };
         
-        if (!body.specialist || !body.patient || !body.start || !body.end || !body.status || !body.code) {
+        if (!body.specialist || !body.patient || !body.start || !body.end || !body.code) {
             throw new Error('Все поля (specialist, patient, start, end, status, code) должны быть заполнены');
         }
-        if (!constants.listFieldValues.appointment.idByStatus[body.status]) {
-            throw new Error(`Недопустимый статус: ${body.status}`);
-        }
+        // if (!constants.listFieldValues.appointment.idByStatus[body.status]) {
+        //     throw new Error(`Недопустимый статус: ${body.status}`);
+        // }
         if (!constants.listFieldValues.appointment.idByCode[body.code]) {
             throw new Error(`Недопустимый код: ${body.code}`);
         }
@@ -310,7 +316,8 @@ class APIClient {
      * @returns
      */
     async deleteAppointment(id) {
-        const url = this.getUrl('appointment/', {id})
+        const url = `${this.serverUrl}appointment/${id}`
+        // const url = this.getUrl('appointment/', {id})
         return await this.delete(url);
     }
 

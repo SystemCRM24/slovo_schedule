@@ -1,8 +1,9 @@
-import React, {Suspense, useEffect, useState, useMemo} from 'react';
+import React, {Suspense, useEffect, useState, useMemo, useContext} from 'react';
 import {Spinner, Table} from "react-bootstrap";
 
 import DaySchedule from '../DaySchedule';
 import apiClient from "../../api/";
+import { AppContext } from '../../contexts/App/context.js';
 import {useScheduleContext} from "../../contexts/Schedule/provider.jsx";
 import {useWorkScheduleContext} from "../../contexts/WorkSchedule/provider.jsx";
 import {SpecialistContextProvider} from "../../contexts/Specialist/provider.jsx";
@@ -50,7 +51,9 @@ const Legenda = () => {
 }
 
 
-const Schedule = ({fromDate, toDate}) => {
+const Schedule = ({}) => {
+    const { dates } = useContext(AppContext);
+    const { fromDate, toDate } = dates;
     const [specialists, setSpecialists] = useState({});
     const [children, setChildren] = useState({})
     const [schedule, setSchedule] = useScheduleContext();

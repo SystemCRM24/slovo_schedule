@@ -1,10 +1,12 @@
-import React, {useState, useMemo, useEffect, useCallback} from 'react';
+import React, {useState, useMemo, useEffect, useCallback, useContext} from 'react';
 import {Button, Form} from "react-bootstrap";
 import { DateTime } from 'luxon';
+import { AppContext } from '../../../contexts/App/context';
 
 import './DateRangePicker.css'
 
-const DateRangePicker = ({setDates}) => {
+const DateRangePicker = () => {
+    const { setDates } = useContext(AppContext);
 
     const [startOfWeek, endOfWeek] = useMemo(
         () => {
