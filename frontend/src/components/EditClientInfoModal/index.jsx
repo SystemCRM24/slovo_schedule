@@ -164,7 +164,7 @@ const EditClientInfoModal = ({ id, show, setShow, startDt, endDt, patientId, pat
                             !workDay
                             // (!!appointment.start && !isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals))
                         }
-                    />
+                    /> 
                 </InputGroup>
                 <label>Исполнитель</label>
                 <InputGroup hasValidation>
