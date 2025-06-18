@@ -29,8 +29,6 @@ app.include_router(appointplan_router)
 app.include_router(api_router)
 
 
-
-
 @app.get('/ping', status_code=200, tags=['Main'])
 async def ping() -> str:
     return 'pong'

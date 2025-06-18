@@ -137,13 +137,16 @@ class AppointmentValidator:
         """Непосредственно, валидирует занятия."""
         # Если список пустой, то можно сразу True возвращать для всего. Сравнивать не с чем
         if len(self.other) == 0:
-            return True
-        if self.appointment is None:
-            return False
+            yield True
+            return
+        yield self.check_appointment_type()
         yield self.check_type_limit()
         yield self.check_day_limit()
         yield self.check_same_time()
         yield self.check_break_duration()
+    
+    def check_appointment_type(self) -> bool:
+        return isinstance(self.appointment, BXAppointment)
 
     def check_type_limit(self) -> bool:
         dct = {self.appointment.start.date(): {self.appointment.code: 1}}

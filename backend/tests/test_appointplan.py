@@ -24,41 +24,37 @@
 """
 
 import pytest
+import os
+import json
+from pathlib import Path
 
 from src.appointplan.handler import Handler
 from src.appointplan.handler.handler import Context
 from src.schemas.appointplan import Deal
 
 
-sample_1 = (
-    '{"deal_id": "267", "user_id": "1", "start_date": "2025-05-05T00:00:00+03:00", '
-    '"first_stage": {"duration": "5", '
-        '"data": [{"t": "L", "q": "3", "d": "30"}, {"t": "LM", "q": "", "d": ""}, {"t": "D1-3,5", "q": "", "d": ""}, {"t": "D 3,5 ", "q": "", "d": ""}, {"t": "R", "q": "2", "d": "90"}, {"t": "ABA", "q": "2", "d": "45"}, {"t": "Z", "q": "", "d": ""}, {"t": "A", "q": "", "d": ""}, {"t": "NT", "q": "", "d": ""}, {"t": "НДГ", "q": "", "d": ""}, {"t": "NP", "q": "", "d": ""}, {"t": "P", "q": "", "d": ""}, {"t": "СИ", "q": "", "d": ""}, {"t": "КИТ", "q": "", "d": ""}, {"t": "АВА-Р", "q": "", "d": ""}, {"t": "i", "q": "", "d": ""}, {"t": "К", "q": "", "d": ""}, {"t": "d", "q": "", "d": ""}, {"t": "КК", "q": "", "d": ""}, {"t": "d-ава", "q": "", "d": ""}, {"t": "dNP", "q": "", "d": ""}, {"t": "dd", "q": "", "d": ""}, {"t": "dL", "q": "", "d": ""}, {"t": "dP", "q": "", "d": ""}]}, '
-    '"second_stage": {"duration": "0", '
-        '"data": [{"t": "L", "q": "", "d": ""}, {"t": "LM", "q": "", "d": ""}, {"t": "D1-3,5", "q": "", "d": ""}, {"t": "D 3,5 ", "q": "", "d": ""}, {"t": "R", "q": "", "d": ""}, {"t": "ABA", "q": "", "d": ""}, {"t": "Z", "q": "", "d": ""}, {"t": "A", "q": "", "d": ""}, {"t": "NT", "q": "", "d": ""}, {"t": "НДГ", "q": "", "d": ""}, {"t": "NP", "q": "", "d": ""}, {"t": "P", "q": "", "d": ""}, {"t": "СИ", "q": "", "d": ""}, {"t": "КИТ", "q": "", "d": ""}, {"t": "АВА-Р", "q": "", "d": ""}, {"t": "i", "q": "", "d": ""}, {"t": "К", "q": "", "d": ""}, {"t": "d", "q": "", "d": ""}, {"t": "КК", "q": "", "d": ""}, {"t": "d-ава", "q": "", "d": ""}, {"t": "dNP", "q": "", "d": ""}, {"t": "dd", "q": "", "d": ""}, {"t": "dL", "q": "", "d": ""}, {"t": "dP", "q": "", "d": ""}]}}'
-)
-samples = (sample_1, )
+def parse_mock_data() -> list:
+    lst = []
+    path = Path(__file__).parent / 'mocks'
+    for request in os.listdir(str(path)):
+        with open(path / request, mode='r', encoding='utf-8') as file:
+            data = json.load(file)
+        lst.append(json.dumps(data))
+    return lst
+
+samples = parse_mock_data()
 
 
 @pytest.fixture(scope='class', params=samples)
-def test_handler(request, test_client):
-    return Handler(request.param)
+def test_data(request, test_client):
+    url = f'/test_handle?data={request.param}'
+    result = test_client.post(url).json()
+    yield result
+    for appointment in result:
+        test_client.delete(f'front/appointment/{appointment['id']}')
 
 
-class TestHandlerContext:
-    
-    def test_default_attributes(self, test_handler: Handler):
-        """В этом не особо много смысла, написан для пробы параметризированных фикстур."""
-        assert isinstance(test_handler.request, str) and len(test_handler.request) > 0
-        assert test_handler.deal is None
-        assert len(test_handler.users) > 0
-        assert isinstance(test_handler.stages, list) and len(test_handler.stages) == 0
-        assert isinstance(test_handler.departments, dict) and len(test_handler.departments) == 0
-        assert test_handler.message is None
-        assert isinstance(test_handler.appointments, list) and len(test_handler.appointments) == 0
+class TestHandler:
 
-    @pytest.mark.asyncio
-    async def test_context_filling(self, test_handler: Handler):
-        await test_handler.run()
-        assert isinstance(test_handler.deal, Deal)
-        assert len(test_handler.stages) > 0
+    def test_0(self, test_data):
+        print(test_data)

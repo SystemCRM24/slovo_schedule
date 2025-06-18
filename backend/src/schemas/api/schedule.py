@@ -5,7 +5,7 @@ from src.core import BXConstants
 
 class Schedule(BaseModel):
     """Договор для фронта"""
-    id: int | None
+    id: int | None = None
     specialist: int
     date: str
     intervals: list[str]

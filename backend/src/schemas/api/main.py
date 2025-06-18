@@ -8,6 +8,7 @@ class BXSpecialist(BaseModel):
     first_name: str = Field(validation_alias='NAME', exclude=True)
     last_name: str = Field(validation_alias='LAST_NAME', exclude=True)
     departments: list[str] = Field(validation_alias='UF_DEPARTMENT')
+    sort_index: int = 0
 
     model_config = ConfigDict(extra='ignore')
 

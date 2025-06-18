@@ -60,7 +60,6 @@ class Handler:
             days = department.get_slots(start, app_set.duration)
             is_find = None
             for slots_of_day in days:
-                print(slots_of_day)
                 if set_qty > 2:     # В рамках дня пытаемся найти время для 2х занятий
                     first, second = self.find_double(slots_of_day)
                     is_first_valid = is_second_valid = False

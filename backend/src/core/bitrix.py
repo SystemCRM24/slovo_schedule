@@ -57,9 +57,12 @@ class BitrixClient:
     async def get_all_specialist() -> list[dict]:
         params = {
             '@UF_DEPARTMENT': list(BXConstants.departments.keys()),
-            'ACTIVE': 'Y'
+            'ACTIVE': 'Y',
+            'SORT': 'UF_USR_1750081359137',
+            'ORDER': 'asc'
         }
-        return await BITRIX.get_all('user.get', params)
+        result = await BITRIX.call('user.get', params, raw=True)
+        return result['result']
     
     @staticmethod
     async def get_all_clients() -> list[dict]:
