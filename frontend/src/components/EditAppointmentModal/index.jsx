@@ -13,7 +13,6 @@ import EditClientInfoModal from "../../components/EditClientInfoModal/index.jsx"
 
 const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, patientType, status, oldpatientId, showModalEdit, setShowModalEdit }) => {
     const { specialistId, specialist } = useSpecialist();
-    // const [showModalEdit, setShowModalEdit] = useState(false)
     const [appointment, setAppointment] = useState({
         id: id,
         status: status,
@@ -22,7 +21,9 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
         start: startDt,
         end: endDt,
         specialist: specialistId,
+        old_patient: oldpatientId
     });
+
     const { schedule, generalSchedule, setGeneralSchedule, workSchedule } = useSchedules();
     const patients = useChildrenContext();
     const patientName = useMemo(() => patients?.[patientId], [patientId, patients]);
@@ -73,7 +74,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
             const [hoursString, minutesString] = value.split(':');
             const hours = parseInt(hoursString);
             const minutes = parseInt(minutesString);
-            newValue = getDateWithTime(workDay, hours, minutes);
+            newValue = getDateWithTime(day, hours, minutes);
         } else {
             newValue = value;
         }
@@ -99,7 +100,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
             patient: appointment.patientId,
             code: appointment.patientType,
             status: appointment.status,
-            old_patient: oldpatientId,
+            old_patient: appointment.old_patient
         };
         const result = await apiClient.updateAppointment(id, newRecord);
         if (result) {
@@ -124,7 +125,6 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                 }
             });
             setShow(false);
-            setDates({ fromDate: workDay, toDate: dates.toDate });
         }
     };
 
@@ -237,17 +237,6 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                 <Button variant="warning" onClick={onModalEditBtnClick} className={'mt-3'}>
                     Изменить
                 </Button>
-                {/* <EditClientInfoModal
-                    show={showModalEdit}
-                    setShow={setShowModalEdit}
-                    id={id}
-                    startDt={startDt}
-                    endDt={endDt}
-                    patientId={patientId}
-                    patientType={patientType}
-                    status={status}
-                    oldpatientId={oldpatientId}
-                /> */}
             </div>
         </CustomModal>
     );

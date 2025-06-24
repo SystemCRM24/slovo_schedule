@@ -10,6 +10,7 @@ import useSpecialist from "../../hooks/useSpecialist.js";
 import { getDateWithTime, getISODate, getTimeStringFromDate, isIntervalValid, isNewScheduleIntervalValid } from "../../utils/dates.js";
 import { useChildrenContext } from "../../contexts/Children/provider.jsx";
 import apiClient, { constants } from "../../api/index.js";
+import { useWorkScheduleContext } from "../../contexts/WorkSchedule/provider.jsx";
 
 const EditClientInfoModal = ({ id, show, setShow, startDt, endDt, patientId, patientType, status, oldpatientId }) => {
     const { specialistId, specialist } = useSpecialist();
@@ -22,8 +23,9 @@ const EditClientInfoModal = ({ id, show, setShow, startDt, endDt, patientId, pat
         patientType: patientType,
         start: startDt,
         end: endDt,
-        specialist: specialistId,
+        specialist: specialistId
     });
+    const [generalWorkSchedule, setGeneralWorkSchedule] = useWorkScheduleContext();
     const { schedule, generalSchedule, setGeneralSchedule, workSchedule } = useSchedules();
     const patients = useChildrenContext();
     const patientName = useMemo(() => patients?.[patientId], [patientId, patients]);
@@ -47,6 +49,10 @@ const EditClientInfoModal = ({ id, show, setShow, startDt, endDt, patientId, pat
         return schedule.filter((value, index) => index !== recordIndex);
     }, [recordIndex, schedule]);
 
+    console.log("ОТВЕТ GENERAL WORK SCHEDULE", generalWorkSchedule)
+    console.log("schedule without item", scheduleWithoutCurrentElem)
+    
+
     const onSubmit = async () => {
         const newRecord = {
             id: appointment.id,
@@ -56,7 +62,7 @@ const EditClientInfoModal = ({ id, show, setShow, startDt, endDt, patientId, pat
             patient: appointment.patientId,
             code: appointment.patientType,
             status: appointment.status,
-            old_patient: oldpatientId,
+            old_patient: oldpatientId
         };
         const result = await apiClient.updateAppointment(id, newRecord);
         if (result) {
@@ -109,6 +115,26 @@ const EditClientInfoModal = ({ id, show, setShow, startDt, endDt, patientId, pat
             setShow(false);
         }
     };
+    const defaultSelectValues = useMemo(() => [15, 30, 45, 60, 90, 120, 130], []);
+
+    const selectValue = useMemo(() => (appointment.end - appointment.start) / 60000, [appointment]);
+
+    const selectOptions = useMemo(() => {
+        const options = defaultSelectValues.map((value) => (
+            <option value={value} key={`duration_${value}`}>
+                {value} минут
+            </option>
+        ));
+        if (!defaultSelectValues.includes(selectValue)) {
+            options.push(
+                <option value={selectValue} key={`duration_${selectValue}`}>
+                    {selectValue} минут
+                </option>
+            );
+        }
+        return options;
+    }, [selectValue, defaultSelectValues]);
+
     const handleDateInputChange = async (e) => {
         const newDate = new Date(e.target.value);
         if (!isNaN(newDate.getTime())) {
@@ -120,7 +146,16 @@ const EditClientInfoModal = ({ id, show, setShow, startDt, endDt, patientId, pat
             await onChange('start', newStart);
             await onChange('end', newEnd);
             setWorkDay(newDate);
+            // const toDate = new Date(newDate);
+            // toDate.setHours(23, 59, 59, 999);
+
         }
+    };
+
+    const handleSelectInputChange = async (e) => {
+        const minutes = e.target.value;
+        const end = new Date(appointment.start.getTime() + minutes * 60 * 1000);
+        await onChange('end', end);
     };
     const handleInputChange = async (e) => {
         const { name, value } = e.target;
@@ -144,28 +179,69 @@ const EditClientInfoModal = ({ id, show, setShow, startDt, endDt, patientId, pat
             show={show}
             handleClose={() => setShow(false)}
             title={`Изменить параметры`}
-            primaryBtnDisabled={!workDay}
+            primaryBtnDisabled={
+                !workDay ||
+                !appointment.start ||
+                !isIntervalValid(appointment) ||
+                !isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals)
+            }
             handlePrimaryBtnClick={onSubmit}
             primaryBtnText={'Сохранить'}
         >
             <div className="d-flex flex-column align-items-center justify-content-center w-100 h-100 gap-2">
-                <label>Дата занятия</label>
-                <InputGroup hasValidation>
-                    <FormControl
-                        type={'date'}
-                        value={getISODate(workDay)}
-                        name={'day'}
-                        onChange={async (e) => {
-                            await handleDateInputChange(e);
-                        }}
-                        style={{ textAlign: "center" }}
-                        required
-                        isInvalid={
-                            !workDay
-                            // (!!appointment.start && !isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals))
-                        }
-                    /> 
-                </InputGroup>
+                <div className="d-flex w-100 align-items-center" style={{ gap: "1rem", whiteSpace: "nowrap" }}>
+                    <label>Дата занятия</label>
+                    <InputGroup hasValidation>
+                        <FormControl
+                            type={'date'}
+                            value={getISODate(workDay)}
+                            name={'day'}
+                            onChange={async (e) => {
+                                await handleDateInputChange(e);
+                            }}
+                            style={{ textAlign: "center" }}
+                            required
+                            isInvalid={
+                                !workDay &&
+                                (!!appointment.start && !isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals))
+                            }
+                        />
+                    </InputGroup>
+                    <label>Начало занятия</label>
+                    <InputGroup hasValidation>
+                        <FormControl
+                            type={'time'}
+                            value={getTimeStringFromDate(appointment.start)}
+                            name={'start'}
+                            onChange={async (e) => {
+                                await handleInputChange(e);
+                            }}
+                            style={{ textAlign: "center" }}
+                            required
+                            isInvalid={
+                                !appointment.start ||
+                                (!!appointment.start && !isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals))
+                            }
+                        />
+                    </InputGroup>
+                    <label>Продолжительность</label>
+                    <InputGroup hasValidation>
+                        <FormControl
+                            as={'select'}
+                            style={{ textAlign: "center" }}
+                            disabled={!appointment.start}
+                            required
+                            value={selectValue}
+                            onChange={async (e) => await handleSelectInputChange(e)}
+                            isInvalid={
+                                appointment.start !== undefined &&
+                                (!isIntervalValid(appointment) || !isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals))
+                            }
+                        >
+                            {selectOptions}
+                        </FormControl>
+                    </InputGroup>
+                </div>
                 <label>Исполнитель</label>
                 <InputGroup hasValidation>
                     <FormSelect

@@ -13,6 +13,10 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
     const [showModalEdit, setShowModalEdit] = useState(false);
     const { schedule } = useSchedules();
 
+    const oldpatientId = useMemo(
+        () => schedule[0]?.old_patient || 0,
+        [schedule, patientId]
+    );
     const intervalStatus = useMemo(
         () => {
             if (status) {
@@ -20,7 +24,7 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
             }
             if (schedule.length > 0) {
                 const oldPatient = schedule[0].old_patient;
-                if (oldPatient && oldPatient !== patientId) {
+                if (oldpatientId && oldpatientId !== patientId) {
                     return 'replace';
                 }
                 return 'booked';
@@ -28,10 +32,6 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
             return 'na';
         },
         [schedule, status, patientId]
-    );
-    const oldpatientId = useMemo(
-        () => schedule[0]?.old_patient || 0,
-        [schedule, patientId]
     );
 
     const patients = useChildrenContext();

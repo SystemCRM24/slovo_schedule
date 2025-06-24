@@ -88,7 +88,8 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
             end: undefined,
             patientId: undefined,
             patientType: undefined,
-            status: 'booked'
+            status: 'booked',
+            old_patient: undefined
         }]);
     }
 
@@ -151,6 +152,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                 code: item.patientType,
                 patient: item.patientId,
                 specialist: specialistId,
+                old_patient: item.patientId
             }
         });
         if (

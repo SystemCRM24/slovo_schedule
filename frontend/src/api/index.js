@@ -24,16 +24,16 @@ export const constants = {
             statusById: {50: 'booked', 51: 'confirmed'},
             idByStatus: {'booked': 50, 'confirmed': 51},
             idByCode: {
-                "L": "52", "A": "53", "LM": "54", "R": "55", "D": "56", "СИ": "57",
-                "НДГ": "58", "АБА": "59", "NP ИПР": "60", "NP  IQ": "61", "P": "62", "Z": "63",
-                "КИТ": "64", "d": "65", "d-L": "66", "d-P": "67", "d-Z": "68", "d-НЭК": "69", "d-NP": "70",
-                "d-Р": "71", "d-ABA": "72", "d-СИ": "73", "АВА-ИА": "74", "АВА-Р": "75"
+                "L": "52", "LM": "54", "D1-3,5": "55", "D 3,5+": "56", "R": "57", "Z": "58",
+                "A": "59", "NT": "60", "НДГ": "61", "NP": "62", "P": "63", "СИ": "64",
+                "КИТ": "65", "АВА-Р": "66", "i": "67", "К": "68", "d": "69", "КК": "70",
+                "d-ава": "71", "dNP": "72", "dd": "73", "dL": "74", "dP": "75"
             },
             codeById: {
-                "52": "L", "53": "A", "54": "LM", "55": "R", "56": "D", "57": "СИ",
-                "58": "НДГ", "59": "АБА", "60": "NP ИПР", "61": "NP IQ", "62": "P", "63": "Z",
-                "64": "КИТ", "65": "d", "66": "d-L", "67": "d-P", "68": "d-Z", "69": "d-НЭК",
-                "70": "d-NP", "71": "d-Р", "72": "d-ABA", "73": "d-СИ", "74": "АВА-ИА", "75": "АВА-Р"
+                "52": "L", "54": "LM", "55": "D1-3,5", "56": "D 3,5+", "57": "R", "58": "Z",
+                "59": "A", "60": "NT", "61": "НДГ", "62": "NP", "63": "P", "64": "СИ",
+                "65": "КИТ", "66": "АВА-Р", "67": "i", "68": "К", "69": "d", "70": "КК",
+                "71": "d-ава", "72": "dNP", "73": "dd", "74": "dL", "75": "dP"
             }
         }
     }
@@ -139,7 +139,9 @@ class APIClient {
      @returns object - объект рсаписания на указанный промежуток врмеени
      */
     async getSchedules(from, to) {
-        const url = this.getUrl('get_schedules', {start: from.toISOString(), end: to.toISOString()});
+        const endOfTo = new Date(to);
+        endOfTo.setDate(endOfTo.getDate() + 1)
+        const url = this.getUrl('get_schedules', {start: from.toISOString(), end: endOfTo.toISOString()});
         const response = await this.get(url);
         const data = {};
         for ( const appointment of response ) {
