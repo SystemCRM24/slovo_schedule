@@ -380,7 +380,17 @@ class APIClient {
      * Обновляет константные значения.-
      */
     async updateConstants() {
-
+        const url = this.getUrl('get_constants');
+        const response = await this.get(url);
+        response.departments && (constants.departments = response.departments);
+        const codeById = response?.appointment?.lfv?.codeById;
+        if ( codeById ) {
+            constants.listFieldValues.appointment.codeById = codeById;
+        }
+        const idByCode = response?.appointment?.lfv?.idByCode;
+        if ( idByCode ) {
+            constants.listFieldValues.appointment.idByCode = idByCode;
+        }
     }
 }
 

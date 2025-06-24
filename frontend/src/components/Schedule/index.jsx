@@ -61,6 +61,7 @@ const Schedule = ({ }) => {
 
     useEffect(() => {
         (async () => {
+            apiClient.updateConstants();
             const [allSpecialists, children] = await Promise.all([
                 apiClient.getSpecialists(),
                 apiClient.getClients()
