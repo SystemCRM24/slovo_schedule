@@ -375,6 +375,13 @@ class APIClient {
         const url = this.getUrl('schedule/', {id});
         return await this.delete(url);
     }
+
+    /**
+     * Обновляет константные значения.-
+     */
+    async updateConstants() {
+
+    }
 }
 
 
