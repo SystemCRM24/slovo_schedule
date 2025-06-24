@@ -102,3 +102,68 @@ class TestGetSchedules:
             assert isinstance(item, dict)
             schedule = BXSchedule(**item)
             assert schedule.is_valid()
+
+
+# ========== Тесты для /get_constants ==========
+
+@pytest.fixture(scope='class')
+def constants_response(test_client) -> Response:
+    return test_client.get('/front/get_constants')
+
+
+@pytest.fixture(scope='class')
+def constants_json(constants_response) -> dict:
+    return constants_response.json()
+
+
+class TestGetConstants:
+
+    def test_status_code(self, constants_response):
+        assert constants_response.status_code == 200
+
+    def test_return_type_is_dict(self, constants_json):
+        assert isinstance(constants_json, dict)
+
+    def test_expected_top_level_keys(self, constants_json):
+        expected_keys = {'appointment', 'schedule', 'deal', 'departments', 'department_ids'}
+        returned_keys = set(constants_json.keys())
+        assert expected_keys.issubset(returned_keys), f"Missing keys: {expected_keys - returned_keys}"
+
+    def test_appointment_structure(self, constants_json):
+        appointment = constants_json['appointment']
+        assert isinstance(appointment, dict)
+        assert 'entityTypeId' in appointment
+        assert isinstance(appointment['entityTypeId'], int)
+        assert 'uf' in appointment
+        assert isinstance(appointment['uf'], dict)
+        assert 'specialist' in appointment['uf']
+        assert isinstance(appointment['uf']['specialist'], str)
+
+    def test_schedule_structure(self, constants_json):
+        schedule = constants_json['schedule']
+        assert isinstance(schedule, dict)
+        assert 'entityTypeId' in schedule
+        assert isinstance(schedule['entityTypeId'], int)
+        assert 'uf' in schedule
+        assert isinstance(schedule['uf'], dict)
+        assert 'specialist' in schedule['uf']
+        assert isinstance(schedule['uf']['specialist'], str)
+
+    def test_deal_structure(self, constants_json):
+        deal = constants_json['deal']
+        assert isinstance(deal, dict)
+        assert len(deal) == 0
+
+    def test_departments_structure(self, constants_json):
+        departments = constants_json['departments']
+        assert isinstance(departments, dict)
+        for key, value in departments.items():
+            assert isinstance(key, str)
+            assert isinstance(value, str)
+
+    def test_department_ids_structure(self, constants_json):
+        department_ids = constants_json['department_ids']
+        assert isinstance(department_ids, dict)
+        for key, value in department_ids.items():
+            assert isinstance(key, str)
+            assert isinstance(value, str)
