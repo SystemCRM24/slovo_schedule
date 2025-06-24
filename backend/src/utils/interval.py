@@ -11,9 +11,9 @@ class Interval:
     @classmethod
     def from_timestamp(cls, start: float, end: float) -> Self:
         """Создает объект на основе таймстампов"""
-        start = datetime.fromtimestamp(start, Settings.TIMEZONE)
-        end = datetime.fromtimestamp(end, Settings.TIMEZONE)
-        return cls(start, end)
+        s = datetime.fromtimestamp(start, Settings.TIMEZONE)
+        e = datetime.fromtimestamp(end, Settings.TIMEZONE)
+        return cls(s, e)
     
     @classmethod
     def from_js_timestamp(cls, start: int | str, end: int | str) -> Self:
@@ -23,9 +23,9 @@ class Interval:
     
     @classmethod
     def from_iso(cls, start: str, end: str) -> Self:
-        start=datetime.fromisoformat(start)
-        end=datetime.fromisoformat(end)
-        return cls(start, end)
+        s = datetime.fromisoformat(start)
+        e = datetime.fromisoformat(end)
+        return cls(s, e)
 
     def __init__(self, start: datetime, end: datetime):
         self.start = start
@@ -53,7 +53,7 @@ class Interval:
             raise ValueError()
         return self.start < other.end and self.end > other.start
 
-    def difference(self, other) -> tuple[None, Self]:
+    def difference(self, other) -> tuple[None | Self, None | Self]:
         """Возвращает разницу интервалов"""
         first = second = None
         if self.is_intersecting(other):
