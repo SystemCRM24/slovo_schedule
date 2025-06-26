@@ -10,11 +10,11 @@ const DateRangePicker = () => {
 
     const [startOfWeek, endOfWeek] = useMemo(
         () => {
-            // const now = DateTime.utc();
-            // const startOfWeek = now.startOf('week');
-            // const endOfWeek = now.endOf('week').minus({'hours': 3});
-            const startOfWeek = DateTime.fromObject({ year: 2025, month: 5, day: 5 }, { zone: 'utc' }).startOf('day');
-            const endOfWeek = DateTime.fromObject({ year: 2025, month: 5, day: 7 }, { zone: 'utc' }).endOf('day').minus({'hours': 3});
+            const now = DateTime.utc();
+            const startOfWeek = now.startOf('week');
+            const endOfWeek = now.endOf('week').minus({'hours': 3});
+            // const startOfWeek = DateTime.fromObject({ year: 2025, month: 5, day: 5 }, { zone: 'utc' }).startOf('day');
+            // const endOfWeek = DateTime.fromObject({ year: 2025, month: 5, day: 7 }, { zone: 'utc' }).endOf('day').minus({'hours': 3});
             return [startOfWeek.toUTC().toJSDate(), endOfWeek.toUTC().toJSDate()];
         },
         []

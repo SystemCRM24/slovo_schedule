@@ -227,7 +227,6 @@ const EditClientInfoModal = ({ id, show, setShow }) => {
             old_patient: updatedAppointment.old_patient
         };
         const result = await apiClient.updateAppointment(updatedAppointment.id, data);
-        console.log('[debug]', result);
         setShow(false);
         setDates({fromDate: new Date(dates.fromDate), toDate: new Date(dates.toDate)});
     };
