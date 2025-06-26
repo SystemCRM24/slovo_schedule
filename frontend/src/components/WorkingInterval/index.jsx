@@ -77,31 +77,24 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
                 <EditWorkScheduleModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt} />
             }
             {(intervalStatus === "booked" || intervalStatus === 'skip' || intervalStatus === 'replace') &&
-                <EditAppointmentModal
-                    id={id}
-                    show={showModal}
-                    setShow={setShowModal}
-                    startDt={startDt}
-                    endDt={endDt}
-                    patientId={patientId}
-                    patientType={patientType}
-                    status={intervalStatus}
-                    oldpatientId={oldpatientId}
-                    showModalEdit={showModalEdit}
-                    setShowModalEdit={setShowModalEdit}
-                />
+                <>
+                    <EditAppointmentModal
+                        id={id}
+                        show={showModal}
+                        setShow={setShowModal}
+                        startDt={startDt}
+                        endDt={endDt}
+                        patientId={patientId}
+                        patientType={patientType}
+                        status={intervalStatus}
+                        oldpatientId={oldpatientId}
+                        showModalEdit={showModalEdit}
+                        setShowModalEdit={setShowModalEdit}
+                    />
+                    <EditClientInfoModal show={showModalEdit} setShow={setShowModalEdit} id={id}/>
+                </>
+
             }
-            <EditClientInfoModal
-                show={showModalEdit}
-                setShow={setShowModalEdit}
-                id={id}
-                startDt={startDt}
-                endDt={endDt}
-                patientId={patientId}
-                patientType={patientType}
-                status={status}
-                oldpatientId={oldpatientId}
-            />
         </div>
     );
 };

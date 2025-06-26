@@ -1,227 +1,282 @@
-import React, { useCallback, useContext, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import CustomModal from "../ui/Modal/index.jsx";
-import { Button, FormControl, FormSelect, InputGroup } from "react-bootstrap";
+import { FormControl, FormSelect, InputGroup } from "react-bootstrap";
 
-import { useDayContext } from "../../contexts/Day/provider.jsx";
 import { AppContext } from "../../contexts/App/context.js";
 import { useAllSpecialistsContext } from "../../contexts/AllSpecialists/provider.jsx";
 import useSchedules from "../../hooks/useSchedules.js";
 import useSpecialist from "../../hooks/useSpecialist.js";
 import { getDateWithTime, getISODate, getTimeStringFromDate, isIntervalValid, isNewScheduleIntervalValid } from "../../utils/dates.js";
-import { useChildrenContext } from "../../contexts/Children/provider.jsx";
-import apiClient, { constants } from "../../api/index.js";
-import { useWorkScheduleContext } from "../../contexts/WorkSchedule/provider.jsx";
+import apiClient from "../../api/index.js";
 
-const EditClientInfoModal = ({ id, show, setShow, startDt, endDt, patientId, patientType, status, oldpatientId }) => {
-    const { specialistId, specialist } = useSpecialist();
+const EditClientInfoModal = ({ id, show, setShow }) => {
+    const {
+        schedule: appointmentsOfDay,
+        workSchedule: schedulesOfDay,
+        generalSchedule: appointments,
+        generalWorkSchedule: schedules,
+        setGeneralSchedule: setAppointments,
+        setGeneralWorkSchedule: setSchedules
+    } = useSchedules();
+
+    const appointment = useMemo(
+        () => {
+            for ( const appointment of appointmentsOfDay ) {
+                if ( appointment.id === id ) {
+                    return appointment;
+                }
+            }
+        }, 
+        [id, appointmentsOfDay]
+    );
+
     const specialists = useAllSpecialistsContext();
-    const { dates, setDates } = useContext(AppContext)
-    const [appointment, setAppointment] = useState({
-        id: id,
-        status: status,
-        patientId: patientId,
-        patientType: patientType,
-        start: startDt,
-        end: endDt,
-        specialist: specialistId
-    });
-    const [generalWorkSchedule, setGeneralWorkSchedule] = useWorkScheduleContext();
-    const { schedule, generalSchedule, setGeneralSchedule, workSchedule } = useSchedules();
-    const patients = useChildrenContext();
-    const patientName = useMemo(() => patients?.[patientId], [patientId, patients]);
-    const day = useDayContext();
-    const children = useChildrenContext();
-    const dayOfWeek = day.toLocaleString('ru-RU', { weekday: 'long' });
-    const dateString = day.toLocaleDateString();
-    const [workDay, setWorkDay] = useState(day);
-
-    const [record, recordIndex] = useMemo(() => {
-        let index = -1;
-        for (const record of schedule) {
-            index++;
-            if (record.start.getTime() === startDt.getTime() && record.end.getTime() === endDt.getTime()) {
-                return [record, index];
-            }
-        }
-        return [{}, -1];
-    }, [schedule, startDt, endDt]);
-    const scheduleWithoutCurrentElem = useMemo(() => {
-        return schedule.filter((value, index) => index !== recordIndex);
-    }, [recordIndex, schedule]);
-
-    console.log("ОТВЕТ GENERAL WORK SCHEDULE", generalWorkSchedule)
-    console.log("schedule without item", scheduleWithoutCurrentElem)
-    
-
-    const onSubmit = async () => {
-        const newRecord = {
-            id: appointment.id,
-            start: appointment.start,
-            end: appointment.end,
-            specialist: appointment.specialist,
-            patient: appointment.patientId,
-            code: appointment.patientType,
-            status: appointment.status,
-            old_patient: oldpatientId
-        };
-        const result = await apiClient.updateAppointment(id, newRecord);
-        if (result) {
-            const newSchedule = schedule.filter((item, index) => index !== recordIndex);
-            const updatedSchedules = await apiClient.getSchedules(workDay, workDay);
-            setGeneralSchedule(updatedSchedules);
-
-            if (appointment.specialist === specialistId) {
-                setGeneralSchedule({
-                    ...generalSchedule,
-                    [specialistId]: {
-                        ...generalSchedule[specialistId],
-                        [getISODate(workDay)]: [
-                            ...newSchedule,
-                            {
-                                ...newRecord,
-                                patient: {
-                                    id: appointment.patientId,
-                                    type: appointment.patientType,
-                                },
-                            },
-                        ],
-                    },
-                });
-            } else {
-                const newSpecialistSchedule = generalSchedule[appointment.specialist] || {};
-                setGeneralSchedule({
-                    ...generalSchedule,
-                    [specialistId]: {
-                        ...generalSchedule[specialistId],
-                        [getISODate(workDay)]: newSchedule,
-                    },
-                    [appointment.specialist]: {
-                        ...newSpecialistSchedule,
-                        [getISODate(workDay)]: [
-                            ...(newSpecialistSchedule[getISODate(workDay)] || []),
-                            {
-                                ...newRecord,
-                                patient: {
-                                    id: appointment.patientId,
-                                    type: appointment.patientType,
-                                },
-                            },
-                        ],
-                    },
-                });
-            }
-            const newDates = { fromDate: new Date(dates.fromDate), toDate: new Date(dates.toDate) };
-            setDates(newDates);
-            setShow(false);
-        }
-    };
-    const defaultSelectValues = useMemo(() => [15, 30, 45, 60, 90, 120, 130], []);
-
-    const selectValue = useMemo(() => (appointment.end - appointment.start) / 60000, [appointment]);
-
-    const selectOptions = useMemo(() => {
-        const options = defaultSelectValues.map((value) => (
-            <option value={value} key={`duration_${value}`}>
-                {value} минут
-            </option>
-        ));
-        if (!defaultSelectValues.includes(selectValue)) {
-            options.push(
-                <option value={selectValue} key={`duration_${selectValue}`}>
-                    {selectValue} минут
-                </option>
+    const specialistsOptions = useMemo(
+        () => {
+            return Object.entries(specialists).map(
+                ([id, spec]) => {
+                    return (
+                        <option value={id} key={`specialist_${id}`}>
+                            {spec.name} ({spec.departments.join(', ')})
+                        </option>
+                    );
+                }
             );
-        }
-        return options;
-    }, [selectValue, defaultSelectValues]);
+        },
+        [specialists]
+    );
 
-    const handleDateInputChange = async (e) => {
-        const newDate = new Date(e.target.value);
-        if (!isNaN(newDate.getTime())) {
-            const hours = appointment.start.getHours();
-            const minutes = appointment.start.getMinutes();
-            const newStart = getDateWithTime(newDate, hours, minutes);
-            const duration = (appointment.end - appointment.start) / (1000 * 60);
-            const newEnd = new Date(newStart.getTime() + duration * 60 * 1000);
-            await onChange('start', newStart);
-            await onChange('end', newEnd);
-            setWorkDay(newDate);
-            // const toDate = new Date(newDate);
-            // toDate.setHours(23, 59, 59, 999);
-
+    const [specialist, setSpecialist] = useState(useSpecialist());
+    const onSpecialistChange = (e) => {
+        for (const specialist of Object.values(specialists)) {
+            if (e.target.value == specialist.id) {
+                setSpecialist({
+                    specialistId: parseInt(e.target.value),
+                    specialist
+                });
+                break;
+            }
         }
     };
 
-    const handleSelectInputChange = async (e) => {
-        const minutes = e.target.value;
-        const end = new Date(appointment.start.getTime() + minutes * 60 * 1000);
-        await onChange('end', end);
+    const [start, setStart] = useState(appointment.start);
+    const [end, setEnd] = useState(appointment.end);
+
+    const specialistScheduleOfDay = useMemo(
+        () => {
+            const [s_year, s_month, s_day] = [start.getFullYear(), start.getMonth(), start.getDate()];
+            const scheduleOfSpecialist = schedules[specialist.specialistId];
+            if ( scheduleOfSpecialist ) {
+                for ( const [dateStr, schedule] of Object.entries(scheduleOfSpecialist) ) {
+                    const date = new Date(dateStr);
+                    const [c_year, c_month, c_day] = [date.getFullYear(), date.getMonth(), date.getDate()];
+                    if (s_year == c_year && s_month == c_month && s_day == c_day) {
+                        return schedule;
+                    }
+                }
+            }
+            return null;
+        },
+        [specialist, start, schedules]
+    );
+
+    const spesialistAppointmentsOfDay = useMemo(
+        () => {
+            const [s_year, s_month, s_day] = [start.getFullYear(), start.getMonth(), start.getDate()];
+            const appointmentsOfSpecialist = appointments[specialist.specialistId];
+            if (appointmentsOfSpecialist) {
+                for ( const [dateStr, apps] of Object.entries(appointmentsOfSpecialist) ) {
+                    const date = new Date(dateStr);
+                    const [c_year, c_month, c_day] = [date.getFullYear(), date.getMonth(), date.getDate()];
+                    if (s_year == c_year && s_month == c_month && s_day == c_day) {
+                        return apps;
+                    }
+                }
+            }
+            return null;
+        },
+        [specialist, start, appointments]
+    );
+    
+    const [date, setDate] = useState(getISODate(start));
+    const onDateChange = (e) => {
+        const value = e.target.value;
+        if (!value) {
+            return;
+        }
+        const date = new Date(e.target.value);
+        const newStart = new Date(start);
+        newStart.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+        setStart(newStart);
+        setDate(getISODate(date));
     };
-    const handleInputChange = async (e) => {
-        const { name, value } = e.target;
-        let newValue;
-        if (['start', 'end'].includes(name)) {
+
+    const [dateIsInvalid, setDateIsInvalid] = useState(true);
+    // подсчет валидности даты
+    useEffect(
+        () => setDateIsInvalid(specialistScheduleOfDay == null),
+        [specialistScheduleOfDay]
+    );
+
+    const [startTime, setStartTime] = useState(getTimeStringFromDate(appointment.start));
+    const onStartTimeChange = (e) => {
+        const value = e.target.value;
+        if (value) {
             const [hoursString, minutesString] = value.split(':');
             const hours = parseInt(hoursString);
             const minutes = parseInt(minutesString);
-            newValue = getDateWithTime(workDay, hours, minutes);
-        } else {
-            newValue = value;
+            const newStart = getDateWithTime(start, hours, minutes);
+            setStart(newStart);
         }
-        await onChange(name, newValue);
+        setStartTime(value);
+        setStartTime(e.target.value);
     };
-    const onChange = async (attrName, value) => {
-        setAppointment((prev) => ({ ...prev, [attrName]: value }));
+
+    const [startIsInvalid, setStartIsInvalid] = useState(true);
+    // Подсчет валидности старта
+    useEffect(
+        () => {
+            let inSchedule = false;
+            if ( specialistScheduleOfDay !== null ) {
+                for ( const interval of specialistScheduleOfDay.intervals ) {
+                    if ( interval.start <= start && start < interval.end ) {
+                        inSchedule = true;
+                        break;
+                    }
+                }
+            }
+            let notInAppointment = true;
+            if ( spesialistAppointmentsOfDay !== null ) {
+                for ( const otherAppointment of spesialistAppointmentsOfDay ) {
+                    if ( otherAppointment.id !== id ) {
+                        if ( otherAppointment.start <= start && start < otherAppointment.end ) {
+                            notInAppointment = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            setStartIsInvalid( !(inSchedule && notInAppointment) );
+        },
+        [specialistScheduleOfDay, start, spesialistAppointmentsOfDay, setStartIsInvalid]
+    );
+
+    const durationValues = useMemo(() => [15, 30, 45, 60, 90, 120, 130], []);
+    const durationOptions = useMemo(
+        () => {
+            const options = durationValues.map(
+                (value) => (
+                    <option value={value} key={`duration_${value}`}>
+                        {value} минут
+                    </option>
+                )
+            );
+            return options;
+        },
+        [durationValues]
+    );
+
+    const [duration, setDuration] = useState((end - start) / 60000);
+    // Пересчет end, когда меняется duration или start
+    useEffect(
+        () => setEnd(new Date(start.getTime() + duration * 60000)),
+        [start, duration]
+    );
+
+    const [durationIsInvalid, setDurationsIsInvalid] = useState(true);
+    useEffect(
+        () => {
+            let inSchedule = false;
+            if ( specialistScheduleOfDay !== null ) {
+                for ( const interval of specialistScheduleOfDay.intervals ) {
+                    if ( interval.start < end && end <= interval.end ) {
+                        inSchedule = true;
+                        break;
+                    }
+                }
+            }
+            let notInAppointment = true;
+            if ( spesialistAppointmentsOfDay !== null ) {
+                for ( const otherAppointment of spesialistAppointmentsOfDay ) {
+                    if ( otherAppointment.id !== id ) {
+                        if ( otherAppointment.start < end && end <= otherAppointment.end ) {
+                            notInAppointment = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            setDurationsIsInvalid( !(inSchedule && notInAppointment) );
+        },
+        [specialistScheduleOfDay, end, spesialistAppointmentsOfDay, setDurationsIsInvalid]
+    );
+    
+    const { dates, setDates } = useContext(AppContext);
+    const onSubmit = async () => {
+        const currentSpecialistId = specialist.specialistId;
+        const updatedAppointment = structuredClone(appointment);
+        updatedAppointment.start = start;
+        updatedAppointment.end = end;
+        const data = {
+            id: updatedAppointment.id,
+            specialist: currentSpecialistId,
+            patient: updatedAppointment.patient.id,
+            start: updatedAppointment.start,
+            end: updatedAppointment.end,
+            code: updatedAppointment.patient.type,
+            old_patient: updatedAppointment.old_patient
+        };
+        const result = await apiClient.updateAppointment(updatedAppointment.id, data);
+        console.log('[debug]', result);
+        setShow(false);
+        setDates({fromDate: new Date(dates.fromDate), toDate: new Date(dates.toDate)});
     };
 
     return (
         <CustomModal
             show={show}
-            handleClose={() => setShow(false)}
-            title={`Изменить параметры`}
-            primaryBtnDisabled={
-                !workDay ||
-                !appointment.start ||
-                !isIntervalValid(appointment) ||
-                !isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals)
-            }
+            title={`Перенос занятия`}
+            primaryBtnDisabled={dateIsInvalid || startIsInvalid || durationIsInvalid}
+            primaryBtnText={'Перенести'}
             handlePrimaryBtnClick={onSubmit}
-            primaryBtnText={'Сохранить'}
+            handleClose={() => setShow(false)}
         >
             <div className="d-flex flex-column align-items-center justify-content-center w-100 h-100 gap-2">
+                <label>Исполнитель</label>
+                <InputGroup hasValidation>
+                    <FormSelect
+                        name={'specialist'}
+                        isInvalid={dateIsInvalid || startIsInvalid || durationIsInvalid}
+                        onChange={onSpecialistChange}
+                        value={specialist.specialistId}
+                    >
+                        <option disabled value="">Выберите специалиста</option>
+                        {specialistsOptions}
+                    </FormSelect>
+                </InputGroup>
                 <div className="d-flex w-100 align-items-center" style={{ gap: "1rem", whiteSpace: "nowrap" }}>
                     <label>Дата занятия</label>
                     <InputGroup hasValidation>
                         <FormControl
                             type={'date'}
-                            value={getISODate(workDay)}
+                            value={date}
                             name={'day'}
-                            onChange={async (e) => {
-                                await handleDateInputChange(e);
-                            }}
+                            onChange={onDateChange}
                             style={{ textAlign: "center" }}
                             required
-                            isInvalid={
-                                !workDay &&
-                                (!!appointment.start && !isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals))
-                            }
+                            isInvalid={dateIsInvalid}
                         />
                     </InputGroup>
                     <label>Начало занятия</label>
                     <InputGroup hasValidation>
                         <FormControl
                             type={'time'}
-                            value={getTimeStringFromDate(appointment.start)}
+                            value={startTime}
                             name={'start'}
-                            onChange={async (e) => {
-                                await handleInputChange(e);
-                            }}
+                            onChange={onStartTimeChange}
                             style={{ textAlign: "center" }}
                             required
-                            isInvalid={
-                                !appointment.start ||
-                                (!!appointment.start && !isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals))
-                            }
+                            isInvalid={startIsInvalid}
                         />
                     </InputGroup>
                     <label>Продолжительность</label>
@@ -229,37 +284,15 @@ const EditClientInfoModal = ({ id, show, setShow, startDt, endDt, patientId, pat
                         <FormControl
                             as={'select'}
                             style={{ textAlign: "center" }}
-                            disabled={!appointment.start}
                             required
-                            value={selectValue}
-                            onChange={async (e) => await handleSelectInputChange(e)}
-                            isInvalid={
-                                appointment.start !== undefined &&
-                                (!isIntervalValid(appointment) || !isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals))
-                            }
+                            value={duration}
+                            onChange={(e) => setDuration(parseInt(e.target.value))}
+                            isInvalid={durationIsInvalid}
                         >
-                            {selectOptions}
+                            {durationOptions}
                         </FormControl>
                     </InputGroup>
                 </div>
-                <label>Исполнитель</label>
-                <InputGroup hasValidation>
-                    <FormSelect
-                        name={'specialist'}
-                        isInvalid={['', null, undefined].includes(appointment.specialist)}
-                        onChange={async (e) => {
-                            await handleInputChange(e);
-                        }}
-                        value={appointment.specialist}
-                    >
-                        <option value="">Выберите специалиста</option>
-                        {Object.entries(specialists).map(([id, spec]) => (
-                            <option value={id} key={`specialist_${day}_interval_${recordIndex}_${id}`}>
-                                {spec.name} ({spec.departments.join(', ')})
-                            </option>
-                        ))}
-                    </FormSelect>
-                </InputGroup>
             </div>
         </CustomModal>
     );

@@ -1,15 +1,14 @@
 import React, { useCallback, useMemo, useState } from "react";
 import CustomModal from "../ui/Modal";
-import { Button, FormControl, FormSelect, InputGroup } from "react-bootstrap";
+import { Button, FormControl, FormSelect, InputGroup, Alert } from "react-bootstrap";
 
 import { useDayContext } from "../../contexts/Day/provider";
-import { useAllSpecialistsContext } from "../../contexts/AllSpecialists/provider.jsx";
 import useSchedules from "../../hooks/useSchedules";
 import useSpecialist from "../../hooks/useSpecialist.js";
-import { getDateWithTime, getISODate, getTimeStringFromDate, isIntervalValid, isNewScheduleIntervalValid } from "../../utils/dates.js";
+import { getDateWithTime, getTimeStringFromDate, isIntervalValid, isNewScheduleIntervalValid } from "../../utils/dates.js";
 import { useChildrenContext } from "../../contexts/Children/provider.jsx";
 import apiClient, { constants } from "../../api/index.js";
-import EditClientInfoModal from "../../components/EditClientInfoModal/index.jsx";
+
 
 const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, patientType, status, oldpatientId, showModalEdit, setShowModalEdit }) => {
     const { specialistId, specialist } = useSpecialist();
@@ -158,11 +157,6 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
             primaryBtnText={'Сохранить'}
         >
             <div className="d-flex flex-column align-items-center justify-content-center w-100 h-100 gap-2">
-                {status === 'replace' && (
-                    <div>
-                        {children[schedule[0].old_patient]} заменен на {patientName}
-                    </div>
-                )}
                 <div className="d-flex w-100 align-items-center" style={{ gap: "1rem", whiteSpace: "nowrap" }}>
                     <label>Начало занятия</label>
                     <InputGroup hasValidation>
@@ -231,12 +225,23 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                         ))}
                     </FormSelect>
                 </InputGroup>
-                <Button variant="danger" onClick={onDeleteBtnClick} className={'mt-3'}>
-                    Удалить
+                <Alert 
+                    variant="warning"
+                    show={status === 'replace'}
+                >
+                    {children[schedule[0].old_patient]} заменен на {patientName}
+                </Alert>
+            </div>          
+            <div className="d-flex align-items-left w-100 h-100 gap-2">
+                <Button 
+                    variant="warning" 
+                    onClick={onModalEditBtnClick} 
+                    className={'mt-3'} 
+                    style={{paddingRight: "1rem"}}
+                >
+                    Перенести
                 </Button>
-                <Button variant="warning" onClick={onModalEditBtnClick} className={'mt-3'}>
-                    Изменить
-                </Button>
+                <Button variant="danger" onClick={onDeleteBtnClick} className={'mt-3'}>Удалить</Button>
             </div>
         </CustomModal>
     );
