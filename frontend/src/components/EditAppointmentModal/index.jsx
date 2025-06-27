@@ -8,6 +8,7 @@ import useSpecialist from "../../hooks/useSpecialist.js";
 import { getDateWithTime, getTimeStringFromDate, isIntervalValid, isNewScheduleIntervalValid } from "../../utils/dates.js";
 import { useChildrenContext } from "../../contexts/Children/provider.jsx";
 import apiClient, { constants } from "../../api/index.js";
+import AutoCompleteInput from "../../components/ui/AutoCompleteInput/index.jsx"
 
 
 const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, patientType, status, oldpatientId, showModalEdit, setShowModalEdit }) => {
@@ -194,20 +195,15 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                     </InputGroup>
                 </div>
                 <InputGroup hasValidation>
-                    <FormSelect
-                        name={'patientId'}
+                    <AutoCompleteInput
+                        options={children}
+                        name="patientId"
                         isInvalid={['', null, undefined].includes(appointment.patientId)}
                         onChange={async (e) => {
                             await handleInputChange(e);
                         }}
                         value={appointment.patientId}
-                    >
-                        {Object.entries(children).map(([childId, childName]) => (
-                            <option value={childId} key={`${day}_interval_${recordIndex}_${childId}`}>
-                                {childName}
-                            </option>
-                        ))}
-                    </FormSelect>
+                    />
                 </InputGroup>
                 <InputGroup hasValidation>
                     <FormSelect
@@ -225,19 +221,19 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                         ))}
                     </FormSelect>
                 </InputGroup>
-                <Alert 
+                <Alert
                     variant="warning"
                     show={status === 'replace'}
                 >
                     {children[schedule[0].old_patient]} заменен на {patientName}
                 </Alert>
-            </div>          
+            </div>
             <div className="d-flex align-items-left w-100 h-100 gap-2">
-                <Button 
-                    variant="warning" 
-                    onClick={onModalEditBtnClick} 
-                    className={'mt-3'} 
-                    style={{paddingRight: "1rem"}}
+                <Button
+                    variant="warning"
+                    onClick={onModalEditBtnClick}
+                    className={'mt-3'}
+                    style={{ paddingRight: "1rem" }}
                 >
                     Перенести
                 </Button>

@@ -12,6 +12,7 @@ import {Button, FormControl, FormSelect, InputGroup, Spinner} from "react-bootst
 import useSpecialist from "../../hooks/useSpecialist.js";
 import {useChildrenContext} from "../../contexts/Children/provider.jsx";
 import apiClient, {constants} from "../../api/index.js";
+import AutoCompleteInput from "../../components/ui/AutoCompleteInput/index.jsx";
 
 const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
     const [newSchedules, setNewSchedules] = useState([]);
@@ -371,23 +372,15 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                                 /> */}
                             </InputGroup>
                             <InputGroup hasValidation>
-                                <FormSelect
+                                <AutoCompleteInput
+                                    options={children}
                                     name={'patientId'}
                                     isInvalid={['', null, undefined].includes(newSchedule.patientId)}
                                     onChange={async (e) => {
                                         await handleInputChange(e, idx);
                                     }}
                                     value={newSchedule.patientId}
-                                >
-                                    <option disabled value={undefined} selected>Выберите клиента</option>
-                                    {Object.entries(children).map(([childId, childName]) => {
-                                        return (
-                                            <option value={childId} key={`${date}_new_interval_${idx}_${childId}`}>
-                                                {childName}
-                                            </option>
-                                        );
-                                    })}
-                                </FormSelect>
+                                />
                             </InputGroup>
                             <InputGroup hasValidation>
                                 <FormSelect
