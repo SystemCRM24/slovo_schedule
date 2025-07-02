@@ -214,11 +214,13 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                         }}
                         value={appointment.patientType}
                     >
-                        {Object.entries(constants.listFieldValues.appointment.idByCode).map(([code, id]) => (
-                            <option value={code} key={`${day}_interval_${recordIndex}_${code}_opt`}>
-                                {code}
-                            </option>
-                        ))}
+                        {Object.entries(constants.listFieldValues.appointment.idByCode)
+                            .sort(([aCode], [bCode]) => aCode.localeCompare(bCode, 'en', { sensitivity: 'base' }))
+                            .map(([code, id]) => (
+                                <option value={code} key={`${day}_interval_${recordIndex}_${code}_opt`}>
+                                    {code}
+                                </option>
+                            ))}
                     </FormSelect>
                 </InputGroup>
                 <Alert
