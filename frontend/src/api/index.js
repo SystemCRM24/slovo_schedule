@@ -51,7 +51,7 @@ class APIClient {
 
     async delete(url) {
         const response = await fetch(url, {method: 'DELETE'});
-        return await response.json();
+        // return await response.json();
     }
 
     async get(url) {
@@ -326,7 +326,8 @@ class APIClient {
      * @param {Array<{start: Date, end: Date}>} data.intervals - Интервалы, которые обозначают рабочее время
      */
     async createWorkSchedule(data) {
-        const url = this.getUrl('schedule/');
+        const url = `${this.serverUrl}schedule/`
+        // const url = this.getUrl('schedule/');
         const body = {
             specialist: data.specialist,
             date: data.date.toISOString(),
@@ -340,7 +341,8 @@ class APIClient {
      * @param {string} id - ид графика
      */
     async getWorkSchedule(id) {
-        const url = this.getUrl('schedule/', {id});
+        const url = `${this.serverUrl}schedule/${id}`
+        // const url = this.getUrl('schedule/', {id});
         return await this.get(url);
     }
 
@@ -353,7 +355,8 @@ class APIClient {
      * @param {Array<{start: Date, end: Date}>} data.intervals - Интервалы, которые обозначают рабочее время
      */
     async updateWorkSchedule(id, data) {
-        const url = this.getUrl('schedule/', {id});
+        const url = `${this.serverUrl}schedule/${id}`
+        // const url = this.getUrl('schedule/', {id});
         const body = {
             ...data,
             intervals: data.intervals.map(i => `${i.start.getTime()}:${i.end.getTime()}`)
@@ -367,7 +370,8 @@ class APIClient {
      * @returns
      */
     async deleteWorkSchedule(id) {
-        const url = this.getUrl('schedule/', {id});
+        const url = `${this.serverUrl}schedule/${id}`
+        // const url = this.getUrl('schedule/', {id});
         return await this.delete(url);
     }
 

@@ -21,27 +21,29 @@ const EditClientInfoModal = ({ id, show, setShow }) => {
 
     const appointment = useMemo(
         () => {
-            for ( const appointment of appointmentsOfDay ) {
-                if ( appointment.id === id ) {
+            for (const appointment of appointmentsOfDay) {
+                if (appointment.id === id) {
                     return appointment;
                 }
             }
-        }, 
+        },
         [id, appointmentsOfDay]
     );
 
     const specialists = useAllSpecialistsContext();
     const specialistsOptions = useMemo(
         () => {
-            return Object.entries(specialists).map(
-                ([id, spec]) => {
-                    return (
-                        <option value={id} key={`specialist_${id}`}>
-                            {spec.name} ({spec.departments.join(', ')})
-                        </option>
-                    );
-                }
-            );
+            return Object.entries(specialists)
+                .sort(([a, aIndex], [b, bIndex]) => aIndex.sort_index - bIndex.sort_index)
+                .map(
+                    ([id, spec]) => {
+                        return (
+                            <option value={id} key={`specialist_${id}`}>
+                                {spec.name} ({spec.departments.join(', ')})
+                            </option>
+                        );
+                    }
+                );
         },
         [specialists]
     );
@@ -66,8 +68,8 @@ const EditClientInfoModal = ({ id, show, setShow }) => {
         () => {
             const [s_year, s_month, s_day] = [start.getFullYear(), start.getMonth(), start.getDate()];
             const scheduleOfSpecialist = schedules[specialist.specialistId];
-            if ( scheduleOfSpecialist ) {
-                for ( const [dateStr, schedule] of Object.entries(scheduleOfSpecialist) ) {
+            if (scheduleOfSpecialist) {
+                for (const [dateStr, schedule] of Object.entries(scheduleOfSpecialist)) {
                     const date = new Date(dateStr);
                     const [c_year, c_month, c_day] = [date.getFullYear(), date.getMonth(), date.getDate()];
                     if (s_year == c_year && s_month == c_month && s_day == c_day) {
@@ -85,7 +87,7 @@ const EditClientInfoModal = ({ id, show, setShow }) => {
             const [s_year, s_month, s_day] = [start.getFullYear(), start.getMonth(), start.getDate()];
             const appointmentsOfSpecialist = appointments[specialist.specialistId];
             if (appointmentsOfSpecialist) {
-                for ( const [dateStr, apps] of Object.entries(appointmentsOfSpecialist) ) {
+                for (const [dateStr, apps] of Object.entries(appointmentsOfSpecialist)) {
                     const date = new Date(dateStr);
                     const [c_year, c_month, c_day] = [date.getFullYear(), date.getMonth(), date.getDate()];
                     if (s_year == c_year && s_month == c_month && s_day == c_day) {
@@ -97,7 +99,7 @@ const EditClientInfoModal = ({ id, show, setShow }) => {
         },
         [specialist, start, appointments]
     );
-    
+
     const [date, setDate] = useState(getISODate(start));
     const onDateChange = (e) => {
         const value = e.target.value;
@@ -137,26 +139,26 @@ const EditClientInfoModal = ({ id, show, setShow }) => {
     useEffect(
         () => {
             let inSchedule = false;
-            if ( specialistScheduleOfDay !== null ) {
-                for ( const interval of specialistScheduleOfDay.intervals ) {
-                    if ( interval.start <= start && start < interval.end ) {
+            if (specialistScheduleOfDay !== null) {
+                for (const interval of specialistScheduleOfDay.intervals) {
+                    if (interval.start <= start && start < interval.end) {
                         inSchedule = true;
                         break;
                     }
                 }
             }
             let notInAppointment = true;
-            if ( spesialistAppointmentsOfDay !== null ) {
-                for ( const otherAppointment of spesialistAppointmentsOfDay ) {
-                    if ( otherAppointment.id !== id ) {
-                        if ( otherAppointment.start <= start && start < otherAppointment.end ) {
+            if (spesialistAppointmentsOfDay !== null) {
+                for (const otherAppointment of spesialistAppointmentsOfDay) {
+                    if (otherAppointment.id !== id) {
+                        if (otherAppointment.start <= start && start < otherAppointment.end) {
                             notInAppointment = false;
                             break;
                         }
                     }
                 }
             }
-            setStartIsInvalid( !(inSchedule && notInAppointment) );
+            setStartIsInvalid(!(inSchedule && notInAppointment));
         },
         [specialistScheduleOfDay, start, spesialistAppointmentsOfDay, setStartIsInvalid]
     );
@@ -187,30 +189,30 @@ const EditClientInfoModal = ({ id, show, setShow }) => {
     useEffect(
         () => {
             let inSchedule = false;
-            if ( specialistScheduleOfDay !== null ) {
-                for ( const interval of specialistScheduleOfDay.intervals ) {
-                    if ( interval.start < end && end <= interval.end ) {
+            if (specialistScheduleOfDay !== null) {
+                for (const interval of specialistScheduleOfDay.intervals) {
+                    if (interval.start < end && end <= interval.end) {
                         inSchedule = true;
                         break;
                     }
                 }
             }
             let notInAppointment = true;
-            if ( spesialistAppointmentsOfDay !== null ) {
-                for ( const otherAppointment of spesialistAppointmentsOfDay ) {
-                    if ( otherAppointment.id !== id ) {
-                        if ( otherAppointment.start < end && end <= otherAppointment.end ) {
+            if (spesialistAppointmentsOfDay !== null) {
+                for (const otherAppointment of spesialistAppointmentsOfDay) {
+                    if (otherAppointment.id !== id) {
+                        if (otherAppointment.start < end && end <= otherAppointment.end) {
                             notInAppointment = false;
                             break;
                         }
                     }
                 }
             }
-            setDurationsIsInvalid( !(inSchedule && notInAppointment) );
+            setDurationsIsInvalid(!(inSchedule && notInAppointment));
         },
         [specialistScheduleOfDay, end, spesialistAppointmentsOfDay, setDurationsIsInvalid]
     );
-    
+
     const { dates, setDates } = useContext(AppContext);
     const onSubmit = async () => {
         const currentSpecialistId = specialist.specialistId;
@@ -228,7 +230,7 @@ const EditClientInfoModal = ({ id, show, setShow }) => {
         };
         const result = await apiClient.updateAppointment(updatedAppointment.id, data);
         setShow(false);
-        setDates({fromDate: new Date(dates.fromDate), toDate: new Date(dates.toDate)});
+        setDates({ fromDate: new Date(dates.fromDate), toDate: new Date(dates.toDate) });
     };
 
     return (

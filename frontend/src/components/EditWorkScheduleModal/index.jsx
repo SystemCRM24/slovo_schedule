@@ -1,22 +1,23 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import CustomModal from "../ui/Modal/index.jsx";
 import useSchedules from "../../hooks/useSchedules.js";
-import {useDayContext} from "../../contexts/Day/provider.jsx";
+import { useDayContext } from "../../contexts/Day/provider.jsx";
 import {
     findScheduleIntervalsInRange,
     getDateWithTime,
     getTimeStringFromDate, areIntervalsOverlapping,
     isIntervalValid, isNewScheduleValid, isNewScheduleIntervalValid, isNewWorkScheduleValid
 } from "../../utils/dates.js";
-import {Button, FormControl, FormSelect, InputGroup, Spinner} from "react-bootstrap";
+import { Button, FormControl, FormSelect, InputGroup, Spinner } from "react-bootstrap";
 import useSpecialist from "../../hooks/useSpecialist.js";
-import {useChildrenContext} from "../../contexts/Children/provider.jsx";
-import apiClient, {constants} from "../../api/index.js";
+import { useChildrenContext } from "../../contexts/Children/provider.jsx";
+import apiClient, { constants } from "../../api/index.js";
+import AutoCompleteInput from "../../components/ui/AutoCompleteInput/index.jsx";
 
-const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
+const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
     const [newSchedules, setNewSchedules] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [workInterval, setWorkInterval] = useState({start: startDt, end: endDt});
+    const [workInterval, setWorkInterval] = useState({ start: startDt, end: endDt });
     const {
         generalSchedule,
         generalWorkSchedule,
@@ -25,10 +26,10 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
         schedule,
         workSchedule
     } = useSchedules();
-    const {specialist, specialistId} = useSpecialist();
+    const { specialist, specialistId } = useSpecialist();
     const date = useDayContext();
     const children = useChildrenContext();
-    const dayOfWeek = date.toLocaleString('ru-RU', {weekday: 'long'});
+    const dayOfWeek = date.toLocaleString('ru-RU', { weekday: 'long' });
     const dateString = date.toLocaleDateString();
 
     const findIntervalPredicate = useCallback((interval) => {
@@ -53,7 +54,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
     const onTimeInputChange = async (idx, attrName, value) => {
         const newIntervals = newSchedules.map((schedule, index) => {
             if (index === idx) {
-                return {...schedule, [attrName]: value};
+                return { ...schedule, [attrName]: value };
             } else {
                 return schedule;
             }
@@ -66,7 +67,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
         const hours = parseInt(hoursString);
         const minutes = parseInt(minutesString);
         let value = getDateWithTime(date, hours, minutes);
-        setWorkInterval({...workInterval, [e.target.name]: value})
+        setWorkInterval({ ...workInterval, [e.target.name]: value })
     }
 
     const handleInputChange = async (e, idx) => {
@@ -208,7 +209,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
         setLoading(false);
         setShow(false);
     }
-    
+
     const selectOptions = useMemo(
         () => {
             const defaultSelectValues = [15, 30, 45, 60, 90, 120, 130];
@@ -265,7 +266,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                         value={getTimeStringFromDate(workInterval.start)}
                         name={'start'}
                         onChange={handleIntervalChange}
-                        style={{textAlign: "center"}}
+                        style={{ textAlign: "center" }}
                         required
                         isInvalid={
                             !workInterval.start || !isWorkScheduleValid
@@ -280,7 +281,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                         value={getTimeStringFromDate(workInterval.end)}
                         name={'end'}
                         onChange={handleIntervalChange}
-                        style={{textAlign: "center",}}
+                        style={{ textAlign: "center", }}
                         disabled={!workInterval.start}
                         min={getTimeStringFromDate(workInterval.start)}
                         required
@@ -315,7 +316,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                                     onChange={async (e) => {
                                         await handleInputChange(e, idx);
                                     }}
-                                    style={{textAlign: "center"}}
+                                    style={{ textAlign: "center" }}
                                     min={getTimeStringFromDate(startDt)}
                                     max={getTimeStringFromDate(endDt)}
                                     required
@@ -332,7 +333,7 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                             <InputGroup hasValidation>
                                 <FormSelect
                                     name={'end'}
-                                    style={{textAlign: "center",}}
+                                    style={{ textAlign: "center", }}
                                     disabled={!newSchedule.start}
                                     required
                                     value={selectValues[idx]}
@@ -371,23 +372,15 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                                 /> */}
                             </InputGroup>
                             <InputGroup hasValidation>
-                                <FormSelect
+                                <AutoCompleteInput
+                                    options={children}
                                     name={'patientId'}
                                     isInvalid={['', null, undefined].includes(newSchedule.patientId)}
                                     onChange={async (e) => {
                                         await handleInputChange(e, idx);
                                     }}
                                     value={newSchedule.patientId}
-                                >
-                                    <option disabled value={undefined} selected>Выберите клиента</option>
-                                    {Object.entries(children).map(([childId, childName]) => {
-                                        return (
-                                            <option value={childId} key={`${date}_new_interval_${idx}_${childId}`}>
-                                                {childName}
-                                            </option>
-                                        );
-                                    })}
-                                </FormSelect>
+                                />
                             </InputGroup>
                             <InputGroup hasValidation>
                                 <FormSelect
@@ -399,13 +392,15 @@ const EditWorkScheduleModal = ({show, setShow, startDt, endDt}) => {
                                     value={newSchedule.patientType}
                                 >
                                     <option disabled value={undefined} selected>Выберите услугу</option>
-                                    {Object.entries(constants.listFieldValues.appointment.idByCode).map(([code, id]) => {
-                                        return (
-                                            <option value={code} key={`${date}_interval_${idx}_${code}_opt`}>
-                                                {code}
-                                            </option>
-                                        );
-                                    })}
+                                    {Object.entries(constants.listFieldValues.appointment.idByCode)
+                                        .sort(([aCode], [bCode]) => aCode.localeCompare(bCode, 'en', { sensitivity: 'base' }))
+                                        .map(([code, id]) => {
+                                            return (
+                                                <option value={code} key={`${date}_interval_${idx}_${code}_opt`}>
+                                                    {code}
+                                                </option>
+                                            );
+                                        })}
                                 </FormSelect>
                             </InputGroup>
                             <Button

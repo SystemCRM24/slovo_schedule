@@ -1,0 +1,17 @@
+.react-select__control {
+    border: none !important;
+    box-shadow: none !important;
+
+    &:hover,
+    &:focus-within {
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    &.is-invalid {
+        border: none !important;
+    }
+}
+.react-select__indicator-separator {
+    display: none;
+}

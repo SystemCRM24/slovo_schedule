@@ -8,6 +8,7 @@ import useSpecialist from "../../hooks/useSpecialist.js";
 import { getDateWithTime, getTimeStringFromDate, isIntervalValid, isNewScheduleIntervalValid } from "../../utils/dates.js";
 import { useChildrenContext } from "../../contexts/Children/provider.jsx";
 import apiClient, { constants } from "../../api/index.js";
+import AutoCompleteInput from "../../components/ui/AutoCompleteInput/index.jsx"
 
 
 const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, patientType, status, oldpatientId, showModalEdit, setShowModalEdit }) => {
@@ -98,7 +99,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
             specialist: appointment.specialist,
             patient: appointment.patientId,
             code: appointment.patientType,
-            status: appointment.status,
+            status: appointment.patientId !== appointment.old_patient && appointment.old_patient ? 'replace' : appointment.status,
             old_patient: appointment.old_patient
         };
         const result = await apiClient.updateAppointment(id, newRecord);
@@ -194,20 +195,15 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                     </InputGroup>
                 </div>
                 <InputGroup hasValidation>
-                    <FormSelect
-                        name={'patientId'}
+                    <AutoCompleteInput
+                        options={children}
+                        name="patientId"
                         isInvalid={['', null, undefined].includes(appointment.patientId)}
                         onChange={async (e) => {
                             await handleInputChange(e);
                         }}
                         value={appointment.patientId}
-                    >
-                        {Object.entries(children).map(([childId, childName]) => (
-                            <option value={childId} key={`${day}_interval_${recordIndex}_${childId}`}>
-                                {childName}
-                            </option>
-                        ))}
-                    </FormSelect>
+                    />
                 </InputGroup>
                 <InputGroup hasValidation>
                     <FormSelect
@@ -218,26 +214,28 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                         }}
                         value={appointment.patientType}
                     >
-                        {Object.entries(constants.listFieldValues.appointment.idByCode).map(([code, id]) => (
-                            <option value={code} key={`${day}_interval_${recordIndex}_${code}_opt`}>
-                                {code}
-                            </option>
-                        ))}
+                        {Object.entries(constants.listFieldValues.appointment.idByCode)
+                            .sort(([aCode], [bCode]) => aCode.localeCompare(bCode, 'en', { sensitivity: 'base' }))
+                            .map(([code, id]) => (
+                                <option value={code} key={`${day}_interval_${recordIndex}_${code}_opt`}>
+                                    {code}
+                                </option>
+                            ))}
                     </FormSelect>
                 </InputGroup>
-                <Alert 
+                <Alert
                     variant="warning"
                     show={status === 'replace'}
                 >
                     {children[schedule[0].old_patient]} заменен на {patientName}
                 </Alert>
-            </div>          
+            </div>
             <div className="d-flex align-items-left w-100 h-100 gap-2">
-                <Button 
-                    variant="warning" 
-                    onClick={onModalEditBtnClick} 
-                    className={'mt-3'} 
-                    style={{paddingRight: "1rem"}}
+                <Button
+                    variant="warning"
+                    onClick={onModalEditBtnClick}
+                    className={'mt-3'}
+                    style={{ paddingRight: "1rem" }}
                 >
                     Перенести
                 </Button>
