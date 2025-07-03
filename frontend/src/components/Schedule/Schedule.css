@@ -3,6 +3,16 @@
     table-layout: auto;
     margin-top: 1rem;
 }
+.table-responsive {
+    max-height: 95vh;
+    overflow: auto;
+}
+
+#schedule-table th {
+    position: sticky;
+    top: -2px;
+    z-index: 99;
+}
 
 #schedule-table td {
     position: relative;

@@ -23,7 +23,6 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
                 return status;
             }
             if (schedule.length > 0) {
-                const oldPatient = schedule[0].old_patient;
                 if (oldpatientId && oldpatientId !== patientId) {
                     return 'replace';
                 }

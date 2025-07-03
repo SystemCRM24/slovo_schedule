@@ -99,7 +99,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
             specialist: appointment.specialist,
             patient: appointment.patientId,
             code: appointment.patientType,
-            status: appointment.status,
+            status: appointment.patientId !== appointment.old_patient && appointment.old_patient ? 'replace' : appointment.status,
             old_patient: appointment.old_patient
         };
         const result = await apiClient.updateAppointment(id, newRecord);
