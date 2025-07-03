@@ -9,6 +9,7 @@ from src.description import description
 from src.services import on_startup
 from src.api import api_router
 from src.appointplan import appointplan_router
+from src.repetative import repetative_router
 
 
 app = FastAPI(title="AppointPlan", description=description)
@@ -26,6 +27,7 @@ app.add_event_handler('startup', on_startup)
 app.add_exception_handler(HTTPException, handle_http_exception)
 
 app.include_router(appointplan_router)
+app.include_router(repetative_router)
 app.include_router(api_router)
 
 

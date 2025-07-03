@@ -28,18 +28,15 @@ import os
 import json
 from pathlib import Path
 
-from src.appointplan.handler import Handler
-from src.appointplan.handler.handler import Context
-from src.schemas.appointplan import Deal
-
 
 def parse_mock_data() -> list:
     lst = []
     path = Path(__file__).parent / 'mocks'
     for request in os.listdir(str(path)):
-        with open(path / request, mode='r', encoding='utf-8') as file:
-            data = json.load(file)
-        lst.append(json.dumps(data))
+        if request.startswith('appointplan'):
+            with open(path / request, mode='r', encoding='utf-8') as file:
+                data = json.load(file)
+            lst.append(json.dumps(data))
     return lst
 
 samples = parse_mock_data()

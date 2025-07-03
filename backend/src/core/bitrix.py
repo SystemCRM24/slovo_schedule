@@ -102,7 +102,7 @@ class BitrixClient:
         return response.get('result')
 
     @staticmethod
-    async def get_specialists_by_department(names: Iterable) -> list[dict]:
+    async def get_specialists_by_department(names: Iterable) -> list[dict[str, str]]:
         ids = [BXConstants.department_ids.get(n, '0') for n in names]
         params = {'@UF_DEPARTMENT': ids, 'ACTIVE': 'Y'}
         return await BITRIX.get_all('user.get', params)
