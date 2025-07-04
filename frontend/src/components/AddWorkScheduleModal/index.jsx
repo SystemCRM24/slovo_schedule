@@ -81,7 +81,7 @@ const AddWorkScheduleModal = ({ show, setShow }) => {
         const newSchedules = [];
         if (checkbox) {
             for (let i = 0; i <= 48; i++) {
-                if (i > 0 && isHoliday(currentDate)) {
+                if (isHoliday(currentDate)) {
                     currentDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
                     continue;
                 }

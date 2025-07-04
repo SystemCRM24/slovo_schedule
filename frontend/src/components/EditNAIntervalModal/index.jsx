@@ -75,55 +75,76 @@ const EditNAInterval = ({ show, setShow, startDt, endDt }) => {
         if (checkbox) {
             let currentDate = new Date(date);
             for (let i = 0; i <= 48; i++) {
-                if (i > 0 && isHoliday(currentDate)) {
+                if (isHoliday(currentDate)) {
                     currentDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
                     continue;
                 }
 
-                if (generalWorkSchedule[specialistId]?.[currentDate]) {
-                    currentDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-                    continue;
+                const existingSchedule = generalWorkSchedule[specialistId]?.[currentDate];
+                let intervalsToSave = newWorkIntervals;
+
+                if (existingSchedule) {
+                    intervalsToSave = [...existingSchedule.intervals, ...workIntervals];
                 }
 
+                try {
+                    const result = existingSchedule
+                        ? await apiClient.updateWorkSchedule(existingSchedule.id, {
+                            specialist: specialistId,
+                            date: currentDate,
+                            intervals: intervalsToSave,
+                        })
+                        : await apiClient.createWorkSchedule({
+                            specialist: specialistId,
+                            date: currentDate,
+                            intervals: intervalsToSave,
+                        });
+
+                    if (result) {
+                        newSchedules.push({
+                            date: new Date(currentDate),
+                            data: { id: result?.id, intervals: intervalsToSave },
+                        });
+                    }
+                } catch (error) {
+                    console.error(`Ошибка для даты ${currentDate}:`, error);
+                }
+
+                currentDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+            }
+        } else {
+            try {
                 const result = await apiClient.updateWorkSchedule(workSchedule.id, {
                     specialist: specialistId,
-                    date: currentDate,
+                    date: date,
                     intervals: newWorkIntervals,
                 });
 
                 if (result) {
                     newSchedules.push({
-                        date: new Date(currentDate),
+                        date: new Date(date),
                         data: { id: result?.id, intervals: newWorkIntervals },
                     });
                 }
-                currentDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-            }
-        } else {
-            const result = await apiClient.updateWorkSchedule(workSchedule.id, {
-                specialist: specialistId,
-                date: date,
-                intervals: newWorkIntervals,
-            });
-
-            if (result) {
-                newSchedules.push({
-                    date: new Date(date),
-                    data: { id: result?.id, intervals: newWorkIntervals },
-                });
+            } catch (error) {
+                console.error(`Ошибка для даты ${date}:`, error);
             }
         }
 
-        setGeneralWorkSchedule(prevSchedule => ({
-            ...prevSchedule,
-            [specialistId]: {
-                ...(prevSchedule[specialistId] || {}),
-                ...newSchedules.reduce((acc, { date, data }) => {
-                    acc[date] = data;
-                    return acc;
-                }, {}),
-            },
-        }));
+        setGeneralWorkSchedule(prevSchedule => {
+            const newState = {
+                ...prevSchedule,
+                [specialistId]: {
+                    ...(prevSchedule[specialistId] || {}),
+                    ...newSchedules.reduce((acc, { date, data }) => {
+                        acc[date] = data;
+                        return acc;
+                    }, {}),
+                },
+            };
+            console.log('Updated generalWorkSchedule:', newState);
+            return newState;
+        });
 
         setLoading(false);
         setShow(false);
