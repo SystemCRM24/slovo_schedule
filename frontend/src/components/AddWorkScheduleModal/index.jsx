@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import useSchedules from "../../hooks/useSchedules.js";
 import CustomModal from "../ui/Modal/index.jsx";
 import { useDayContext } from "../../contexts/Day/provider.jsx";
-import { Button, FormControl, InputGroup } from "react-bootstrap";
+import { Button, FormControl, InputGroup, Form } from "react-bootstrap";
 import { areIntervalsOverlapping, getDateWithTime, getTimeStringFromDate, isIntervalValid } from "../../utils/dates.js";
 import { useSpecialistContext } from "../../contexts/Specialist/provider.jsx";
 import apiClient from "../../api/index.js";
@@ -19,6 +19,9 @@ const AddWorkScheduleModal = ({ show, setShow }) => {
     const dateString = date.toLocaleDateString();
     const [workIntervals, setWorkIntervals] = useState([]);
     const holidays = new Holidays('RU');
+    const [checkbox, setCheckbox] = useState(false)
+    const [loading, setLoading] = useState(false)
+
 
     const isNewIntervalValid = useCallback((interval, index) => {
         if (interval.start !== undefined && interval.end !== undefined) {
@@ -68,29 +71,53 @@ const AddWorkScheduleModal = ({ show, setShow }) => {
         });
     };
 
+    const handleCheckboxChange = (e) => {
+        setCheckbox(e.target.checked);
+    };
+
     const onSumbit = async () => {
+        setLoading(true)
         let currentDate = new Date(date);
         const newSchedules = [];
+        if (checkbox) {
+            for (let i = 0; i <= 48; i++) {
+                if (i > 0 && isHoliday(currentDate)) {
+                    currentDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+                    continue;
+                }
 
-        for (let i = 0; i <= 2; i++) {
-            if (i > 0 && isHoliday(currentDate)) {
+                if (generalWorkSchedule[specialistId]?.[currentDate]) {
+                    currentDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+                    continue;
+                }
+
+                const result = await apiClient.createWorkSchedule({
+                    specialist: specialistId,
+                    date: currentDate,
+                    intervals: workIntervals,
+                });
+
+                if (result) {
+                    newSchedules.push({
+                        date: currentDate,
+                        data: { id: result?.id, intervals: workIntervals }
+                    });
+                }
+
                 currentDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-                continue;
             }
+        } else {
             const result = await apiClient.createWorkSchedule({
                 specialist: specialistId,
                 date: currentDate,
-                intervals: workIntervals,
-            });
-
+                intervals: workIntervals
+            })
             if (result) {
                 newSchedules.push({
                     date: currentDate,
                     data: { id: result?.id, intervals: workIntervals }
                 });
             }
-
-            currentDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
         }
 
         setGeneralWorkSchedule(prevSchedule => ({
@@ -103,6 +130,7 @@ const AddWorkScheduleModal = ({ show, setShow }) => {
                 }, {})
             }
         }));
+        setLoading(false)
     };
 
     return (
@@ -111,6 +139,7 @@ const AddWorkScheduleModal = ({ show, setShow }) => {
             handleClose={() => setShow(false)}
             title={`${specialistId}, ${dayOfWeek} ${dateString}`}
             primaryBtnDisabled={
+                loading ||
                 workIntervals.length === 0 ||
                 !workIntervals.map(interval => isIntervalValid(interval)).every(elem => elem === true) ||
                 !areIntervalsValid
@@ -170,11 +199,28 @@ const AddWorkScheduleModal = ({ show, setShow }) => {
                     )
                 })}
             </div>
-            <div className={'d-flex justify-content-center w-100 mt-3'}>
-                <Button variant={'success'} name={'addIntervalBtn'} onClick={onAddButtonClick}>
-                    Добавить рабочий промежуток
-                </Button>
-            </div>
+            {loading
+                ? (
+                    <div className={'d-flex justify-content-center w-100 mt-3 align-items-center gap-2'}>
+                        Создание расписания… Пожалуйста, подождите.
+                    </div>
+                )
+                : (
+                    <div className={'d-flex justify-content-center w-100 mt-3 align-items-center gap-2'}>
+                        <Button variant={'success'} name={'addIntervalBtn'} onClick={onAddButtonClick}>
+                            Добавить рабочий промежуток
+                        </Button>
+                        <Form.Group className="me-0">
+                            <Form.Check
+                                type="checkbox"
+                                label="Массовое добавление (на 48 недель)"
+                                checked={checkbox}
+                                onChange={(e) => handleCheckboxChange(e)}
+                            />
+                        </Form.Group>
+                    </div>
+                )
+            }
         </CustomModal>
     );
 };
