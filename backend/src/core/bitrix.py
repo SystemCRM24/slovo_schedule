@@ -4,6 +4,7 @@ from fast_bitrix24 import BitrixAsync
 
 from .settings import Settings
 from .bxconstants import BXConstants
+from src.utils import BatchBuilder
 
 
 BITRIX = BitrixAsync(Settings.BITRIX_WEBHOOK, verbose=False)
@@ -130,3 +131,28 @@ class BitrixClient:
             }
         }
         return await BITRIX.get_all("crm.item.list", params)
+    
+    @staticmethod
+    async def init_bizporc(*sp_ids):
+        """Запускает бизнес-процесс для указанных элементов смарт-процесса - расписания"""
+        batches = {}
+        docs = ['crm', 'Bitrix\\Crm\\Integration\\BizProc\\Document\\Dynamic']
+        for smartp_id in sp_ids:
+            document_id = docs.copy()
+            document_id.append(f'DYNAMIC_{BXConstants.appointment.entityTypeId}_{smartp_id}')
+            params = {'TEMPLATE_ID': 57, 'DOCUMENT_ID': document_id}
+            batch = BatchBuilder('bizproc.workflow.start', params)
+            batches[smartp_id] = batch.build()
+        return await BITRIX.call_batch(batches)
+
+    @staticmethod
+    async def add_comment_to_deal(deal_id: int, comment: str):
+        """Добавляет коммантарий к сделке"""
+        items = {
+            'fields': {
+                'ENTITY_ID': deal_id,
+                'ENTITY_TYPE': 'deal',
+                'COMMENT': comment
+            }
+        }
+        return await BITRIX.call('crm.timeline.comment.add', items)

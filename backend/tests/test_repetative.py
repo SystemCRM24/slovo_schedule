@@ -23,7 +23,8 @@ def test_data(request, test_client):
     result = test_client.post(url).json()
     yield result
     for appointment in result:
-        test_client.delete(f'front/appointment/{appointment['id']}')
+        id = appointment.get('item', {}).get('id')
+        test_client.delete(f'front/appointment/{id}')
 
 
 class TestHandler:

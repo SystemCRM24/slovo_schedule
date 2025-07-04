@@ -39,6 +39,7 @@ async def update_appointment(id: int, appointment: Appointment, bt: BackgroundTa
     fields = appointment.to_bx()
     updated_data = await BitrixClient.update_crm_item(aety, id, fields)
     bt.add_task(logger.debug, f"Appointment id={id} was updated.")
+    bt.add_task(BitrixClient.init_bizporc, id)
     return appointment
 
 

@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException
-from fastapi.responses import PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.middleware import AppExceptionHandlerMiddleware

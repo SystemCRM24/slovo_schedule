@@ -1,9 +1,9 @@
 {
-    "deal_id": "267",
-    "user_id": "1",
-    "patient": "1",
-    "code": "L",
-    "day": "0",
-    "time": "9:00",
-    "duration": "30"
+    "deal_id": "272", 
+    "user_id": "1", 
+    "start_date": "09.07.2025 10:00:00", 
+    "specialist": "19", 
+    "code": "L", 
+    "duration": "45", 
+    "qty": ""
 }
