@@ -272,7 +272,9 @@ class Context:
             BitrixClient.get_specialists_appointments(start_iso, end_iso, specialists_ids)
         )
         schedules = [BXSchedule(**s) for s in schedules]
+        schedules.sort(key=lambda s: s.date)                        # type:ignore
         appointments = [BXAppointment(**a) for a in appointments]
+        appointments.sort(key=lambda a: a.start)                    # type:ignore
         return schedules, appointments
 
     def build_departments(
