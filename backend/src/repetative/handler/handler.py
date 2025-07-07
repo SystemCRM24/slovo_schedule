@@ -151,6 +151,6 @@ class Context:
     async def fill_patient(self):
         """Получает из сделки информацию по пациенту"""
         deal = await BitrixClient.get_deal_info(self.handler.data.deal_id)
-        patient = deal.get('CONTACT_ID', None)
+        patient = deal.get('UF_CRM_1747910940529', None)
         if patient:
             self.handler.patient = patient
