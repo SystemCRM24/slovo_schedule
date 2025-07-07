@@ -104,8 +104,9 @@ class Handler:
             if c.get('ID', '0') == patient:
                 patient = c
                 break
-        patient_fio = patient.get('LAST_NAME', '') + ' ' + patient.get('NAME', '')[0]       # type:ignore
-        template = f"[*] {spec_fio} - {patient_fio}, {self.data.code}, " + "{0}, {1} минут."
+        if isinstance(patient, dict)
+            patient = patient.get('LAST_NAME', '') + ' ' + patient.get('NAME', '')[0]       # type:ignore
+        template = f"[*] {spec_fio} - {patient}, {self.data.code}, " + "{0}, {1} минут."
 
         def iterator():
             for app in self.repetatives:
