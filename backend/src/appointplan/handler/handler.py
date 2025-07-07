@@ -23,7 +23,7 @@ class Handler:
         self.stages: list[Stage] = []                   # Стадии, занятия в которых нужно распланировать
         self.departments: dict[str, Department] = {}    # Подразделения по типу
         self.message = None                             # Сообщение, которое пошлем пользователю
-        self.appointments = []                          # Расставленные занятия
+        self.appointments: list[BXAppointment] = []     # Расставленные занятия
 
     async def run(self):
         """Проставляем занятия и отправляем сообщение. Обернуто в транзакцию."""
@@ -44,7 +44,8 @@ class Handler:
             trace_format = traceback.format_exc()
             AEHM._log_app_exception(stack, trace_format)
             self.appointments.clear()
-        await self.send_message()
+        asyncio.create_task(self.send_message())
+        asyncio.create_task(self.send_comment())
         return await self.send_appointments()
 
     def plan_appointments(self, stage: Stage, app_set: AppointmentSet):
@@ -154,6 +155,34 @@ class Handler:
             appointment.id = result.get('id')
         logger.info('The appointments were scheduled.')
         return self.appointments
+
+    async def send_comment(self):
+        if not self.appointments:
+            return
+        specialists_lst, patients_lst = await asyncio.gather(
+            BitrixClient.get_all_specialist(),
+            BitrixClient.get_all_clients()
+        )
+        specialists = {int(s.get('ID', '0')): s for s in specialists_lst}
+        patient = str(self.deal.patient)
+        for c in patients_lst:
+            if c.get('ID', '0') == patient:
+                patient = c
+                break
+        patient_fio = patient.get('LAST_NAME', '') + ' ' + patient.get('NAME', '')[0]       # type:ignore
+        template = "[*] {0} - {1}, {2}, {3}, {4} минут."
+
+        def iterator():
+            for app in self.appointments:
+                specialist = specialists[app.specialist]
+                spec_fio = specialist.get('LAST_NAME', '') + ' ' + specialist.get('NAME', '')[0]    # type:ignore
+                date = app.start.strftime(r'%d.%m.%Y %H:%M')    #type:ignore
+                duration = app.end - app.start                  #type:ignore
+                duration = int(duration.total_seconds() // 60)  #type:ignore
+                yield template.format(spec_fio, patient_fio, app.code, date, duration)
+    
+        comment = f'Добавлены занятия:\n[list=1]{'\n'.join(iterator())}[/list]'
+        return await BitrixClient.add_comment_to_deal(self.deal.id, comment)
 
 
 class Context:

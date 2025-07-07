@@ -5,6 +5,7 @@ from src.utils import BatchBuilder
 from src.core import Settings, BXConstants, BitrixClient
 from src.schemas.repetative import RequestSchema
 from src.schemas.appointplan import BXSchedule
+from src.services import get_comment
 
 
 class Handler:
@@ -27,6 +28,7 @@ class Handler:
             self.repetatives.clear()
             self.messages.append(str(e))
         asyncio.create_task(self.send_message())
+        asyncio.create_task(self.send_comment())
         return await self.send_appointments()
 
     def create_repetatives(self):
@@ -81,22 +83,40 @@ class Handler:
                 {'entityTypeId': BXConstants.appointment.entityTypeId, 'fields': appointment}
             )
             batches[index] = batch.build()
-        result = await BitrixClient.call_batch(batches)
-        t = asyncio.create_task(self.send_comment(result))
-        await t
-        return result
+        return await BitrixClient.call_batch(batches)
     
-    async def send_comment(self, result):
+    async def send_comment(self):
         """Создает коммент к сделке"""
-        comments = []
-        template = '[URL=/crm/type/1036/detalis/{0}/]{1}[/URL]'
-        for item in result:
-            item = item.get('item', None)
-            if item is None:
-                continue
-            text = f'Занятие {item.get('ufCrm3StartDate', '')[:10]}'
-            comments.append(template.format(item.get('id'), text))
-        await BitrixClient.add_comment_to_deal(self.data.deal_id, '\n'.join(comments))
+        if not self.repetatives:
+            return
+        specialists, patients = await asyncio.gather(
+            BitrixClient.get_all_specialist(),
+            BitrixClient.get_all_clients()
+        )
+        specialist = str(self.data.specialist_id)
+        for spec in specialists:
+            if spec.get('ID', '0') == specialist:
+                specialist = spec
+                break
+        spec_fio = specialist.get('LAST_NAME', '') + ' ' + specialist.get('NAME', '')[0]    # type:ignore
+        patient = str(self.patient)
+        for c in patients:
+            if c.get('ID', '0') == patient:
+                patient = c
+                break
+        patient_fio = patient.get('LAST_NAME', '') + ' ' + patient.get('NAME', '')[0]       # type:ignore
+        template = f"[*] {spec_fio} - {patient_fio}, {self.data.code}, " + "{0}, {1} минут."
+
+        def iterator():
+            for app in self.repetatives:
+                date = datetime.fromisoformat(app.get('ufCrm3StartDate', ''))
+                duration = datetime.fromisoformat(app.get('ufCrm3EndDate', '')) - date
+                date = date.strftime(r'%d.%m.%Y %H:%M')         #type:ignore
+                duration = int(duration.total_seconds() // 60)  #type:ignore
+                yield template.format(date, duration)
+    
+        comment = f'Добавлены занятия:\n[list=1]{'\n'.join(iterator())}[/list]'
+        return await BitrixClient.add_comment_to_deal(self.data.deal_id, comment)
 
 
 class Context:
