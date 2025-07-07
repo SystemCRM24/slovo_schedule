@@ -1,12 +1,13 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useContext } from 'react';
 import useSchedules from "../../hooks/useSchedules.js";
 import CustomModal from "../ui/Modal/index.jsx";
 import { useDayContext } from "../../contexts/Day/provider.jsx";
-import { Button, FormControl, InputGroup } from "react-bootstrap";
+import { Button, FormControl, InputGroup, Form } from "react-bootstrap";
 import { areIntervalsOverlapping, getDateWithTime, getTimeStringFromDate, isIntervalValid } from "../../utils/dates.js";
 import { useSpecialistContext } from "../../contexts/Specialist/provider.jsx";
 import apiClient from "../../api/index.js";
 import Holidays from 'date-holidays';
+import { AppContext } from "../../contexts/App/context.js";
 
 const AddWorkScheduleModal = ({ show, setShow }) => {
     const {
@@ -19,6 +20,10 @@ const AddWorkScheduleModal = ({ show, setShow }) => {
     const dateString = date.toLocaleDateString();
     const [workIntervals, setWorkIntervals] = useState([]);
     const holidays = new Holidays('RU');
+    const [checkbox, setCheckbox] = useState(false)
+    const [loading, setLoading] = useState(false)
+    const { dates, setDates } = useContext(AppContext);
+
 
     const isNewIntervalValid = useCallback((interval, index) => {
         if (interval.start !== undefined && interval.end !== undefined) {
@@ -68,41 +73,126 @@ const AddWorkScheduleModal = ({ show, setShow }) => {
         });
     };
 
-    const onSumbit = async () => {
-        let currentDate = new Date(date);
-        const newSchedules = [];
+    const handleCheckboxChange = (e) => {
+        setCheckbox(e.target.checked);
+    };
 
-        for (let i = 0; i <= 2; i++) {
-            if (i > 0 && isHoliday(currentDate)) {
-                currentDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-                continue;
+    const createNewWorkSchedule = async (specialistId, baseDate, workIntervals, repeatWeekly = false) => {
+        const schedulesToCreate = [];
+
+        let currentDate = new Date(baseDate);
+
+        if (repeatWeekly) {
+            for (let i = 0; i < 48; i++) {
+                const isDayOff = isHoliday(currentDate) || currentDate.getDay() === 0;
+
+                if (!isDayOff) {
+                    const adjustedIntervals = workIntervals.map(interval => ({
+                        start: new Date(
+                            currentDate.getFullYear(),
+                            currentDate.getMonth(),
+                            currentDate.getDate(),
+                            interval.start.getHours(),
+                            interval.start.getMinutes()
+                        ),
+                        end: new Date(
+                            currentDate.getFullYear(),
+                            currentDate.getMonth(),
+                            currentDate.getDate(),
+                            interval.end.getHours(),
+                            interval.end.getMinutes()
+                        )
+                    }));
+
+                    schedulesToCreate.push({
+                        date: new Date(currentDate),
+                        intervals: adjustedIntervals
+                    });
+                }
+
+                currentDate.setDate(currentDate.getDate() + 7);
             }
+        } else {
+            // Одноразовое расписание
+            const adjustedIntervals = workIntervals.map(interval => ({
+                start: new Date(
+                    currentDate.getFullYear(),
+                    currentDate.getMonth(),
+                    currentDate.getDate(),
+                    interval.start.getHours(),
+                    interval.start.getMinutes()
+                ),
+                end: new Date(
+                    currentDate.getFullYear(),
+                    currentDate.getMonth(),
+                    currentDate.getDate(),
+                    interval.end.getHours(),
+                    interval.end.getMinutes()
+                )
+            }));
+
+            schedulesToCreate.push({
+                date: new Date(currentDate),
+                intervals: adjustedIntervals
+            });
+        }
+
+        const createdSchedules = [];
+
+        for (const schedule of schedulesToCreate) {
             const result = await apiClient.createWorkSchedule({
                 specialist: specialistId,
-                date: currentDate,
-                intervals: workIntervals,
+                date: schedule.date,
+                intervals: schedule.intervals
             });
 
             if (result) {
-                newSchedules.push({
-                    date: currentDate,
-                    data: { id: result?.id, intervals: workIntervals }
+                createdSchedules.push({
+                    date: schedule.date.toISOString().split('T')[0],
+                    data: {
+                        id: result.id,
+                        intervals: schedule.intervals
+                    }
                 });
             }
-
-            currentDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
         }
 
-        setGeneralWorkSchedule(prevSchedule => ({
-            ...prevSchedule,
-            [specialistId]: {
-                ...(prevSchedule[specialistId] || {}),
-                ...newSchedules.reduce((acc, { date, data }) => {
+        return createdSchedules;
+    };
+
+    const onSumbit = async () => {
+        setLoading(true);
+
+        try {
+            const createdSchedules = await createNewWorkSchedule(
+                specialistId,
+                date,
+                workIntervals,
+                checkbox
+            );
+
+            // Обновляем стейт общего расписания
+            setGeneralWorkSchedule(prev => {
+                const updatedSpecialistSchedule = createdSchedules.reduce((acc, { date, data }) => {
                     acc[date] = data;
                     return acc;
-                }, {})
-            }
-        }));
+                }, {});
+
+                return {
+                    ...prev,
+                    [specialistId]: {
+                        ...(prev[specialistId] || {}),
+                        ...updatedSpecialistSchedule
+                    }
+                };
+            });
+
+        } catch (error) {
+            console.error("Ошибка при создании расписания:", error);
+        } finally {
+            setLoading(false);
+            setDates({ fromDate: new Date(dates.fromDate), toDate: new Date(dates.toDate) });
+        }
     };
 
     return (
@@ -111,6 +201,7 @@ const AddWorkScheduleModal = ({ show, setShow }) => {
             handleClose={() => setShow(false)}
             title={`${specialistId}, ${dayOfWeek} ${dateString}`}
             primaryBtnDisabled={
+                loading ||
                 workIntervals.length === 0 ||
                 !workIntervals.map(interval => isIntervalValid(interval)).every(elem => elem === true) ||
                 !areIntervalsValid
@@ -170,11 +261,28 @@ const AddWorkScheduleModal = ({ show, setShow }) => {
                     )
                 })}
             </div>
-            <div className={'d-flex justify-content-center w-100 mt-3'}>
-                <Button variant={'success'} name={'addIntervalBtn'} onClick={onAddButtonClick}>
-                    Добавить рабочий промежуток
-                </Button>
-            </div>
+            {loading
+                ? (
+                    <div className={'d-flex justify-content-center w-100 mt-3 align-items-center gap-2'}>
+                        Создание расписания… Пожалуйста, подождите.
+                    </div>
+                )
+                : (
+                    <div className={'d-flex justify-content-center w-100 mt-3 align-items-center gap-2'}>
+                        <Button variant={'success'} name={'addIntervalBtn'} onClick={onAddButtonClick}>
+                            Добавить рабочий промежуток
+                        </Button>
+                        <Form.Group className="me-0">
+                            <Form.Check
+                                type="checkbox"
+                                label="Массовое добавление (на 48 недель)"
+                                checked={checkbox}
+                                onChange={(e) => handleCheckboxChange(e)}
+                            />
+                        </Form.Group>
+                    </div>
+                )
+            }
         </CustomModal>
     );
 };
