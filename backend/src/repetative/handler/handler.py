@@ -104,7 +104,7 @@ class Handler:
             if c.get('ID', '0') == patient:
                 patient = c
                 break
-        if isinstance(patient, dict)
+        if isinstance(patient, dict):
             patient = patient.get('LAST_NAME', '') + ' ' + patient.get('NAME', '')[0]       # type:ignore
         template = f"[*] {spec_fio} - {patient}, {self.data.code}, " + "{0}, {1} минут."
 
