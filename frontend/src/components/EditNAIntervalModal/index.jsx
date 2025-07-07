@@ -79,12 +79,28 @@ const EditNAInterval = ({ show, setShow, startDt, endDt }) => {
                     currentDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
                     continue;
                 }
+                const adjustedIntervals = workIntervals.map(interval => ({
+                    start: new Date(
+                        currentDate.getFullYear(),
+                        currentDate.getMonth(),
+                        currentDate.getDate(),
+                        interval.start.getHours(),
+                        interval.start.getMinutes()
+                    ),
+                    end: new Date(
+                        currentDate.getFullYear(),
+                        currentDate.getMonth(),
+                        currentDate.getDate(),
+                        interval.end.getHours(),
+                        interval.end.getMinutes()
+                    )
+                }))
 
                 const existingSchedule = generalWorkSchedule[specialistId]?.[currentDate];
-                let intervalsToSave = newWorkIntervals;
+                let intervalsToSave = adjustedIntervals;
 
                 if (existingSchedule) {
-                    intervalsToSave = [...existingSchedule.intervals, ...workIntervals];
+                    intervalsToSave = [...existingSchedule.intervals, ...adjustedIntervals];
                 }
 
                 try {
