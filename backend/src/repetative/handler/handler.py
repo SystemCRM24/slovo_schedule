@@ -147,6 +147,7 @@ class Context:
         for raw_schedule in schedules:
             schedule = BXSchedule.model_validate(raw_schedule)
             self.handler.schedules.append(schedule)
+        self.handler.schedules.sort(key=lambda s: s.date)   # type:ignore
 
     async def fill_patient(self):
         """Получает из сделки информацию по пациенту"""
