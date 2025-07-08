@@ -27,7 +27,7 @@ class Handler:
         except Exception as e:
             self.repetatives.clear()
             self.messages.append(str(e))
-        asyncio.create_task(self.send_message())
+        t = asyncio.create_task(self.send_message())
         asyncio.create_task(self.send_comment())
         return await self.send_appointments()
 
@@ -89,10 +89,7 @@ class Handler:
         """Создает коммент к сделке"""
         if not self.repetatives:
             return
-        specialists, patients = await asyncio.gather(
-            BitrixClient.get_all_specialist(),
-            BitrixClient.get_all_clients()
-        )
+        specialists = await BitrixClient.get_all_specialist()
         specialist = str(self.data.specialist_id)
         for spec in specialists:
             if spec.get('ID', '0') == specialist:
@@ -151,5 +148,5 @@ class Context:
             for client in clients:
                 if client.get('ID', None) == patient:
                     self.handler.patient = BXClient.model_validate(client)
-                    break
+                    return
         raise Exception('В сделке не установлен клиент или у клиента неподходящий тип')

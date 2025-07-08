@@ -43,7 +43,9 @@ class Stage(BaseModel):
     @classmethod
     def from_raw(cls, start: datetime, raw_stage: dict) -> Self:
         """Собираем объект из сырых данных"""
-        duration = raw_stage.get('duration', "0")
+        duration = raw_stage.get('duration', "")
+        if duration == "":
+            duration = "0"
         data = raw_stage.get('data', [])
         return cls(start=start, duration=duration, sets=data)
     
