@@ -13,7 +13,7 @@ class Handler:
     def __init__(self, request: str) -> None:
         self.request = request
         self.data: RequestSchema = None                             # type:ignore
-        self.patient: int = Settings.DEFAULT_USER
+        self.patient = str(Settings.DEFAULT_USER)
         self.schedules: list[BXSchedule] = []
         self.users = [Settings.DEFAULT_USER]
         self.repetatives: list[dict] = []
@@ -99,7 +99,7 @@ class Handler:
                 specialist = spec
                 break
         spec_fio = specialist.get('LAST_NAME', '') + ' ' + specialist.get('NAME', '')[0]    # type:ignore
-        patient = str(self.patient)
+        patient = self.patient
         for c in patients:
             if c.get('ID', '0') == patient:
                 patient = c
@@ -153,5 +153,6 @@ class Context:
         """Получает из сделки информацию по пациенту"""
         deal = await BitrixClient.get_deal_info(self.handler.data.deal_id)
         patient = deal.get('UF_CRM_1747910940529', None)
+        print('[DEBUG]', patient)
         if patient:
             self.handler.patient = patient
