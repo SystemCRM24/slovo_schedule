@@ -1,9 +1,9 @@
 {
-    "deal_id": "272", 
-    "user_id": "1", 
-    "start_date": "01.07.2025 10:00:00", 
-    "specialist": "19", 
-    "code": "L", 
-    "duration": "45", 
-    "qty": ""
+  "deal_id": "272",
+  "user_id": "1",
+  "start_date": "07.07.2025 17:30:00",
+  "specialist": "19",
+  "code": "L",
+  "duration": "45",
+  "qty": ""
 }

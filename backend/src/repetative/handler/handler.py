@@ -5,7 +5,7 @@ from src.utils import BatchBuilder
 from src.core import Settings, BXConstants, BitrixClient
 from src.schemas.repetative import RequestSchema
 from src.schemas.appointplan import BXSchedule
-from src.services import get_comment
+from src.schemas.api import BXClient
 
 
 class Handler:
@@ -13,7 +13,7 @@ class Handler:
     def __init__(self, request: str) -> None:
         self.request = request
         self.data: RequestSchema = None                             # type:ignore
-        self.patient = str(Settings.DEFAULT_USER)
+        self.patient = BXClient(ID=Settings.DEFAULT_USER, NAME='СпецСистема', LAST_NAME="Интегратор")   # type:ignore
         self.schedules: list[BXSchedule] = []
         self.users = [Settings.DEFAULT_USER]
         self.repetatives: list[dict] = []
@@ -55,8 +55,8 @@ class Handler:
             'ufCrm3Code': [code],
             'ufCrm3StartDate': start.isoformat(),
             'ufCrm3EndDate': end.isoformat(),
-            'ufCrm3Children': self.patient,
-            'ufCrm3HistoryClient': self.patient,
+            'ufCrm3Children': self.patient.id,
+            'ufCrm3HistoryClient': self.patient.id,
             'ufCrm3Dealid': str(self.data.deal_id)
         }
     
@@ -99,14 +99,7 @@ class Handler:
                 specialist = spec
                 break
         spec_fio = specialist.get('LAST_NAME', '') + ' ' + specialist.get('NAME', '')[0]    # type:ignore
-        patient = self.patient
-        for c in patients:
-            if c.get('ID', '0') == patient:
-                patient = c
-                break
-        if isinstance(patient, dict):
-            patient = patient.get('LAST_NAME', '') + ' ' + patient.get('NAME', '')[0]       # type:ignore
-        template = f"[*] {spec_fio} - {patient}, {self.data.code}, " + "{0}, {1} минут."
+        template = f"[*] {spec_fio} - {self.patient.full_name}, {self.data.code}, " + "{0}, {1} минут."
 
         def iterator():
             for app in self.repetatives:
@@ -152,7 +145,11 @@ class Context:
     async def fill_patient(self):
         """Получает из сделки информацию по пациенту"""
         deal = await BitrixClient.get_deal_info(self.handler.data.deal_id)
-        patient = deal.get('UF_CRM_1747910940529', None)
-        print('[DEBUG]', patient)
+        clients = await BitrixClient.get_all_clients()
+        patient = deal.get('CONTACT_ID', None)
         if patient:
-            self.handler.patient = patient
+            for client in clients:
+                if client.get('ID', None) == patient:
+                    self.handler.patient = BXClient.model_validate(client)
+                    break
+        raise Exception('В сделке не установлен клиент или у клиента неподходящий тип')

@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from functools import cached_property
 
 from typing import Self
+from src.core import Settings
 
 
 class AppointmentSet(BaseModel):
@@ -69,3 +70,10 @@ class Deal(BaseModel):
     patient: int = Field(validation_alias='CONTACT_ID')
 
     model_config = ConfigDict(extra='ignore')
+
+    @field_validator('patient', mode='before')
+    @classmethod
+    def quantity_validator(cls, value: str) -> int:
+        if isinstance(value, str) and value.isdigit():
+            return int(value)
+        return Settings.DEFAULT_USER
