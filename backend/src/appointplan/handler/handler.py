@@ -169,17 +169,18 @@ class Handler:
             if c.get('ID', '0') == patient:
                 patient = c
                 break
-        patient_fio = patient.get('LAST_NAME', '') + ' ' + patient.get('NAME', '')[0]       # type:ignore
-        template = "[*] {0} - {1}, {2}, {3}, {4} минут."
+        if isinstance(patient, dict):
+            patient = patient.get('LAST_NAME', '') + ' ' + patient.get('NAME', '')[0]       # type:ignore
 
         def iterator():
+            template = "[*] {0} - {1}, {2}, {3}, {4} минут."
             for app in self.appointments:
                 specialist = specialists[app.specialist]
                 spec_fio = specialist.get('LAST_NAME', '') + ' ' + specialist.get('NAME', '')[0]    # type:ignore
                 date = app.start.strftime(r'%d.%m.%Y %H:%M')    #type:ignore
                 duration = app.end - app.start                  #type:ignore
                 duration = int(duration.total_seconds() // 60)  #type:ignore
-                yield template.format(spec_fio, patient_fio, app.code, date, duration)
+                yield template.format(spec_fio, patient, app.code, date, duration)
     
         comment = f'Добавлены занятия:\n[list=1]{'\n'.join(iterator())}[/list]'
         return await BitrixClient.add_comment_to_deal(self.deal.id, comment)
