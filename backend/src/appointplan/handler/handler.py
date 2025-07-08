@@ -153,7 +153,8 @@ class Handler:
                 fields
             )
             appointment.id = result.get('id')
-        logger.info('The appointments were scheduled.')
+        if self.appointments:
+            logger.info('The appointments were scheduled.')
         return self.appointments
 
     async def send_comment(self):
@@ -170,7 +171,9 @@ class Handler:
                 patient = c
                 break
         if isinstance(patient, dict):
-            patient = patient.get('LAST_NAME', '') + ' ' + patient.get('NAME', '')[0]       # type:ignore
+            last_name = patient.get('LAST_NAME', None) or ""
+            name = patient.get('NAME', '')[0] or ""
+            patient = last_name + ' ' + name       # type:ignore
 
         def iterator():
             template = "[*] {0} - {1}, {2}, {3}, {4} минут."
