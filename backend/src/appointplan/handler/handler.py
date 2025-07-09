@@ -155,7 +155,7 @@ class Handler:
                 batches[index] = BatchBuilder('crm.item.add', params).build()
             result = await BitrixClient.call_batch(batches)
             logger.info('The appointments were scheduled.')
-            for index, item in result:
+            for index, item in enumerate(result):
                 id = item.get('item', {}).get('id', None)
                 if id is not None:
                     self.appointments[index].id = id
