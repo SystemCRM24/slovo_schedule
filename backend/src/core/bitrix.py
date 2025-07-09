@@ -141,9 +141,8 @@ class BitrixClient:
             document_id = docs.copy()
             document_id.append(f'DYNAMIC_{BXConstants.appointment.entityTypeId}_{smartp_id}')
             params = {'TEMPLATE_ID': 57, 'DOCUMENT_ID': document_id}
-            batch = BatchBuilder('bizproc.workflow.start', params)
-            batches[smartp_id] = batch.build()
-        return await BITRIX.call_batch(batches)
+            batches[smartp_id] = await BITRIX.call('bizproc.workflow.start', params)
+        return batches
 
     @staticmethod
     async def add_comment_to_deal(deal_id: int, comment: str):

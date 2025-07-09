@@ -1,6 +1,8 @@
 """Тестирование основного приложения"""
 import pytest
 from fastapi.testclient import TestClient
+from src.core import BitrixClient
+from src.core.bitrix import BITRIX
 
 
 class TestApp:
@@ -12,3 +14,8 @@ class TestApp:
         assert response.status_code == 200, "YOU ARE NOT PREPARED!"
         msg = response.json()
         assert msg == 'pong', 'Pong message da best!!!'
+
+    @pytest.mark.asyncio
+    async def test_bizproc(self):
+        result = await BitrixClient.init_bizporc(1025)
+        print(result)
