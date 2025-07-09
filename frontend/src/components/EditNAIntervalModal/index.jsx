@@ -67,6 +67,29 @@ const EditNAInterval = ({ show, setShow, startDt, endDt }) => {
         setCheckbox(e.target.checked);
     };
 
+    function mergeIntervals(intervals) {
+        if (!intervals.length) return [];
+
+        const sorted = [...intervals].sort((a, b) => a.start.getTime() - b.start.getTime());
+
+        const merged = [sorted[0]];
+
+        for (const current of sorted.slice(1)) {
+            const last = merged[merged.length - 1];
+
+            if (current.start.getTime() <= last.end.getTime()) {
+                merged[merged.length - 1] = {
+                    start: last.start,
+                    end: current.end.getTime() > last.end.getTime() ? current.end : last.end,
+                };
+            } else {
+                merged.push(current);
+            }
+        }
+
+        return merged;
+    }
+
     const handleSubmit = async () => {
         setLoading(true);
         const newWorkIntervals = [...workSchedule.intervals, ...workIntervals];
@@ -74,9 +97,14 @@ const EditNAInterval = ({ show, setShow, startDt, endDt }) => {
 
         if (checkbox) {
             let currentDate = new Date(date);
+            const endDate = new Date(date);
+            endDate.setDate(endDate.getDate() + 365);
+            const response = await apiClient.getWorkSchedules(currentDate, endDate);
+            const schedulesForSpecialist = response[specialistId] || [];
+
             for (let i = 0; i <= 48; i++) {
                 if (isHoliday(currentDate)) {
-                    currentDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+                    currentDate.setDate(currentDate.getDate() + 7);
                     continue;
                 }
                 const adjustedIntervals = workIntervals.map(interval => ({
@@ -96,12 +124,15 @@ const EditNAInterval = ({ show, setShow, startDt, endDt }) => {
                     )
                 }))
 
-                const existingSchedule = generalWorkSchedule[specialistId]?.[currentDate];
+                const normalizedCurrentDate = currentDate.toString();
+                const existingSchedule = schedulesForSpecialist[normalizedCurrentDate];
+
                 let intervalsToSave = adjustedIntervals;
 
                 if (existingSchedule) {
                     intervalsToSave = [...existingSchedule.intervals, ...adjustedIntervals];
                 }
+                intervalsToSave = mergeIntervals(intervalsToSave);
 
                 try {
                     const result = existingSchedule
@@ -126,7 +157,7 @@ const EditNAInterval = ({ show, setShow, startDt, endDt }) => {
                     console.error(`Ошибка для даты ${currentDate}:`, error);
                 }
 
-                currentDate = new Date(currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+                currentDate.setDate(currentDate.getDate() + 7);
             }
         } else {
             try {
