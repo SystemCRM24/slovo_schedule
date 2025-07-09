@@ -1,5 +1,6 @@
 from fastapi import APIRouter, BackgroundTasks
 from fastapi.exceptions import HTTPException
+import asyncio
 
 from src.core import BitrixClient, BXConstants
 from src.schemas.api import Appointment, BXAppointment
@@ -39,7 +40,7 @@ async def update_appointment(id: int, appointment: Appointment, bt: BackgroundTa
     fields = appointment.to_bx()
     updated_data = await BitrixClient.update_crm_item(aety, id, fields)
     bt.add_task(logger.debug, f"Appointment id={id} was updated.")
-    bt.add_task(BitrixClient.init_bizporc, id)
+    asyncio.create_task(BitrixClient.init_bizporc(id))
     return appointment
 
 
