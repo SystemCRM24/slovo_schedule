@@ -139,22 +139,26 @@ class Handler:
     
     async def send_appointments(self):
         """Посылает батч-запрос на расстановку занятий в битру."""
-        for appointment in self.appointments:
-            fields = {
-                'assignedById': appointment.specialist,
-                'ufCrm3Code': [BXConstants.appointment.lfv.idByCode.get(appointment.code)],
-                'ufCrm3Children': appointment.patient,
-                'ufCrm3StartDate': appointment.start.isoformat(),
-                'ufCrm3EndDate': appointment.end.isoformat(),
-                'ufCrm3HistoryClient': appointment.patient      
-            }
-            result = await BitrixClient.create_crm_item(
-                BXConstants.appointment.entityTypeId,
-                fields
-            )
-            appointment.id = result.get('id')
         if self.appointments:
+            batches = {}
+            for index, appointment in enumerate(self.appointments):
+                fields = {
+                    'assignedById': appointment.specialist,
+                    'ufCrm3Code': [BXConstants.appointment.lfv.idByCode.get(appointment.code)],
+                    'ufCrm3Children': appointment.patient,
+                    'ufCrm3StartDate': appointment.start.isoformat(),
+                    'ufCrm3EndDate': appointment.end.isoformat(),
+                    'ufCrm3HistoryClient': appointment.patient,
+                    'ufCrm3Dealid': self.deal.id
+                }
+                params = {'entityTypeId': BXConstants.appointment.entityTypeId, 'fields': fields}
+                batches[index] = BatchBuilder('crm.item.add', params).build()
+            result = await BitrixClient.call_batch(batches)
             logger.info('The appointments were scheduled.')
+            for index, item in result:
+                id = item.get('item', {}).get('id', None)
+                if id is not None:
+                    self.appointments[index].id = id
         return self.appointments
 
     async def send_comment(self):
