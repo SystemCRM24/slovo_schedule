@@ -191,9 +191,11 @@ const EditClientInfoModal = ({ id, show, setShow }) => {
             let inSchedule = false;
             if (specialistScheduleOfDay !== null) {
                 for (const interval of specialistScheduleOfDay.intervals) {
-                    if (interval.start < end && end <= interval.end) {
+                    const isStartInSchedule = interval.start <= start && start < interval.end;
+                    const isEndInSchedule = interval.start < end && end <= interval.end;
+                    if ( isStartInSchedule && isEndInSchedule ) {
                         inSchedule = true;
-                        break;
+                        break
                     }
                 }
             }
@@ -210,7 +212,7 @@ const EditClientInfoModal = ({ id, show, setShow }) => {
             }
             setDurationsIsInvalid(!(inSchedule && notInAppointment));
         },
-        [specialistScheduleOfDay, end, spesialistAppointmentsOfDay, setDurationsIsInvalid]
+        [specialistScheduleOfDay, end, start, spesialistAppointmentsOfDay, setDurationsIsInvalid]
     );
 
     const { dates, setDates } = useContext(AppContext);
