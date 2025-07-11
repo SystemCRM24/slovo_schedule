@@ -1,10 +1,12 @@
 from fastapi import APIRouter, BackgroundTasks
 from fastapi.exceptions import HTTPException
 import asyncio
+from datetime import datetime, timedelta
 
 from src.core import BitrixClient, BXConstants
 from src.schemas.api import Appointment, BXAppointment
 from src.logger import logger
+from src.utils import BatchBuilder
 
 
 router = APIRouter(prefix="/appointment")
@@ -52,3 +54,40 @@ async def delete_appointment(id: int, bt: BackgroundTasks):
     if not result:
         raise HTTPException(404, f'Appointment id={id} not found.')
     bt.add_task(logger.debug, f'Appointment id={id} was deleted.')
+
+
+@router.delete('/massive/{id}', status_code=200)
+async def delete_appointment_massive(id: int, bt: BackgroundTasks) -> list[BXAppointment]:
+    template = await get_appointment(id, bt)
+    template_start = datetime.fromisoformat(template.start)                  # type:ignore
+    appointments = await BitrixClient.get_specialists_appointments(
+        template_start.replace(hour=0, minute=0, second=0).isoformat(),
+        (template_start + timedelta(days=380)).isoformat(),
+        (template.specialist, )
+    )
+    response = []
+    batches = {}
+    builder = BatchBuilder("crm.item.delete")
+    for raw in appointments:
+        appointment = BXAppointment.model_validate(raw)
+        is_patient = template.patient == appointment.patient
+        is_code = template.code == appointment.code
+        app_start = datetime.fromisoformat(appointment.start)       # type: ignore
+        is_weekday = template_start.weekday() == app_start.weekday()
+        if not (is_patient and is_code and is_weekday):
+            continue
+        app_start = app_start.replace(
+            year=template_start.year,
+            month=template_start.month,
+            day=template_start.day
+        )
+        if template_start != app_start:
+            continue
+        builder.params = {
+            "entityTypeId": BXConstants.appointment.entityTypeId, 
+            "id": appointment.id
+        }
+        batches[appointment.id] = builder.build()
+        response.append(appointment)
+    await BitrixClient.call_batch(batches)
+    return response

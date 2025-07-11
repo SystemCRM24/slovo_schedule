@@ -22,12 +22,11 @@ def test_data(request, test_client):
     url = f'/test_repetative?data={request.param}'
     result = test_client.post(url).json()
     yield result
-    for appointment in result:
-        id = appointment.get('item', {}).get('id')
-        test_client.delete(f'front/appointment/{id}')
 
 
 class TestHandler:
 
-    def test_0(self, test_data):
-        print(test_data)
+    def test_delete(self, test_data, test_client):
+        appointment = test_data[0]
+        result = test_client.delete(f'front/appointment/massive/{appointment.get('item', {}).get('id')}')
+        print('[DEBUG]', result)

@@ -2,7 +2,6 @@
 import pytest
 from fastapi.testclient import TestClient
 from src.core import BitrixClient
-from src.core.bitrix import BITRIX
 
 
 class TestApp:
@@ -18,4 +17,3 @@ class TestApp:
     @pytest.mark.asyncio
     async def test_bizproc(self):
         result = await BitrixClient.init_bizporc(1025)
-        print(result)

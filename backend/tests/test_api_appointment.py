@@ -9,8 +9,8 @@ def test_appointment() -> dict:
         'specialist': 12,
         'code': 'L',
         'patient': 17,
-        'start': "2025-05-12T10:00:00+03:00",
-        'end': "2025-05-12T10:30:00+03:00",
+        'start': "2025-07-07T10:00:00+03:00",
+        'end': "2025-07-07T10:30:00+03:00",
         'old_patient': 17
     }
 

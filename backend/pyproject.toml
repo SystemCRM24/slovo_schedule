@@ -7,6 +7,7 @@ dependencies = [
     "aiocache>=0.12.3",
     "fast-bitrix24>=1.8.5",
     "fastapi>=0.115.12",
+    "holidays>=0.76",
     "loguru>=0.7.3",
     "pydantic-settings>=2.9.1",
     "python-dotenv>=1.1.0",
