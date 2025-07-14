@@ -319,6 +319,17 @@ class APIClient {
     }
 
     /**
+     * Удаляет запись о приеме (на год вперед)
+     * @param {string} id - ид записи (Расписания)
+     * @returns
+     */
+    async deleteAppointmentMassive(id) {
+        const url = `${this.serverUrl}appointment/massive/${id}`
+        // const url = this.getUrl('appointment/', {id})
+        return await this.delete(url);
+    }
+
+    /**
      * Создает элемент смарт-процесса - график
      * @param {object} data - Объект графика
      * @param {string} data.specialist - ИД специалиста
@@ -327,6 +338,24 @@ class APIClient {
      */
     async createWorkSchedule(data) {
         const url = `${this.serverUrl}schedule/`
+        // const url = this.getUrl('schedule/');
+        const body = {
+            specialist: data.specialist,
+            date: data.date.toISOString(),
+            intervals: data.intervals.map(i => `${i.start.getTime()}:${i.end.getTime()}`)
+        };
+        return await this.post(url, body);
+    }
+
+    /**
+     * Создает элемент смарт-процесса - график (на год вперед)
+     * @param {object} data - Объект графика
+     * @param {string} data.specialist - ИД специалиста
+     * @param {string} data.date - дата, для которой нужно создать расписание
+     * @param {Array<{start: Date, end: Date}>} data.intervals - Интервалы, которые обозначают рабочее время
+     */
+    async createWorkScheduleMassive(data) {
+        const url = `${this.serverUrl}schedule/massive/`
         // const url = this.getUrl('schedule/');
         const body = {
             specialist: data.specialist,
@@ -365,6 +394,23 @@ class APIClient {
     }
 
     /**
+     * Обновляет элемент смарт-процесса-график (на год вперед)
+     * @param {string} id - ид графика
+     * @param {object} data - Объект графика
+     * @param {string} data.specialist - ИД специалиста
+     * @param {string} data.date - дата, для которой нужно создать расписание
+     * @param {Array<{start: Date, end: Date}>} data.intervals - Интервалы, которые обозначают рабочее время
+     */
+    async updateWorkScheduleMassive(id, data) {
+        const url = `${this.serverUrl}schedule/massive/${id}`
+        const body = {
+            ...data,
+            intervals: data.intervals.map(i => `${i.start.getTime()}:${i.end.getTime()}`)
+        };
+        return await this.update(url, body);
+    }
+
+    /**
      * Удаляет запись о рабочем графике
      * @param {string} id - ид рабочего графика
      * @returns
@@ -372,6 +418,16 @@ class APIClient {
     async deleteWorkSchedule(id) {
         const url = `${this.serverUrl}schedule/${id}`
         // const url = this.getUrl('schedule/', {id});
+        return await this.delete(url);
+    }
+
+    /**
+     * Удаляет запись о рабочем графике (на год вперед)
+     * @param {string} id - ид рабочего графика
+     * @returns
+     */
+    async deleteWorkScheduleMassive(id) {
+        const url = `${this.serverUrl}schedule/massive/${id}`
         return await this.delete(url);
     }
 

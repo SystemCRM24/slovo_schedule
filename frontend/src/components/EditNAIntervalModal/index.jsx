@@ -47,6 +47,7 @@ const EditNAInterval = ({ show, setShow, startDt, endDt }) => {
         });
         setWorkIntervals(newIntervals);
     }
+
     const isHoliday = (date) => {
         const holidaysList = holidays.getHolidays(date.getFullYear());
         return holidaysList.some(holiday => {
@@ -100,6 +101,7 @@ const EditNAInterval = ({ show, setShow, startDt, endDt }) => {
             const endDate = new Date(date);
             endDate.setDate(endDate.getDate() + 365);
             const response = await apiClient.getWorkSchedules(currentDate, endDate);
+            const id = response[specialistId][currentDate].id
             const schedulesForSpecialist = response[specialistId] || [];
 
             for (let i = 0; i <= 48; i++) {
@@ -126,7 +128,8 @@ const EditNAInterval = ({ show, setShow, startDt, endDt }) => {
 
                 const normalizedCurrentDate = currentDate.toString();
                 const existingSchedule = schedulesForSpecialist[normalizedCurrentDate];
-
+                console.log("existingSchedule", existingSchedule)
+                console.log("workSchedule", workSchedule)
                 let intervalsToSave = adjustedIntervals;
 
                 if (existingSchedule) {
@@ -135,22 +138,21 @@ const EditNAInterval = ({ show, setShow, startDt, endDt }) => {
                 intervalsToSave = mergeIntervals(intervalsToSave);
 
                 try {
-                    const result = existingSchedule
-                        ? await apiClient.updateWorkSchedule(existingSchedule.id, {
+                    let result
+                    if (existingSchedule) {
+                        result = await apiClient.updateWorkScheduleMassive(existingSchedule.id, {
                             specialist: specialistId,
                             date: currentDate,
                             intervals: intervalsToSave,
                         })
-                        : await apiClient.createWorkSchedule({
-                            specialist: specialistId,
-                            date: currentDate,
-                            intervals: intervalsToSave,
-                        });
-
+                    } else {
+                        continue
+                    }
                     if (result) {
+                        console.log("result", result)
                         newSchedules.push({
                             date: new Date(currentDate),
-                            data: { id: result?.id, intervals: intervalsToSave },
+                            data: { id: existingSchedule.id, intervals: intervalsToSave },
                         });
                     }
                 } catch (error) {
@@ -161,17 +163,21 @@ const EditNAInterval = ({ show, setShow, startDt, endDt }) => {
             }
         } else {
             try {
-                const result = await apiClient.updateWorkSchedule(workSchedule.id, {
+                const response = await apiClient.getWorkSchedules(date, date);
+                const id = response[specialistId][date].id
+                const result = await apiClient.updateWorkSchedule(id.toString(), {
                     specialist: specialistId,
                     date: date,
                     intervals: newWorkIntervals,
                 });
-
+                console.log("result", result)
+                console.log("workSchedule", workSchedule)
                 if (result) {
                     newSchedules.push({
                         date: new Date(date),
-                        data: { id: result?.id, intervals: newWorkIntervals },
+                        data: { id: id, intervals: newWorkIntervals },
                     });
+                    console.log("newSchedules", newSchedules)
                 }
             } catch (error) {
                 console.error(`Ошибка для даты ${date}:`, error);
