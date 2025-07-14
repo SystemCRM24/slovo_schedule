@@ -140,11 +140,19 @@ const AddWorkScheduleModal = ({ show, setShow }) => {
         const createdSchedules = [];
 
         for (const schedule of schedulesToCreate) {
-            const result = await apiClient.createWorkSchedule({
+            if (repeatWeekly) {
+                const result = await apiClient.createWorkScheduleMassive({
                 specialist: specialistId,
                 date: schedule.date,
                 intervals: schedule.intervals
             });
+            } else {
+                const result = await apiClient.createWorkSchedule({
+                specialist: specialistId,
+                date: schedule.date,
+                intervals: schedule.intervals
+            });
+            }
 
             if (result) {
                 createdSchedules.push({

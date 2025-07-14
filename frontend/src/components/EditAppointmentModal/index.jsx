@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
 import CustomModal from "../ui/Modal";
-import { Button, FormControl, FormSelect, InputGroup, Alert } from "react-bootstrap";
+import { Button, FormControl, FormSelect, InputGroup, Alert, Form } from "react-bootstrap";
 
 import { useDayContext } from "../../contexts/Day/provider";
 import useSchedules from "../../hooks/useSchedules";
@@ -31,6 +31,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
     const children = useChildrenContext();
     const dayOfWeek = day.toLocaleString('ru-RU', { weekday: 'long' });
     const dateString = day.toLocaleDateString();
+    const [checkbox, setCheckbox] = useState(false);
 
     const [record, recordIndex] = useMemo(() => {
         let index = -1;
@@ -45,7 +46,13 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
 
     const onDeleteBtnClick = useCallback(() => {
         (async () => {
-            await apiClient.deleteAppointment(id);
+            console.log(checkbox)
+            if (checkbox) {
+                await apiClient.deleteAppointmentMassive(id);
+
+            } else {
+                await apiClient.deleteAppointment(id);
+            }
             setShow(false);
             const newSchedule = schedule.filter((item, index) => index !== recordIndex);
             setGeneralSchedule({
@@ -56,7 +63,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                 },
             });
         })();
-    }, [id, setShow, schedule, setGeneralSchedule, generalSchedule, specialistId, day, recordIndex]);
+    }, [id, setShow, schedule, setGeneralSchedule, generalSchedule, specialistId, day, recordIndex, checkbox]);
 
     const onModalEditBtnClick = () => {
         setShow(false)
@@ -85,6 +92,10 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
         const minutes = e.target.value;
         const end = new Date(appointment.start.getTime() + minutes * 60 * 1000);
         await onChange('end', end);
+    };
+
+    const handleCheckboxChange = (e) => {
+        setCheckbox(e.target.checked);
     };
 
     const onChange = async (attrName, value) => {
@@ -230,16 +241,23 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                     {children[schedule[0].old_patient]} заменен на {patientName}
                 </Alert>
             </div>
-            <div className="d-flex align-items-left w-100 h-100 gap-2">
+            <div className="d-flex align-items-center w-100 h-100 gap-2 mt-3">
                 <Button
                     variant="warning"
                     onClick={onModalEditBtnClick}
-                    className={'mt-3'}
                     style={{ paddingRight: "1rem" }}
                 >
                     Перенести
                 </Button>
-                <Button variant="danger" onClick={onDeleteBtnClick} className={'mt-3'}>Удалить</Button>
+                <Button variant="danger" onClick={onDeleteBtnClick}>Удалить</Button>
+                <Form.Group className="me-0">
+                    <Form.Check
+                        type="checkbox"
+                        label="Массовое удаление"
+                        checked={checkbox}
+                        onChange={(e) => handleCheckboxChange(e)}
+                    />
+                </Form.Group>
             </div>
         </CustomModal>
     );
