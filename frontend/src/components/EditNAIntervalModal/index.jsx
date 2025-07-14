@@ -158,7 +158,6 @@ const EditNAInterval = ({ show, setShow, startDt, endDt }) => {
                 } catch (error) {
                     console.error(`Ошибка для даты ${currentDate}:`, error);
                 }
-
                 currentDate.setDate(currentDate.getDate() + 7);
             }
         } else {
