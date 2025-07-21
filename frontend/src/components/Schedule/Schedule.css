@@ -16,8 +16,7 @@
   z-index: 100;
   min-height: 63px;
   min-width: 123px;
-  /* top: -1px; */
-  left: -1px;
+  left: -0px;
 }
 
 #schedule-table th:not(.sticky-corner) {
