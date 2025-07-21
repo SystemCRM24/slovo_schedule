@@ -15,7 +15,9 @@
   position: fixed;
   z-index: 100;
   min-height: 63px;
-  min-width: 120px;
+  min-width: 123px;
+  /* top: -1px; */
+  left: -1px;
 }
 
 #schedule-table th:not(.sticky-corner) {
@@ -25,7 +27,7 @@
 }
 
 #schedule-table tbody th {
-    left: 0;
+    left: -1px;
     z-index: 95;
 }
 
