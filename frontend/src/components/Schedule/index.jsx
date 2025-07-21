@@ -147,7 +147,8 @@ const Schedule = ({ }) => {
                     >
                         <thead>
                             <tr>
-                                <th scope="col" style={{ minWidth: '130px' }} />{headers}
+                                <th class="sticky-corner" scope="col" />
+                                {headers}
                             </tr>
                         </thead>
                         <tbody>{rows}</tbody>

@@ -14,9 +14,17 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
     const { schedule } = useSchedules();
 
     const oldpatientId = useMemo(
-        () => schedule[0]?.old_patient || 0,
-        [schedule, patientId]
+        () => {
+            for (const item of schedule ) {
+                if ( item.id === id ) {
+                    return item.old_patient;
+                }
+            }
+            return 0;
+        },
+        [id, schedule, patientId]
     );
+    
     const intervalStatus = useMemo(
         () => {
             if (status) {
@@ -30,7 +38,7 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
             }
             return 'na';
         },
-        [schedule, status, patientId]
+        [schedule, status, patientId, oldpatientId]
     );
 
     const patients = useChildrenContext();

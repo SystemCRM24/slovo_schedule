@@ -10,7 +10,6 @@ const WorkingIntervals = () => {
     const specialistId = useSpecialistContext();
     const workingDayDurationMinutes = useMemo(
         () => {
-            console.log(generalWorkSchedule);
             const workingDay = getWorkingDayFromSchedule(generalWorkSchedule);
             const workingDayStart = new Date();
             const workingDayEnd = new Date();

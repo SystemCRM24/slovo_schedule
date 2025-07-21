@@ -10,7 +10,7 @@ import { AppContextProvider } from "./contexts/App/provider.jsx";
 function App() {
     return (
         <AppContextProvider>
-            <Container fluid className={'mt-2'}>
+            <Container fluid className={'mt-2 mb-2'}>
                 <DateRangePicker />
             </Container>
             <WorkScheduleContextProvider schedule={{}}>

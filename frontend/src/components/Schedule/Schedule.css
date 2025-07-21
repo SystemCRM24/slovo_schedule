@@ -1,17 +1,32 @@
+.table-responsive {
+    position: fixed;
+    overflow: auto;
+    border: 1px solid #ccc;
+    width: 100%;
+    height: calc(100vh - 52px);
+}
+
 #schedule-table {
     width: auto;
     table-layout: auto;
-    margin-top: 1rem;
-}
-.table-responsive {
-    max-height: 95vh;
-    overflow: auto;
 }
 
-#schedule-table th {
+.sticky-corner {
+  position: fixed;
+  z-index: 100;
+  min-height: 63px;
+  min-width: 120px;
+}
+
+#schedule-table th:not(.sticky-corner) {
     position: sticky;
-    top: -2px;
+    top: -1px;
     z-index: 99;
+}
+
+#schedule-table tbody th {
+    left: 0;
+    z-index: 95;
 }
 
 #schedule-table td {
