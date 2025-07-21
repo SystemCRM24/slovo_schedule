@@ -37,13 +37,13 @@ function AutoCompleteInput({ options, onChange, value, name, isInvalid }) {
                 options={selectOptions}
                 value={selectedOption}
                 onChange={handleChange}
-                placeholder="Выберите пациента"
+                placeholder="Выберите клиента"
                 name={name}
                 isInvalid={isInvalid}
                 isSearchable
                 className='p-0'
                 classNamePrefix="react-select"
-                noOptionsMessage={() => 'Нет подходящих пациентов'}
+                noOptionsMessage={() => 'Нет подходящих клиента'}
             />
         </InputGroup>
     );
