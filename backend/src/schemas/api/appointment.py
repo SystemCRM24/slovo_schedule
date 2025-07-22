@@ -38,7 +38,12 @@ class BXAppointment(BaseModel):
     patient: int | None = Field(validation_alias=BXConstants.appointment.uf.patient)
     start: str | None = Field(validation_alias=BXConstants.appointment.uf.start)
     end: str | None = Field(validation_alias=BXConstants.appointment.uf.end)
+
+    # Значения для истории
+    old_specialist: int | None = Field(validation_alias=BXConstants.appointment.uf.old_specialist)
     old_patient: int | None = Field(validation_alias=BXConstants.appointment.uf.old_patient)
+    old_start: str | None = Field(validation_alias=BXConstants.appointment.uf.old_start)
+    old_end: str | None = Field(validation_alias=BXConstants.appointment.uf.old_end)
 
     model_config = ConfigDict(extra='ignore')
 

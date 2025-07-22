@@ -349,27 +349,6 @@ const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
                                     <option disabled value={''}>Выберите длительность</option>
                                     {selectOptions}
                                 </FormSelect>
-                                {/* <FormControl
-                                    type={'time'}
-                                    key={`${date}_new_interval_${idx}_end`}
-                                    value={getTimeStringFromDate(newSchedule.end)}
-                                    name={'end'}
-                                    onChange={async (e) => {
-                                        await handleInputChange(e, idx);
-                                    }}
-                                    style={{textAlign: "center",}}
-                                    disabled={!newSchedule.start}
-                                    min={getTimeStringFromDate(newSchedule.start)}
-                                    max={getTimeStringFromDate(endDt)}
-                                    required
-                                    isInvalid={
-                                        newSchedule.start !== undefined &&
-                                        (
-                                            !isIntervalValid(newSchedule) ||
-                                            !isNewScheduleIntervalValid(newSchedule, newSchedulesWithoutCurrentElem, schedule, workInterval)
-                                        )
-                                    }
-                                /> */}
                             </InputGroup>
                             <InputGroup hasValidation>
                                 <AutoCompleteInput

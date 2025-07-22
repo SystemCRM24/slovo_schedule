@@ -4,16 +4,22 @@ class appointment:
     class uf:
         specialist = 'assignedById'
         patient = "ufCrm3Children"
-        old_patient = "ufCrm3HistoryClient"
         start = "ufCrm3StartDate"
         end = "ufCrm3EndDate"
         status = "ufCrm3Status"
         code = "ufCrm3Code"
+        deal_id = "ufCrm3Dealid"
+
+        old_specialist = "ufCrm3AssignedByIdHistory"
+        old_patient = "ufCrm3HistoryClient"
+        old_start = "ufCrm3StartDateHistory"
+        old_end = "ufCrm3EndDateHistory"
+        old_code = "ufCrm3HistoryCode"
+        
     
     class lfv:          # Обновится при запуске приложения
         idByCode = {}   # {"L": "52"}
         codeById = {}   # {"52": "L"}
-
 
 class schedule:
     entityTypeId = 1042
