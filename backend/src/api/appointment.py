@@ -38,11 +38,11 @@ async def get_appointment(id: int, bt: BackgroundTasks) -> BXAppointment:
 @router.put("/{id}", status_code=200)
 async def update_appointment(id: int, appointment: Appointment, bt: BackgroundTasks) -> Appointment:
     """Обновление элемента смарт-процесса расписание"""
+    await BitrixClient.init_bizporc(id)
     aety = BXConstants.appointment.entityTypeId
     fields = appointment.to_bx()
     updated_data = await BitrixClient.update_crm_item(aety, id, fields)
     bt.add_task(logger.debug, f"Appointment id={id} was updated.")
-    asyncio.create_task(BitrixClient.init_bizporc(id))
     return appointment
 
 
