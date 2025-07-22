@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import CustomModal from "../ui/Modal";
 import { Button, FormControl, FormSelect, InputGroup, Alert, Form } from "react-bootstrap";
 
@@ -88,7 +88,14 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
         await onChange(name, newValue);
     };
 
-    const handleSelectInputChange = async (e) => {
+    const onStartChange = async (e) => {
+        const [hoursString, minutesString] = e.target.value.split(':');
+        const hours = parseInt(hoursString);
+        const minutes = parseInt(minutesString);
+        newValue = getDateWithTime(day, hours, minutes);
+    }
+
+    const onDurationChange = async (e) => {
         const minutes = e.target.value;
         const end = new Date(appointment.start.getTime() + minutes * 60 * 1000);
         await onChange('end', end);
@@ -141,23 +148,32 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
 
     const defaultSelectValues = useMemo(() => [15, 30, 45, 60, 90, 120, 130], []);
 
-    const selectValue = useMemo(() => (appointment.end - appointment.start) / 60000, [appointment]);
-
     const selectOptions = useMemo(() => {
-        const options = defaultSelectValues.map((value) => (
+        return defaultSelectValues.map((value) => (
             <option value={value} key={`duration_${value}`}>
                 {value} минут
             </option>
         ));
-        if (!defaultSelectValues.includes(selectValue)) {
-            options.push(
-                <option value={selectValue} key={`duration_${selectValue}`}>
-                    {selectValue} минут
-                </option>
-            );
-        }
-        return options;
-    }, [selectValue, defaultSelectValues]);
+    }, [defaultSelectValues]);
+
+    const [start, setStart] = useState(getTimeStringFromDate(appointment.start));
+    const [duration, setDuration] = useState((appointment.end - appointment.start) / 60000);
+
+    useEffect(
+        () => {
+            const [hoursString, minutesString] = start.split(':');
+            const hours = parseInt(hoursString);
+            const minutes = parseInt(minutesString);
+            const newStart = getDateWithTime(day, hours, minutes);
+            let newEnd = newStart;
+            if ( !isNaN(newStart) ) {
+                newEnd = new Date(newStart.getTime() + duration * 60 * 1000);
+            }
+            onChange('start', newStart);
+            onChange('end', newEnd);
+        },
+        [start, duration]
+    )
 
     return (
         <CustomModal
@@ -174,11 +190,9 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                     <InputGroup hasValidation>
                         <FormControl
                             type={'time'}
-                            value={getTimeStringFromDate(appointment.start)}
+                            value={start}
                             name={'start'}
-                            onChange={async (e) => {
-                                await handleInputChange(e);
-                            }}
+                            onChange={e => setStart(e.target.value)}
                             style={{ textAlign: "center" }}
                             required
                             isInvalid={
@@ -194,8 +208,8 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                             style={{ textAlign: "center" }}
                             disabled={!appointment.start}
                             required
-                            value={selectValue}
-                            onChange={async (e) => await handleSelectInputChange(e)}
+                            value={duration}
+                            onChange={e => setDuration(e.target.value)}
                             isInvalid={
                                 appointment.start !== undefined &&
                                 (!isIntervalValid(appointment) || !isNewScheduleIntervalValid(appointment, scheduleWithoutCurrentElem, scheduleWithoutCurrentElem, workSchedule.intervals))
