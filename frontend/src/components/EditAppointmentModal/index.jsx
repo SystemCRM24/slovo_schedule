@@ -183,7 +183,6 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
         () => {
             for ( const a of schedule) {
                 if ( a.id === id ) {
-                    console.log('[debug]', a);
                     const isSpecChange = a.old_specialist !== null && a.old_specialist !== undefined && a.old_specialist !== a.specialist;
                     const isStartChange = a.old_start !== null && a.old_start !== undefined && a.old_start !== a.start;
                     const isEndChange = a.old_end !== null && a.old_end !== undefined && a.old_end !== a.end;
