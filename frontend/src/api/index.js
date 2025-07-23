@@ -159,6 +159,9 @@ class APIClient {
                     id: appointment.patient, 
                     type: appointment.code
                 },
+                old_specialist: appointment.old_specialist,
+                old_start: appointment.old_start !== null ? new Date(appointment.old_start) : null,
+                old_end: appointment.old_end !== null ? new Date(appointment.old_end) : null,
                 old_patient: appointment.old_patient
             });
         }

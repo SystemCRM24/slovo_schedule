@@ -8,7 +8,9 @@ import useSpecialist from "../../hooks/useSpecialist.js";
 import { getDateWithTime, getTimeStringFromDate, isIntervalValid, isNewScheduleIntervalValid } from "../../utils/dates.js";
 import { useChildrenContext } from "../../contexts/Children/provider.jsx";
 import apiClient, { constants } from "../../api/index.js";
-import AutoCompleteInput from "../../components/ui/AutoCompleteInput/index.jsx"
+import AutoCompleteInput from "../../components/ui/AutoCompleteInput/index.jsx";
+import { useContext } from "react";
+import { AppContext } from "../../contexts/App/context.js";
 
 
 const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, patientType, status, oldpatientId, showModalEdit, setShowModalEdit }) => {
@@ -33,6 +35,8 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
     const dateString = day.toLocaleDateString();
     const [checkbox, setCheckbox] = useState(false);
 
+    const { reloadSchedule } = useContext(AppContext);
+
     const [record, recordIndex] = useMemo(() => {
         let index = -1;
         for (const record of schedule) {
@@ -46,7 +50,6 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
 
     const onDeleteBtnClick = useCallback(() => {
         (async () => {
-            console.log(checkbox)
             if (checkbox) {
                 await apiClient.deleteAppointmentMassive(id);
 
@@ -109,16 +112,17 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
         setAppointment((prev) => ({ ...prev, [attrName]: value }));
     };
 
-    const onSubmit = async () => {
+    const onSubmit = async (newAppointment = null) => {
+        const source = newAppointment || appointment;
         const newRecord = {
-            id: appointment.id,
-            start: appointment.start,
-            end: appointment.end,
-            specialist: appointment.specialist,
-            patient: appointment.patientId,
-            code: appointment.patientType,
-            status: appointment.patientId !== appointment.old_patient && appointment.old_patient ? 'replace' : appointment.status,
-            old_patient: appointment.old_patient
+            id: source.id,
+            start: source.start,
+            end: source.end,
+            specialist: source.specialist,
+            patient: source.patientId,
+            code: source.patientType,
+            status: source.patientId !== source.old_patient && source.old_patient ? 'replace' : source.status,
+            old_patient: source.old_patient
         };
         const result = await apiClient.updateAppointment(id, newRecord);
         if (result) {
@@ -174,6 +178,40 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
         },
         [start, duration]
     )
+
+    const isMoved = useMemo(
+        () => {
+            for ( const a of schedule) {
+                if ( a.id === id ) {
+                    console.log('[debug]', a);
+                    const isSpecChange = a.old_specialist !== null && a.old_specialist !== undefined && a.old_specialist !== a.specialist;
+                    const isStartChange = a.old_start !== null && a.old_start !== undefined && a.old_start !== a.start;
+                    const isEndChange = a.old_end !== null && a.old_end !== undefined && a.old_end !== a.end;
+                    return isSpecChange || isStartChange || isEndChange;
+                }
+            }
+            return false;
+        },
+        [id, schedule, appointment]
+    );
+
+    const onRollBack = () => {
+        const rba = {...appointment};
+        for ( const a of schedule) {
+            if ( a.id === id ) {
+                if (a.old_specialist !== null ) {
+                    rba.specialist = a.old_specialist;
+                }
+                if ( a.old_start !== null ) {
+                    rba.start = a.old_start;
+                }
+                if ( a.old_end !== null ) {
+                    rba.end = a.old_end;
+                }
+                onSubmit(rba).then(reloadSchedule);
+            }
+        };
+    };
 
     return (
         <CustomModal
@@ -248,11 +286,23 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                             ))}
                     </FormSelect>
                 </InputGroup>
-                <Alert
-                    variant="warning"
-                    show={status === 'replace'}
-                >
+                <Alert variant="warning" show={status === 'replace'}>
                     {children[schedule[0].old_patient]} заменен на {patientName}
+                </Alert>
+                <Alert variant="warning" show={isMoved}>
+                    <div className={"gap-2"}>
+                        <span>Занятие было изменено.</span>
+                        <Button 
+                            variant="outline-dark"
+                            style={{marginLeft: "15px"}}
+                            onClick={onRollBack}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2z"/>
+                                <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466"/>
+                            </svg>
+                        </Button>   
+                    </div>
                 </Alert>
             </div>
             <div className="d-flex align-items-center w-100 h-100 gap-2 mt-3">
