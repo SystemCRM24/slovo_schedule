@@ -44,7 +44,7 @@ class BXAppointment(BaseModel):
     old_patient: int | None = Field(validation_alias=BXConstants.appointment.uf.old_patient)
     old_start: str | None = Field(validation_alias=BXConstants.appointment.uf.old_start)
     old_end: str | None = Field(validation_alias=BXConstants.appointment.uf.old_end)
-    old_code: str | int | None = Field(validation_alias=BXConstants.appointment.uf.old_code)
+    old_code: str | None = Field(validation_alias=BXConstants.appointment.uf.old_code)
 
     model_config = ConfigDict(extra='ignore')
 
@@ -53,6 +53,13 @@ class BXAppointment(BaseModel):
     def code_validator(cls, value: list) -> str | None:
         if isinstance(value, list) and len(value) > 0:
             return BXConstants.appointment.lfv.codeById.get(value[0])
+        return None
+    
+    @field_validator('old_code', mode='before')
+    @classmethod
+    def old_code_validator(cls, value: int) -> str | None:
+        if isinstance(value, int):
+            return BXConstants.appointment.lfv.oldCodeById.get(str(value))
         return None
 
     def is_valid(self) -> bool:

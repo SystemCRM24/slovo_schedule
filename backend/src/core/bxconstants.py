@@ -15,11 +15,12 @@ class appointment:
         old_start = "ufCrm3StartDateHistory"
         old_end = "ufCrm3EndDateHistory"
         old_code = "ufCrm3HistoryCode"
-        
-    
+
     class lfv:          # Обновится при запуске приложения
         idByCode = {}   # {"L": "52"}
         codeById = {}   # {"52": "L"}
+        idByOldCode = {}
+        oldCodeById = {}
 
 class schedule:
     entityTypeId = 1042

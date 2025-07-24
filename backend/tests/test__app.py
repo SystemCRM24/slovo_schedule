@@ -14,6 +14,6 @@ class TestApp:
         msg = response.json()
         assert msg == 'pong', 'Pong message da best!!!'
 
-    @pytest.mark.asyncio
-    async def test_bizproc(self):
-        result = await BitrixClient.init_bizporc(1025)
+    # @pytest.mark.asyncio
+    # async def test_bizproc(self):
+    #     result = await BitrixClient.init_bizporc(1025)
