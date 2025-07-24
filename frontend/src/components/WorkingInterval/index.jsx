@@ -8,21 +8,26 @@ import EditNAIntervalModal from "../EditNAIntervalModal/index.jsx";
 import useSchedules from '../../hooks/useSchedules.js';
 import EditClientInfoModal from '../EditClientInfoModal/index.jsx';
 
-const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, patientId, patientType }) => {
+const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, patientId, patientType, patientCode }) => {
     const [showModal, setShowModal] = useState(false);
     const [showModalEdit, setShowModalEdit] = useState(false);
     const { schedule } = useSchedules();
 
-    const oldpatientId = useMemo(
+    const [oldpatientId, oldpatientCode, oldpatientStart, oldpatientEnd] = useMemo(
         () => {
             for (const item of schedule ) {
                 if ( item.id === id ) {
-                    return item.old_patient;
+                    return [
+                        item.old_patient, 
+                        item.old_code, 
+                        item.old_start, 
+                        item.old_end
+                    ];
                 }
             }
-            return 0;
+            return [0, 0, 0, 0];
         },
-        [id, schedule, patientId]
+        [id, schedule, patientId, patientCode, startDt, endDt]
     );
     
     const intervalStatus = useMemo(
@@ -31,7 +36,12 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
                 return status;
             }
             if (schedule.length > 0) {
-                if (oldpatientId && oldpatientId !== patientId) {
+                if (
+                    oldpatientId && oldpatientId !== patientId || 
+                    oldpatientCode && oldpatientCode !== patientCode ||
+                    oldpatientStart && oldpatientStart !== startDt ||
+                    oldpatientEnd && oldpatientEnd !== endDt
+                ) {
                     return 'replace';
                 }
                 return 'booked';
@@ -97,6 +107,9 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
                         oldpatientId={oldpatientId}
                         showModalEdit={showModalEdit}
                         setShowModalEdit={setShowModalEdit}
+                        oldPatientEnd={oldpatientEnd}
+                        oldPatientStart={oldpatientStart}
+                        oldPatientCode={oldpatientCode}
                     />
                     <EditClientInfoModal show={showModalEdit} setShow={setShowModalEdit} id={id}/>
                 </>

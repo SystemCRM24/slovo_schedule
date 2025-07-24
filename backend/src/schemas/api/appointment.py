@@ -44,6 +44,7 @@ class BXAppointment(BaseModel):
     old_patient: int | None = Field(validation_alias=BXConstants.appointment.uf.old_patient)
     old_start: str | None = Field(validation_alias=BXConstants.appointment.uf.old_start)
     old_end: str | None = Field(validation_alias=BXConstants.appointment.uf.old_end)
+    old_code: str | None = Field(validation_alias=BXConstants.appointment.uf.old_code)
 
     model_config = ConfigDict(extra='ignore')
 

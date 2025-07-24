@@ -23,7 +23,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
         start: startDt,
         end: endDt,
         specialist: specialistId,
-        old_patient: oldpatientId
+        old_patient: oldpatientId,
     });
 
     const { schedule, generalSchedule, setGeneralSchedule, workSchedule } = useSchedules();
@@ -122,7 +122,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
             patient: source.patientId,
             code: source.patientType,
             status: source.patientId !== source.old_patient && source.old_patient ? 'replace' : source.status,
-            old_patient: source.old_patient
+            old_patient: source.old_patient,
         };
         const result = await apiClient.updateAppointment(id, newRecord);
         if (result) {
@@ -170,7 +170,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
             const minutes = parseInt(minutesString);
             const newStart = getDateWithTime(day, hours, minutes);
             let newEnd = newStart;
-            if ( !isNaN(newStart) ) {
+            if (!isNaN(newStart)) {
                 newEnd = new Date(newStart.getTime() + duration * 60 * 1000);
             }
             onChange('start', newStart);
@@ -178,34 +178,75 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
         },
         [start, duration]
     )
+    console.log(schedule[0])
 
-    const isMoved = useMemo(
-        () => {
-            for ( const a of schedule) {
-                if ( a.id === id ) {
-                    const isSpecChange = a.old_specialist !== null && a.old_specialist !== undefined && a.old_specialist !== a.specialist;
-                    const isStartChange = a.old_start !== null && a.old_start !== undefined && a.old_start !== a.start;
-                    const isEndChange = a.old_end !== null && a.old_end !== undefined && a.old_end !== a.end;
-                    return isSpecChange || isStartChange || isEndChange;
+    const isMoved = useMemo(() => {
+        for (const a of schedule) {
+            if (a.id === id) {
+                const changesList = [];
+                if (oldpatientId && oldpatientId !== patientId) {
+                    changesList.push(`${children[oldpatientId]} заменен на ${patientName}`)
                 }
+                if (
+                    typeof a.old_specialist === 'number' &&
+                    typeof a.specialist === 'number' &&
+                    a.old_specialist !== a.specialist
+                ) {
+                    changesList.push(`Специалист изменён на ${a.specialist}`);
+                }
+
+                const oldStart = a.old_start ? new Date(a.old_start) : null;
+                if (
+                    oldStart &&
+                    a.start &&
+                    !isNaN(oldStart.getTime()) &&
+                    !isNaN(a.start.getTime()) &&
+                    oldStart.getTime() !== a.start.getTime()
+                ) {
+                    changesList.push(
+                        `Время начала изменено с ${getTimeStringFromDate(oldStart)} на ${getTimeStringFromDate(a.start)}`
+                    );
+                }
+
+                const oldEnd = a.old_end ? new Date(a.old_end) : null;
+                if (
+                    oldEnd &&
+                    a.end &&
+                    !isNaN(oldEnd.getTime()) &&
+                    !isNaN(a.end.getTime()) &&
+                    oldEnd.getTime() !== a.end.getTime()
+                ) {
+                    changesList.push(
+                        `Время окончания изменено с ${getTimeStringFromDate(oldEnd)} на ${getTimeStringFromDate(a.end)}`
+                    );
+                }
+
+                if (a.old_code && a.code && a.old_code !== a.code) {
+                    changesList.push(`Тип изменён с ${a.old_code} на ${a.code}`);
+                }
+
+                console.log('Изменения:', changesList);
+                return changesList;
             }
-            return false;
-        },
-        [id, schedule, appointment]
-    );
+        }
+        return [];
+    }, [id, schedule, appointment]);
 
     const onRollBack = () => {
-        const rba = {...appointment};
-        for ( const a of schedule) {
-            if ( a.id === id ) {
-                if (a.old_specialist !== null ) {
+        const rba = { ...appointment };
+        for (const a of schedule) {
+            if (a.id === id) {
+                if (a.old_specialist !== null) {
                     rba.specialist = a.old_specialist;
                 }
-                if ( a.old_start !== null ) {
+                if (a.old_start !== null) {
                     rba.start = a.old_start;
                 }
-                if ( a.old_end !== null ) {
+                if (a.old_end !== null) {
                     rba.end = a.old_end;
+                }
+                if (a.old_code !== null) {
+                    rba.code = a.old_code;
                 }
                 onSubmit(rba).then(reloadSchedule);
             }
@@ -285,22 +326,21 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                             ))}
                     </FormSelect>
                 </InputGroup>
-                <Alert variant="warning" show={status === 'replace'}>
-                    {children[schedule[0].old_patient]} заменен на {patientName}
-                </Alert>
-                <Alert variant="warning" show={isMoved}>
+                <Alert variant="warning" show={isMoved.length > 0}>
                     <div className={"gap-2"}>
-                        <span>Занятие было изменено.</span>
-                        <Button 
+                        {isMoved.map((item, index) => (
+                            <div key={index}>{item}<br /></div>
+                        ))}
+                        <Button
                             variant="outline-dark"
-                            style={{marginLeft: "15px"}}
+                            style={{ marginLeft: "15px" }}
                             onClick={onRollBack}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-counterclockwise" viewBox="0 0 16 16">
-                                <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2z"/>
-                                <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466"/>
+                                <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2z" />
+                                <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466" />
                             </svg>
-                        </Button>   
+                        </Button>
                     </div>
                 </Alert>
             </div>
