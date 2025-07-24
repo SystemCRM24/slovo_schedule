@@ -146,6 +146,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                     [day]: newSchedule,
                 }
             });
+            reloadSchedule();
             setShow(false);
         }
     };
@@ -178,7 +179,6 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
         },
         [start, duration]
     )
-    console.log(schedule[0])
 
     const isMoved = useMemo(() => {
         for (const a of schedule) {
@@ -188,11 +188,9 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                     changesList.push(`${children[oldpatientId]} заменен на ${patientName}`)
                 }
                 if (
-                    typeof a.old_specialist === 'number' &&
-                    typeof a.specialist === 'number' &&
-                    a.old_specialist !== a.specialist
+                    a.old_specialist !== Number(specialistId)
                 ) {
-                    changesList.push(`Специалист изменён на ${a.specialist}`);
+                    changesList.push(`Специалист изменён на ${specialist.name}`);
                 }
 
                 const oldStart = a.old_start ? new Date(a.old_start) : null;
@@ -225,7 +223,6 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                     changesList.push(`Тип изменён с ${a.old_code} на ${a.code}`);
                 }
 
-                console.log('Изменения:', changesList);
                 return changesList;
             }
         }
@@ -248,7 +245,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                 if (a.old_code !== null) {
                     rba.code = a.old_code;
                 }
-                onSubmit(rba).then(reloadSchedule);
+                onSubmit(rba);
             }
         };
     };

@@ -7,13 +7,14 @@ import { useChildrenContext } from "../../contexts/Children/provider.jsx";
 import EditNAIntervalModal from "../EditNAIntervalModal/index.jsx";
 import useSchedules from '../../hooks/useSchedules.js';
 import EditClientInfoModal from '../EditClientInfoModal/index.jsx';
+import {useSpecialistContext} from "../../contexts/Specialist/provider.jsx";
 
 const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, patientId, patientType, patientCode }) => {
     const [showModal, setShowModal] = useState(false);
     const [showModalEdit, setShowModalEdit] = useState(false);
     const { schedule } = useSchedules();
-
-    const [oldpatientId, oldpatientCode, oldpatientStart, oldpatientEnd] = useMemo(
+    const specialistId = useSpecialistContext();
+    const [oldpatientId, oldpatientCode, oldpatientStart, oldpatientEnd, oldpatientSpecialist] = useMemo(
         () => {
             for (const item of schedule ) {
                 if ( item.id === id ) {
@@ -21,13 +22,14 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
                         item.old_patient, 
                         item.old_code, 
                         item.old_start, 
-                        item.old_end
+                        item.old_end,
+                        item.old_specialist,
                     ];
                 }
             }
-            return [0, 0, 0, 0];
+            return [0, 0, 0, 0, 0];
         },
-        [id, schedule, patientId, patientCode, startDt, endDt]
+        [id, schedule, patientId, patientCode, startDt, endDt, specialistId]
     );
     
     const intervalStatus = useMemo(
@@ -37,6 +39,7 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
             }
             if (schedule.length > 0) {
                 if (
+                    oldpatientSpecialist && oldpatientSpecialist !== specialistId ||
                     oldpatientId && oldpatientId !== patientId || 
                     oldpatientCode && oldpatientCode !== patientCode ||
                     oldpatientStart && oldpatientStart !== startDt ||
@@ -48,7 +51,7 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
             }
             return 'na';
         },
-        [schedule, status, patientId, oldpatientId]
+        [schedule, status, patientId, oldpatientId, startDt, endDt, patientCode]
     );
 
     const patients = useChildrenContext();
@@ -107,9 +110,6 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
                         oldpatientId={oldpatientId}
                         showModalEdit={showModalEdit}
                         setShowModalEdit={setShowModalEdit}
-                        oldPatientEnd={oldpatientEnd}
-                        oldPatientStart={oldpatientStart}
-                        oldPatientCode={oldpatientCode}
                     />
                     <EditClientInfoModal show={showModalEdit} setShow={setShowModalEdit} id={id}/>
                 </>

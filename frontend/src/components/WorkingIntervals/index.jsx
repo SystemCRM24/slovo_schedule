@@ -26,6 +26,7 @@ const WorkingIntervals = () => {
         },
         [schedule, workSchedule, generalWorkSchedule]
     );
+    console.log(intervals)
     return (
         <div className={'h-100 w-100'}>
             {intervals.map(interval => {
