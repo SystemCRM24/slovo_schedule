@@ -7,46 +7,43 @@ import { useChildrenContext } from "../../contexts/Children/provider.jsx";
 import EditNAIntervalModal from "../EditNAIntervalModal/index.jsx";
 import useSchedules from '../../hooks/useSchedules.js';
 import EditClientInfoModal from '../EditClientInfoModal/index.jsx';
-import {useSpecialistContext} from "../../contexts/Specialist/provider.jsx";
+import { useSpecialistContext } from "../../contexts/Specialist/provider.jsx";
 
 const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, patientId, patientType, patientCode }) => {
     const [showModal, setShowModal] = useState(false);
     const [showModalEdit, setShowModalEdit] = useState(false);
     const { schedule } = useSchedules();
     const specialistId = useSpecialistContext();
-    const [oldpatientId, oldpatientCode, oldpatientStart, oldpatientEnd, oldpatientSpecialist] = useMemo(
+    const oldpatientId = useMemo(
         () => {
-            for (const item of schedule ) {
-                if ( item.id === id ) {
-                    console.log('[DEBUG]', item, patientCode);
-                    return [
-                        item.old_patient, 
-                        item.old_code, 
-                        item.old_start, 
-                        item.old_end,
-                        item.old_specialist,
-                    ];
+            for (const item of schedule) {
+                if (item.id === id) {
+                    return item.old_patient;
                 }
             }
-            return [0, 0, 0, 0, 0];
+            return 0;
         },
-        [id, schedule, patientCode]
+        [id, schedule, patientId]
     );
-    
     const intervalStatus = useMemo(
         () => {
             if (status) {
-                return status;
+                return status
             }
             if (schedule.length > 0) {
-                if (
-                    oldpatientSpecialist && oldpatientSpecialist !== specialistId ||
-                    oldpatientId && oldpatientId !== patientId || 
-                    oldpatientCode && oldpatientCode !== patientCode ||
-                    oldpatientStart && oldpatientStart !== startDt ||
-                    oldpatientEnd && oldpatientEnd !== endDt
-                ) {
-                    return 'replace';
+                for (const item of schedule) {
+                    if (item.id === id) {
+                        const isSpecialistChanged = item.old_specialist && (item.old_specialist != specialistId);
+                        const isPatientChanged = item.old_patient && (item.old_patient != item.patient.id);
+                        const isStartChanged = item.old_start && (item.old_start.getTime() !== item.start.getTime());
+                        const isEndChanged = item.old_end && (item.old_end.getTime() !== item.end.getTime());
+                        const isCodeChanged = item.old_code && (item.old_code != item.patient.type);
+                        console.log('[DEBUG]', item, isSpecialistChanged, isPatientChanged, isStartChanged, isEndChanged, isCodeChanged);
+
+                        if (isSpecialistChanged || isPatientChanged || isStartChanged || isEndChanged || isCodeChanged) {
+                            return 'replace';
+                        }
+                    }
                 }
                 return 'booked';
             }
@@ -112,7 +109,7 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
                         showModalEdit={showModalEdit}
                         setShowModalEdit={setShowModalEdit}
                     />
-                    <EditClientInfoModal show={showModalEdit} setShow={setShowModalEdit} id={id}/>
+                    <EditClientInfoModal show={showModalEdit} setShow={setShowModalEdit} id={id} />
                 </>
 
             }

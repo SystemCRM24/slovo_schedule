@@ -324,10 +324,12 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                     </FormSelect>
                 </InputGroup>
                 <Alert variant="warning" show={isMoved.length > 0}>
-                    <div className={"gap-2"}>
-                        {isMoved.map((item, index) => (
-                            <div key={index}>{item}<br /></div>
-                        ))}
+                    <div className={"gap-2 d-flex align-items-start"}>
+                        <div>
+                            {isMoved.map((item, index) => (
+                                <div key={index}>{item}<br /></div>
+                            ))}
+                        </div>
                         <Button
                             variant="outline-dark"
                             style={{ marginLeft: "15px" }}
