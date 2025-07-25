@@ -188,7 +188,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                     changesList.push(`${children[oldpatientId]} заменен на ${patientName}`)
                 }
                 if (
-                    a.old_specialist !== Number(specialistId)
+                    a.old_specialist && a.old_specialist !== Number(specialistId)
                 ) {
                     changesList.push(`Специалист изменён на ${specialist.name}`);
                 }
