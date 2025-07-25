@@ -18,6 +18,7 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
         () => {
             for (const item of schedule ) {
                 if ( item.id === id ) {
+                    console.log('[DEBUG]', item, patientCode);
                     return [
                         item.old_patient, 
                         item.old_code, 
@@ -29,7 +30,7 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
             }
             return [0, 0, 0, 0, 0];
         },
-        [id, schedule, patientId, patientCode, startDt, endDt, specialistId]
+        [id, schedule, patientCode]
     );
     
     const intervalStatus = useMemo(
