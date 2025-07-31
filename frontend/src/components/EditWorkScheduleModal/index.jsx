@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useContext } from 'react';
 import CustomModal from "../ui/Modal/index.jsx";
 import useSchedules from "../../hooks/useSchedules.js";
 import { useDayContext } from "../../contexts/Day/provider.jsx";
@@ -13,6 +13,8 @@ import useSpecialist from "../../hooks/useSpecialist.js";
 import { useChildrenContext } from "../../contexts/Children/provider.jsx";
 import apiClient, { constants } from "../../api/index.js";
 import AutoCompleteInput from "../../components/ui/AutoCompleteInput/index.jsx";
+import { AppContext } from '../../contexts/App/context.js';
+
 
 const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
     const [newSchedules, setNewSchedules] = useState([]);
@@ -114,6 +116,8 @@ const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
         return isNewWorkScheduleValid(workInterval, newSchedules, schedule, workScheduleWithoutCurrentInterval);
     }, [newSchedules, realIntervalIndex, schedule, workInterval, workSchedule.intervals]);
 
+    const {decreaseModalCount} = useContext(AppContext);
+
     const handleDelete = async () => {
         const newWorkScheduleIntervals = workSchedule.intervals.filter(
             (value, index) => index !== realIntervalIndex
@@ -140,6 +144,7 @@ const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
                 });
             }
         }
+        decreaseModalCount();
         setShow(false);
     }
 

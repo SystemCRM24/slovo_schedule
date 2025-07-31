@@ -35,7 +35,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
     const dateString = day.toLocaleDateString();
     const [checkbox, setCheckbox] = useState(false);
 
-    const { reloadSchedule } = useContext(AppContext);
+    const { reloadSchedule, decreaseModalCount } = useContext(AppContext);
 
     const [record, recordIndex] = useMemo(() => {
         let index = -1;
@@ -48,7 +48,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
         return [{}, -1];
     }, [schedule, startDt, endDt]);
 
-    const onDeleteBtnClick = useCallback(() => {
+    const onDeleteBtnClick = () => {
         (async () => {
             if (checkbox) {
                 await apiClient.deleteAppointmentMassive(id);
@@ -65,12 +65,13 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                     [day]: newSchedule,
                 },
             });
+            decreaseModalCount();
         })();
-    }, [id, setShow, schedule, setGeneralSchedule, generalSchedule, specialistId, day, recordIndex, checkbox]);
+    };
 
     const onModalEditBtnClick = () => {
-        setShow(false)
-        setShowModalEdit(!showModalEdit)
+        setShow(false);
+        setShowModalEdit(!showModalEdit);
     }
 
     const scheduleWithoutCurrentElem = useMemo(() => {

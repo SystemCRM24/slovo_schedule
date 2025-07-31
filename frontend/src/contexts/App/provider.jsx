@@ -14,12 +14,20 @@ export const AppContextProvider = ({ children }) => {
         [dates]
     );
 
+    const [modalWindowCount, setModalWindowCount] = useState(0);
+
+    const increaseModalCount = () => setModalWindowCount(modalWindowCount + 1);
+    const decreaseModalCount = () => setModalWindowCount(modalWindowCount - 1);
+
     return (
         <AppContext.Provider 
             value={{
                 dates, 
                 setDates,
-                reloadSchedule
+                reloadSchedule,
+                modalWindowCount,
+                increaseModalCount,
+                decreaseModalCount
             }}
         >
             {children}

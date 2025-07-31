@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useContext } from 'react';
 import './WorkingInterval.css';
 import { getIntervalTimeString } from "../../utils/dates.js";
 import EditWorkScheduleModal from "../EditWorkScheduleModal/index.jsx";
@@ -8,6 +8,8 @@ import EditNAIntervalModal from "../EditNAIntervalModal/index.jsx";
 import useSchedules from '../../hooks/useSchedules.js';
 import EditClientInfoModal from '../EditClientInfoModal/index.jsx';
 import { useSpecialistContext } from "../../contexts/Specialist/provider.jsx";
+import { AppContext } from '../../contexts/App/context.js';
+
 
 const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, patientId, patientType, patientCode }) => {
     const [showModal, setShowModal] = useState(false);
@@ -38,8 +40,6 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
                         const isStartChanged = item.old_start && (item.old_start.getTime() !== item.start.getTime());
                         const isEndChanged = item.old_end && (item.old_end.getTime() !== item.end.getTime());
                         const isCodeChanged = item.old_code && (item.old_code != item.patient.type);
-                        console.log('[DEBUG]', item, isSpecialistChanged, isPatientChanged, isStartChanged, isEndChanged, isCodeChanged);
-
                         if (isSpecialistChanged || isPatientChanged || isStartChanged || isEndChanged || isCodeChanged) {
                             return 'replace';
                         }
@@ -64,11 +64,20 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
         return patientName;
     }, [patientId, patients]);
 
+    const {increaseModalCount} = useContext(AppContext);
+
+    const onIntervalClick = () => {
+        if ( !showModal && !showModalEdit ) {
+            increaseModalCount();
+            setShowModal(true);
+        }
+    }
+
     return (
         <div
             className={`interval status-${intervalStatus}`}
             style={{ height: '2.5rem' }}
-            onClick={() => { (!showModal && !showModalEdit) && setShowModal(true) }}
+            onClick={onIntervalClick}
         >
             <div
                 style={{

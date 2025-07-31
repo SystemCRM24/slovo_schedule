@@ -5,8 +5,7 @@ import {useSpecialistContext} from "../../contexts/Specialist/provider.jsx";
 import useSchedules from "../../hooks/useSchedules.js";
 
 const WorkingIntervals = () => {
-    const {schedule, workSchedule, generalWorkSchedule}
-        = useSchedules();
+    const {schedule, workSchedule, generalWorkSchedule} = useSchedules();
     const specialistId = useSpecialistContext();
     const workingDayDurationMinutes = useMemo(
         () => {
@@ -19,6 +18,7 @@ const WorkingIntervals = () => {
         },
         [generalWorkSchedule]
     );
+    
     const intervals = useMemo(
         () => {
             const workingDay = getWorkingDayFromSchedule(generalWorkSchedule);
@@ -26,7 +26,7 @@ const WorkingIntervals = () => {
         },
         [schedule, workSchedule, generalWorkSchedule]
     );
-    console.log(intervals)
+
     return (
         <div className={'h-100 w-100'}>
             {intervals.map(interval => {
