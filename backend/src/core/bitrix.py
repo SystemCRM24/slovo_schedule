@@ -51,6 +51,41 @@ class BitrixClient:
     async def update_crm_item(entityTypeId: int, id: int, fields: dict) -> dict:
         items = {"entityTypeId": entityTypeId, "id": id, "fields": fields}
         return await BITRIX.call('crm.item.update', items)
+    
+    @staticmethod
+    def get_comment_request_params(appointment_id) -> dict:
+        return {
+            "filter": {"ENTITY_TYPE": "DYNAMIC_1036", "ENTITY_ID": appointment_id},
+            "order": {"ID": "DESC"}
+        }
+
+    # Методы для rollback'а занятий
+    @staticmethod
+    async def get_comments_list(appointment_id) -> list[dict]:
+        """Получает список комментариев к занятию"""
+        items = BitrixClient.get_comment_request_params(appointment_id)
+        result: dict = await BITRIX.call('crm.timeline.comment.list', items, raw=True)
+        return result.get('result', [])
+    
+    @staticmethod
+    async def get_comments_from_appointments(apps):
+        batches = {}
+        builder = BatchBuilder('crm.timeline.comment.list')
+        for i, id in enumerate(apps):
+            builder.params = BitrixClient.get_comment_request_params(id)
+            batches[i] = builder.build()
+        return await BitrixClient.call_batch(batches)
+    
+    @staticmethod
+    async def delete_comment(comment: dict):
+        """Удаляет комментарий из таймлайна смарт-процесса"""
+        # {'ID': '21374', 'ENTITY_ID': 1607, 'ENTITY_TYPE': 'dynamic_1036'}
+        params = {
+            'id': comment.get('ID'),
+            'ownerId': comment.get('ENTITY_ID'),
+            'ownerTypeId': 1036
+        }
+        return await BITRIX.call("crm.timeline.comment.delete", params)
 
 
     # Методы для фронта
@@ -140,7 +175,7 @@ class BitrixClient:
         for smartp_id in sp_ids:
             document_id = docs.copy()
             document_id.append(f'DYNAMIC_{BXConstants.appointment.entityTypeId}_{smartp_id}')
-            params = {'TEMPLATE_ID': 57, 'DOCUMENT_ID': document_id}
+            params = {'TEMPLATE_ID': 60, 'DOCUMENT_ID': document_id}
             batches[smartp_id] = await BITRIX.call('bizproc.workflow.start', params)
         return batches
 

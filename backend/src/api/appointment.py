@@ -1,7 +1,7 @@
 from fastapi import APIRouter, BackgroundTasks
 from fastapi.exceptions import HTTPException
-import asyncio
 from datetime import datetime, timedelta
+import asyncio
 
 from src.core import BitrixClient, BXConstants
 from src.schemas.api import Appointment, BXAppointment
@@ -13,12 +13,12 @@ router = APIRouter(prefix="/appointment")
 
 
 @router.post("/", status_code=201)
-async def create_appointment(appointment: Appointment, bt: BackgroundTasks) -> Appointment:
+async def create_appointment(appointment: Appointment, bt: BackgroundTasks) -> BXAppointment:
     """Создание элемента смарт-процесса - расписание"""
     aety = BXConstants.appointment.entityTypeId
     fields = appointment.to_bx()
     data = await BitrixClient.create_crm_item(aety, fields)
-    appointment.id = data['id']
+    appointment = BXAppointment.model_validate(data)
     bt.add_task(logger.debug, f'Appointment id={appointment.id} was created.')
     return appointment
 
@@ -27,22 +27,59 @@ async def create_appointment(appointment: Appointment, bt: BackgroundTasks) -> A
 async def get_appointment(id: int, bt: BackgroundTasks) -> BXAppointment:
     """Получение элемента смарт-процесса Расписание"""
     aety = BXConstants.appointment.entityTypeId
-    data = await BitrixClient.get_crm_item(aety, id)
+    data, comments = await asyncio.gather(
+        BitrixClient.get_crm_item(aety, id),
+        BitrixClient.get_comments_list(id)
+    )
     if data is None:
         raise HTTPException(status_code=404, detail=f"Appointment id={id} not found.")
-    appointment = BXAppointment(**data)
+    appointment = BXAppointment.model_validate(data)
+    appointment.parse_last_comment(comments)
     bt.add_task(logger.debug, f'Appointment id={id} was received.')
     return appointment
 
 
 @router.put("/{id}", status_code=200)
-async def update_appointment(id: int, appointment: Appointment, bt: BackgroundTasks) -> Appointment:
+async def update_appointment(id: int, appointment: Appointment, bt: BackgroundTasks) -> BXAppointment:
     """Обновление элемента смарт-процесса расписание"""
     await BitrixClient.init_bizporc(id)
     aety = BXConstants.appointment.entityTypeId
     fields = appointment.to_bx()
-    updated_data = await BitrixClient.update_crm_item(aety, id, fields)
+    data, comment = await asyncio.gather(
+        BitrixClient.update_crm_item(aety, id, fields),
+        BitrixClient.get_comments_list(id)
+    )
+    appointment: BXAppointment = BXAppointment.model_validate(data)
+    appointment.parse_last_comment(comment)
     bt.add_task(logger.debug, f"Appointment id={id} was updated.")
+    return appointment
+
+
+@router.put("/rollback/{id}", status_code=200)
+async def rollback_appointment(id: int, bt: BackgroundTasks) -> BXAppointment:
+    """Откатывает изменения занятия на 1 шаг назад"""
+    aety = BXConstants.appointment.entityTypeId
+    data, comments = await asyncio.gather(
+        BitrixClient.get_crm_item(aety, id),
+        BitrixClient.get_comments_list(id)
+    )
+    appointment = BXAppointment.model_validate(data)
+    appointment.parse_last_comment(comments)
+    if len(comments) > 0:
+        previous = Appointment(
+            specialist=appointment.old_specialist,
+            patient=appointment.old_patient,
+            start=appointment.old_start,
+            end=appointment.old_end,
+            code=appointment.old_code,
+            status=appointment.old_status
+        )
+        fields = previous.to_bx()
+        updated_data = await BitrixClient.update_crm_item(aety, id, fields)
+        appointment = BXAppointment.model_validate(updated_data)
+        comment = comments.pop(0)
+        await BitrixClient.delete_comment(comment)
+        appointment.parse_last_comment(comments)
     return appointment
 
 

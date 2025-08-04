@@ -22,9 +22,9 @@ async def update_constants():
         code = item['VALUE']
         BXConstants.appointment.lfv.idByCode[code] = id
         BXConstants.appointment.lfv.codeById[id] = code
-    old_codes = data.get(BXConstants.appointment.uf.old_code)
-    old_codes_items = old_codes.get('items')
-    for item in old_codes_items:
-        id, code = item['ID'], item['VALUE']
-        BXConstants.appointment.lfv.idByOldCode[code] = id
-        BXConstants.appointment.lfv.oldCodeById[id] = code
+    statuses = data.get(BXConstants.appointment.uf.status)
+    status_items = statuses.get('items')
+    for item in status_items:
+        id, status = int(item['ID']), item['VALUE']
+        BXConstants.appointment.lfv.idByStatus[status] = id
+        BXConstants.appointment.lfv.statusById[id]= status

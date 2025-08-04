@@ -25,22 +25,25 @@ async def get_specialists() -> list[BXSpecialist]:
 async def get_clients() -> list[BXClient]:
     """Получение списка клиентов из Bitrix CRM."""
     clients = await BitrixClient.get_all_clients()
-    return [BXClient(**c) for c in clients]
+    return [BXClient.model_validate(c) for c in clients]
 
 
 @router.get("/get_schedules", status_code=200)
 async def get_schedules(query: QueryDateRange = Depends()) -> list[BXAppointment]:
     """Получение расписания записей специалистов за указанный период."""
     appointments = await BitrixClient.get_all_appointments(query.start, query.end)
-    bx_appintments = map(lambda a: BXAppointment(**a), appointments)
-    filtered = filter(lambda a: a.is_valid(), bx_appintments)
-    return list(filtered)
+    bx_appintments = map(lambda a: BXAppointment.model_validate(a), appointments)
+    response = list(filter(lambda a: a.is_valid(), bx_appintments))
+    comments = await BitrixClient.get_comments_from_appointments(a.id for a in response)
+    for i, appointment in enumerate(response):
+        appointment.parse_last_comment(comments[i])
+    return response
 
 
 @router.get("/get_work_schedules", status_code=200)
 async def get_work_schedules(query: QueryDateRange = Depends()) -> list[BXSchedule]:
     schedules = await BitrixClient.get_all_schedules(query.start, query.end)
-    bx_schedules = map(lambda s: BXSchedule(**s), schedules)
+    bx_schedules = map(lambda s: BXSchedule.model_validate(s), schedules)
     filtered = filter(lambda s: s.is_valid(), bx_schedules)
     return list(filtered)
 
