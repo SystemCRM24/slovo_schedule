@@ -12,7 +12,7 @@ class Appointment(BaseModel):
     start: str
     end: str
     code: str
-    status: str
+    status: str | None = None
 
     def to_bx(self) -> dict:
         """Возвращает словарик, который можно отправить в битру"""
@@ -21,14 +21,16 @@ class Appointment(BaseModel):
         code_id = BXConstants.appointment.lfv.idByCode.get(self.code, None)
         if code_id is not None:
             code.append(code_id)
-        return {
+        fields = {
             auf.specialist: self.specialist,
             auf.patient: self.patient,
             auf.start: self.start,
             auf.end: self.end,
             auf.code: code,
-            auf.status: BXConstants.appointment.lfv.idByStatus.get(self.status, None),
         }
+        if self.status is not None:
+            fields[auf.status] = BXConstants.appointment.lfv.idByStatus.get(self.status, None)
+        return fields
 
 
 class BXAppointment(BaseModel):
