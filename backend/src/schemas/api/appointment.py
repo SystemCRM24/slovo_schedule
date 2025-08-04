@@ -103,7 +103,8 @@ class BXAppointment(BaseModel):
             self.old_start = old_start
             self.old_end = old_end
             self.old_code = old_code
-            self.old_status = old_status
+            if old_status:
+                self.old_status = old_status
         except:
             pass
 
