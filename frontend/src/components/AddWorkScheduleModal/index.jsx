@@ -3,7 +3,7 @@ import useSchedules from "../../hooks/useSchedules.js";
 import CustomModal from "../ui/Modal/index.jsx";
 import { useDayContext } from "../../contexts/Day/provider.jsx";
 import { Button, FormControl, InputGroup, Form } from "react-bootstrap";
-import { areIntervalsOverlapping, getDateWithTime, getTimeStringFromDate, isIntervalValid } from "../../utils/dates.js";
+import { areScheduleIntervalsOverlapping, getDateWithTime, getTimeStringFromDate, isIntervalValid } from "../../utils/dates.js";
 import { useSpecialistContext } from "../../contexts/Specialist/provider.jsx";
 import apiClient from "../../api/index.js";
 import Holidays from 'date-holidays';
@@ -20,16 +20,15 @@ const AddWorkScheduleModal = ({ show, setShow }) => {
     const dateString = date.toLocaleDateString();
     const [workIntervals, setWorkIntervals] = useState([]);
     const holidays = new Holidays('RU');
-    const [checkbox, setCheckbox] = useState(false)
-    const [loading, setLoading] = useState(false)
+    const [checkbox, setCheckbox] = useState(false);
+    const [loading, setLoading] = useState(false);
     const { dates, setDates } = useContext(AppContext);
-
 
     const isNewIntervalValid = useCallback((interval, index) => {
         if (interval.start !== undefined && interval.end !== undefined) {
             const intervalsWithoutCurrent = workIntervals.filter((value, idx) => idx !== index);
             for (const interv of intervalsWithoutCurrent) {
-                if (isIntervalValid(interv) && areIntervalsOverlapping(interval, interv)) {
+                if (isIntervalValid(interv) && areScheduleIntervalsOverlapping(interval, interv)) {
                     console.log(interval, 'overlapping', interv);
                     return false;
                 }
@@ -65,6 +64,7 @@ const AddWorkScheduleModal = ({ show, setShow }) => {
     const onRemoveButtonClick = async (idx) => {
         setWorkIntervals(workIntervals.filter((value, index) => index !== idx));
     }
+
     const isHoliday = (date) => {
         const holidaysList = holidays.getHolidays(date.getFullYear());
         return holidaysList.some(holiday => {

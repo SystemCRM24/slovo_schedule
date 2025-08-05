@@ -7,6 +7,7 @@ import useSchedules from "../../hooks/useSchedules.js";
 const WorkingIntervals = () => {
     const {schedule, workSchedule, generalWorkSchedule} = useSchedules();
     const specialistId = useSpecialistContext();
+
     const workingDayDurationMinutes = useMemo(
         () => {
             const workingDay = getWorkingDayFromSchedule(generalWorkSchedule);
@@ -22,7 +23,9 @@ const WorkingIntervals = () => {
     const intervals = useMemo(
         () => {
             const workingDay = getWorkingDayFromSchedule(generalWorkSchedule);
-            return getWorkingIntervalsFromSchedules(schedule, workSchedule.intervals, workingDay.start, workingDay.end);
+            const result = getWorkingIntervalsFromSchedules(schedule, workSchedule.intervals, workingDay.start, workingDay.end);
+            console.log('[DEBUG]', result);
+            return result;
         },
         [schedule, workSchedule, generalWorkSchedule]
     );

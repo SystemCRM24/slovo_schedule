@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import CustomModal from "../ui/Modal/index.jsx";
-import { FormControl, FormSelect, InputGroup } from "react-bootstrap";
+import { Alert, FormControl, FormSelect, InputGroup } from "react-bootstrap";
 
 import { AppContext } from "../../contexts/App/context.js";
 import { useAllSpecialistsContext } from "../../contexts/AllSpecialists/provider.jsx";
@@ -296,7 +296,16 @@ const EditClientInfoModal = ({ id, show, setShow }) => {
                         </FormControl>
                     </InputGroup>
                 </div>
+                
             </div>
+            <Alert 
+                variant="danger" 
+                show={durationIsInvalid}
+                className="mt-3"
+                style={{textAlign: 'center'}}
+            >
+                Занятие находится вне графика или накладывается на другое занятие.
+            </Alert>
         </CustomModal>
     );
 };

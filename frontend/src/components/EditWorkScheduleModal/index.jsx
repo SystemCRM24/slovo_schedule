@@ -4,7 +4,7 @@ import useSchedules from "../../hooks/useSchedules.js";
 import { useDayContext } from "../../contexts/Day/provider.jsx";
 import {
     findScheduleIntervalsInRange,
-    getDateWithTime,
+    getDateWithTime, isNewWorkScheduleValidModify,
     getTimeStringFromDate, areIntervalsOverlapping,
     isIntervalValid, isNewScheduleValid, isNewScheduleIntervalValid, isNewWorkScheduleValid
 } from "../../utils/dates.js";
@@ -113,7 +113,7 @@ const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
     const isWorkScheduleValid = useMemo(() => {
         const workScheduleWithoutCurrentInterval = workSchedule.intervals
             .filter((value, index) => index !== realIntervalIndex);
-        return isNewWorkScheduleValid(workInterval, newSchedules, schedule, workScheduleWithoutCurrentInterval);
+        return isNewWorkScheduleValidModify(workInterval, newSchedules, schedule, workScheduleWithoutCurrentInterval);
     }, [newSchedules, realIntervalIndex, schedule, workInterval, workSchedule.intervals]);
 
     const {decreaseModalCount} = useContext(AppContext);

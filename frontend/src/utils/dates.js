@@ -185,6 +185,26 @@ export function areIntervalsOverlapping(interval1, interval2) {
         (startDate >= startD && startDate < endD);
 }
 
+/**
+ *
+ * @param {
+ * {start: Date, end: Date}
+ * } interval1
+ * @param {
+ * {start: Date, end: Date}
+ * } interval2
+ * @returns {Boolean} - пересекаются ли временные промежутки
+ */
+export function areScheduleIntervalsOverlapping(interval1, interval2) {
+    const startD = interval1.start.getTime(); // 09:30
+    const startDate = interval2.start.getTime(); // 10:00
+    const endD = interval1.end.getTime(); // 10:00
+    const endDate = interval2.end.getTime(); // 10:15
+    console.log('[debug]', interval1, interval2);
+    return (startD >= startDate && startD <= endDate) ||
+        (startDate >= startD && startDate <= endD);
+}
+
 function compareIntervalDates(a, b) {
     return a.start - b.start;
 }
@@ -321,8 +341,12 @@ export function isNewScheduleValid(schedule, newSchedules, daySchedule, workSche
  * @param {{start: Date, end: Date}} dayWorkSchedule - текущее промежуток графика работы на день
  * @returns {Boolean} является ли новый рабочий график валидным
  */
-export function isNewWorkScheduleValid(newWorkSchedule, newSchedules,
-                                       daySchedule, dayWorkSchedule) {
+export function isNewWorkScheduleValid(
+    newWorkSchedule, 
+    newSchedules,
+    daySchedule, 
+    dayWorkSchedule
+) {
     // базовая проверка интервала на валидность
     if (!isIntervalValid(newWorkSchedule)) {
         return false;
@@ -332,6 +356,33 @@ export function isNewWorkScheduleValid(newWorkSchedule, newSchedules,
     for (const potentiallyOverlappingSchedule of potentiallyOverlappingSchedules) {
         if (
             areIntervalsOverlapping(newWorkSchedule, potentiallyOverlappingSchedule) &&
+            !(
+                potentiallyOverlappingSchedule.start >= newWorkSchedule.start &&
+                    potentiallyOverlappingSchedule.end <= newWorkSchedule.end
+            )
+        ) {
+            console.log(newWorkSchedule, 'overlapping', potentiallyOverlappingSchedule)
+            return false;
+        }
+    }
+    return true;
+}
+
+export function isNewWorkScheduleValidModify(
+    newWorkSchedule, 
+    newSchedules,
+    daySchedule, 
+    dayWorkSchedule
+) {
+    // базовая проверка интервала на валидность
+    if (!isIntervalValid(newWorkSchedule)) {
+        return false;
+    }
+    // проверяем, не пересекается ли с другими рабочими промежутками и занятиями
+    const potentiallyOverlappingSchedules = [...newSchedules.filter(isIntervalValid), ...daySchedule, ...dayWorkSchedule];
+    for (const potentiallyOverlappingSchedule of potentiallyOverlappingSchedules) {
+        if (
+            areScheduleIntervalsOverlapping(newWorkSchedule, potentiallyOverlappingSchedule) &&
             !(
                 potentiallyOverlappingSchedule.start >= newWorkSchedule.start &&
                     potentiallyOverlappingSchedule.end <= newWorkSchedule.end
