@@ -91,7 +91,7 @@ const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
             end: undefined,
             patientId: undefined,
             patientType: undefined,
-            status: 'booked',
+            status: 'Единичное',
             old_patient: undefined
         }]);
     }
@@ -158,7 +158,6 @@ const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
                 code: item.patientType,
                 patient: item.patientId,
                 specialist: specialistId,
-                old_patient: item.patientId
             }
         });
         if (
@@ -194,14 +193,12 @@ const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
         }
         const results = await Promise.all(tasks);
         for (const [index, sched] of Object.entries(results)) {
-            transformedNewSchedules[index] = {
-                ...transformedNewSchedules[index],
-                id: sched.id,
-                patient: {
-                    id: transformedNewSchedules[index].patient,
-                    type: transformedNewSchedules[index].code,
-                }
-            }
+            sched.patient = {id: sched.patient, type: sched.code};
+            sched.start = new Date(sched.start);
+            sched.end = new Date(sched.end);
+            sched.old_start = new Date(sched.old_start);
+            sched.old_end = new Date(sched.old_end);
+            transformedNewSchedules[index] = sched;
         }
         console.log(transformedNewSchedules);
         setGeneralSchedule({

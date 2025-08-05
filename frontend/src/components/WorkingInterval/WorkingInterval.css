@@ -12,10 +12,14 @@
 }
 
 .status-free {
-    background-color: #AEE9FF;
+    background-color: #c9f1ff;
 }
 
-.status-booked {
+.status-single {
+    background-color: #75a7f7;
+}
+
+.status-multiple {
     background-color: #AEFFAE;
 }
 

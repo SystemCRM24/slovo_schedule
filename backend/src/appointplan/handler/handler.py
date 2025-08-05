@@ -148,8 +148,8 @@ class Handler:
                     'ufCrm3Children': appointment.patient,
                     'ufCrm3StartDate': appointment.start.isoformat(),
                     'ufCrm3EndDate': appointment.end.isoformat(),
-                    'ufCrm3HistoryClient': appointment.patient,
-                    'ufCrm3Dealid': self.deal.id
+                    'ufCrm3Dealid': self.deal.id,
+                    'ufCrm3Status': 51
                 }
                 params = {'entityTypeId': BXConstants.appointment.entityTypeId, 'fields': fields}
                 batches[index] = BatchBuilder('crm.item.add', params).build()

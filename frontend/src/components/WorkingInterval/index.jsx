@@ -27,29 +27,33 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
         },
         [id, schedule, patientId]
     );
+
     const intervalStatus = useMemo(
         () => {
-            if (status) {
-                return status
+            if ( status === 'free' ) {
+                return status;
             }
-            if (schedule.length > 0) {
-                for (const item of schedule) {
-                    if (item.id === id) {
-                        const isSpecialistChanged = item.old_specialist && (item.old_specialist != specialistId);
-                        const isPatientChanged = item.old_patient && (item.old_patient != item.patient.id);
-                        const isStartChanged = item.old_start && (item.old_start.getTime() !== item.start.getTime());
-                        const isEndChanged = item.old_end && (item.old_end.getTime() !== item.end.getTime());
-                        const isCodeChanged = item.old_code && (item.old_code != item.patient.type);
-                        if (isSpecialistChanged || isPatientChanged || isStartChanged || isEndChanged || isCodeChanged) {
-                            return 'replace';
-                        }
+            if ( id && schedule.length > 0 ) {
+                for ( const item of schedule ) {
+                    if ( item.id !== id ) {
+                        continue;
                     }
+                    let status = item.status === 'Единичное' ? 'single' : 'multiple';
+                    const isSpecialistChanged = item.old_specialist != specialistId;
+                    const isPatientChanged = item.old_patient != item.patient.id;
+                    const isStartChanged = item.old_start.getTime() !== item.start.getTime();
+                    const isEndChanged = item.old_end.getTime() !== item.end.getTime();
+                    const isCodeChanged = item.old_code != item.patient.type;
+                    const isStatusChanged = item.status != item.old_status;
+                    if (isSpecialistChanged || isPatientChanged || isStartChanged || isEndChanged || isCodeChanged || isStatusChanged) {
+                        status = 'replace';
+                    }
+                    return status;
                 }
-                return 'booked';
             }
             return 'na';
         },
-        [schedule, status, patientId, oldpatientId, startDt, endDt, patientCode]
+        [schedule, id, status, specialistId]
     );
 
     const patients = useChildrenContext();
@@ -103,7 +107,7 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
             {intervalStatus === "free" &&
                 <EditWorkScheduleModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt} />
             }
-            {(intervalStatus === "booked" || intervalStatus === 'skip' || intervalStatus === 'replace') &&
+            {(intervalStatus === "single" || intervalStatus === 'multiple' || intervalStatus === 'skip' || intervalStatus === 'replace') &&
                 <>
                     <EditAppointmentModal
                         id={id}

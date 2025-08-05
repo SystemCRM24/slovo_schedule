@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import CustomModal from "../ui/Modal";
-import { Button, FormControl, FormSelect, InputGroup, Alert, Form } from "react-bootstrap";
+import { Button, FormControl, FormSelect, InputGroup, Alert, Form, Fade } from "react-bootstrap";
 
 import { useDayContext } from "../../contexts/Day/provider";
 import useSchedules from "../../hooks/useSchedules";
@@ -11,6 +11,7 @@ import apiClient, { constants } from "../../api/index.js";
 import AutoCompleteInput from "../../components/ui/AutoCompleteInput/index.jsx";
 import { useContext } from "react";
 import { AppContext } from "../../contexts/App/context.js";
+import { useAllSpecialistsContext } from "../../contexts/AllSpecialists/provider.jsx";
 
 
 const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, patientType, status, oldpatientId, showModalEdit, setShowModalEdit }) => {
@@ -25,6 +26,8 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
         specialist: specialistId,
         old_patient: oldpatientId,
     });
+
+    const allSpecialists = useAllSpecialistsContext();
 
     const { schedule, generalSchedule, setGeneralSchedule, workSchedule } = useSchedules();
     const patients = useChildrenContext();
@@ -122,31 +125,9 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
             specialist: source.specialist,
             patient: source.patientId,
             code: source.patientType,
-            status: source.patientId !== source.old_patient && source.old_patient ? 'replace' : source.status,
-            old_patient: source.old_patient,
         };
-        const result = await apiClient.updateAppointment(id, newRecord);
-        if (result) {
-            const newSchedule = schedule.map((item, index) => {
-                if (index === recordIndex) {
-                    return {
-                        ...newRecord,
-                        patient: {
-                            id: appointment.patientId,
-                            type: appointment.patientType
-                        }
-                    }
-                } else {
-                    return item;
-                }
-            })
-            setGeneralSchedule({
-                ...generalSchedule,
-                [specialistId]: {
-                    ...generalSchedule[specialistId],
-                    [day]: newSchedule,
-                }
-            });
+        const response = await apiClient.updateAppointment(id, newRecord);
+        if ( response ) {
             reloadSchedule();
             setShow(false);
         }
@@ -181,75 +162,48 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
         [start, duration]
     )
 
-    const isMoved = useMemo(() => {
-        for (const a of schedule) {
-            if (a.id === id) {
-                const changesList = [];
-                if (oldpatientId && oldpatientId !== patientId) {
-                    changesList.push(`${children[oldpatientId]} заменен на ${patientName}`)
+    const isMoved = useMemo(
+        () => {
+            const changes = [];
+            for ( const a of schedule ) {
+                if ( a.id !== id ) {
+                    continue;
                 }
-                if (
-                    a.old_specialist && a.old_specialist !== Number(specialistId)
-                ) {
-                    changesList.push(`Специалист изменён на ${specialist.name}`);
+                if ( Number(specialistId) !== a.old_specialist ) {
+                    changes.push(`Специалист: ${allSpecialists[a.old_specialist]?.name} -> ${allSpecialists[specialistId]?.name}`);
                 }
-
-                const oldStart = a.old_start ? new Date(a.old_start) : null;
-                if (
-                    oldStart &&
-                    a.start &&
-                    !isNaN(oldStart.getTime()) &&
-                    !isNaN(a.start.getTime()) &&
-                    oldStart.getTime() !== a.start.getTime()
-                ) {
-                    changesList.push(
-                        `Время начала изменено с ${getTimeStringFromDate(oldStart)} на ${getTimeStringFromDate(a.start)}`
-                    );
+                if ( a.patient.id !== a.old_patient ) {
+                    changes.push(`Пациент: ${patients[a.old_patient]} -> ${patients[a.patient.id]}`);
                 }
-
-                const oldEnd = a.old_end ? new Date(a.old_end) : null;
-                if (
-                    oldEnd &&
-                    a.end &&
-                    !isNaN(oldEnd.getTime()) &&
-                    !isNaN(a.end.getTime()) &&
-                    oldEnd.getTime() !== a.end.getTime()
-                ) {
-                    changesList.push(
-                        `Время окончания изменено с ${getTimeStringFromDate(oldEnd)} на ${getTimeStringFromDate(a.end)}`
-                    );
+                if ( a.start.getTime() !== a.old_start.getTime() ) {
+                    changes.push(`Начало: ${a.old_start.toLocaleString()} -> ${a.start.toLocaleString()}`);
                 }
-
-                if (a.old_code && a.code && a.old_code !== a.code) {
-                    changesList.push(`Тип изменён с ${a.old_code} на ${a.code}`);
+                const oldDuration = (a.old_end.getTime() - a.old_start.getTime()) / 60000;
+                const currentDuration = (a.end.getTime() - a.start.getTime()) / 60000;
+                if ( oldDuration !== currentDuration ) {
+                    changes.push(`Длительность: ${oldDuration}м -> ${currentDuration}м`);
                 }
-
-                return changesList;
+                if ( a.patient.type !== a.old_code ) {
+                    changes.push(`Код занятия: ${a.old_code} -> ${a.patient.type}`);
+                }
             }
-        }
-        return [];
-    }, [id, schedule, appointment]);
+            return changes;
+        },
+        [id, schedule, specialistId, allSpecialists]
+    );
 
-    const onRollBack = () => {
-        const rba = { ...appointment };
-        for (const a of schedule) {
-            if (a.id === id) {
-                if (a.old_specialist !== null) {
-                    rba.specialist = a.old_specialist;
+    const onRollBack = useCallback(
+        () => {
+            apiClient.rollbackAppointment(id).then(
+                () => {
+                    reloadSchedule();
+                    setShow(false);
+                    decreaseModalCount();
                 }
-                if (a.old_start !== null) {
-                    rba.start = a.old_start;
-                }
-                if (a.old_end !== null) {
-                    rba.end = a.old_end;
-                }
-                if (a.old_code !== null) {
-                    rba.code = a.old_code;
-                }
-                onSubmit(rba);
-            }
-        };
-    };
+            )
+        },
+        [id, reloadSchedule, setShow, decreaseModalCount]
+    )
 
     return (
         <CustomModal

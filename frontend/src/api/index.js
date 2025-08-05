@@ -159,11 +159,13 @@ class APIClient {
                     id: appointment.patient, 
                     type: appointment.code
                 },
+                status: appointment.status,
                 old_specialist: appointment.old_specialist,
                 old_start: appointment.old_start !== null ? new Date(appointment.old_start) : null,
                 old_end: appointment.old_end !== null ? new Date(appointment.old_end) : null,
                 old_patient: appointment.old_patient,
-                old_code: appointment.old_code
+                old_code: appointment.old_code,
+                old_status: appointment.old_status,
             });
         }
         return data;
@@ -225,23 +227,12 @@ class APIClient {
             end: data.end.toISOString(), 
             status: data.status,
             code: data.code,
-            old_patient: data.patient
         };
-
-        if (!body.specialist || !body.patient || !body.start || !body.end || !body.code) {
-            throw new Error('Все поля (specialist, patient, start, end, status, code) должны быть заполнены');
-        }
-        // if (!constants.listFieldValues.appointment.idByStatus[body.status]) {
-        //     throw new Error(`Недопустимый статус: ${body.status}`);
-        // }
-        if (!constants.listFieldValues.appointment.idByCode[body.code]) {
-            throw new Error(`Недопустимый код: ${body.code}`);
-        }
         const response = await this.post(url, body);
         if (!response.id) {
             throw new Error(`Ошибка API: ${response}`);
         }
-        return { id: response.id };
+        return response;
     }
     // TODO 
     // нужно ли преобразовывать start и end в Date ??
@@ -254,13 +245,10 @@ class APIClient {
     async getAppointment(id) {
         const url = `${this.serverUrl}appointment/${id}`
         // const url = this.getUrl('appointment/', { id });
-
         const response = await this.get(url);
-
         if (!response.id) {
             throw new Error(`Запись с id=${id} не найдена`);
         }
-
         return {
             id: response.id,
             specialist: response.specialist,
@@ -284,31 +272,22 @@ class APIClient {
      */
     async updateAppointment(id, data) {
         const url = `${this.serverUrl}appointment/${id}`
-        // const url = this.getUrl('appointment/', { id });
         const body = {
-            id: data.id,
             specialist: data.specialist,
             patient: data.patient,
             start: data.start.toISOString(),
             end: data.end.toISOString(),
             code: data.code,
-            old_patient: data.old_patient
         };
-        
-        if (!body.specialist || !body.patient || !body.start || !body.end || !body.code) {
-            throw new Error('Все поля (specialist, patient, start, end, code) должны быть заполнены');
-        }
-        // if (!constants.listFieldValues.appointment.idByStatus[body.status]) {
-        //     throw new Error(`Недопустимый статус: ${body.status}`);
-        // }
-
         const response = await this.update(url, body);
-        
         if (!response.id) {
             throw new Error(`Ошибка API: ${response}`);
         }
-
-        return { id: response.id };
+        response.start = new Date(response.start);
+        response.end = new Date(response.end);
+        response.old_start = new Date(response.old_start);
+        response.old_end = new Date(response.old_end);
+        return response;
     }
 
     /**
@@ -320,6 +299,13 @@ class APIClient {
         const url = `${this.serverUrl}appointment/${id}`
         // const url = this.getUrl('appointment/', {id})
         return await this.delete(url);
+    }
+
+    async rollbackAppointment(id) {
+        const url = `${this.serverUrl}appointment/rollback/${id}`;
+        const init = {method: 'PUT', headers: {'Content-Type': 'application/json'}};
+        const response = await fetch(url, init);
+        return await response.json();
     }
 
     /**

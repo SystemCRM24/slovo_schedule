@@ -56,8 +56,8 @@ class Handler:
             'ufCrm3StartDate': start.isoformat(),
             'ufCrm3EndDate': end.isoformat(),
             'ufCrm3Children': self.patient.id,
-            'ufCrm3HistoryClient': self.patient.id,
-            'ufCrm3Dealid': str(self.data.deal_id)
+            'ufCrm3Dealid': str(self.data.deal_id),
+            'ufCrm3Status': 2150
         }
     
     async def send_message(self):

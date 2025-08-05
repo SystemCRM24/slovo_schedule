@@ -283,7 +283,6 @@ export function isNewScheduleIntervalValid(schedule, newSchedules, daySchedule, 
                 }
             }
         }
-        console.info('everything ok with', schedule);
         return true;
     }
 }
