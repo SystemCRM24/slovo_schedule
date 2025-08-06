@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useContext } from 'react';
 import './WorkingInterval.css';
-import { getIntervalTimeString } from "../../utils/dates.js";
+import { getIntervalTimeString, getWorkingIntervalsFromSchedules } from "../../utils/dates.js";
 import EditWorkScheduleModal from "../EditWorkScheduleModal/index.jsx";
 import EditAppointmentModal from '../EditAppointmentModal/index.jsx';
 import { useChildrenContext } from "../../contexts/Children/provider.jsx";
@@ -14,8 +14,9 @@ import { AppContext } from '../../contexts/App/context.js';
 const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, patientId, patientType, patientCode }) => {
     const [showModal, setShowModal] = useState(false);
     const [showModalEdit, setShowModalEdit] = useState(false);
-    const { schedule } = useSchedules();
+    const { schedule, workSchedule } = useSchedules();
     const specialistId = useSpecialistContext();
+
     const oldpatientId = useMemo(
         () => {
             for (const item of schedule) {
@@ -41,19 +42,30 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
                     let status = item.status === 'Единичное' ? 'single' : 'multiple';
                     const isSpecialistChanged = item.old_specialist != specialistId;
                     const isPatientChanged = item.old_patient != item.patient.id;
-                    const isStartChanged = item.old_start.getTime() !== item.start.getTime();
-                    const isEndChanged = item.old_end.getTime() !== item.end.getTime();
+                    const itemStart = item.start.getTime();
+                    const isStartChanged = item.old_start.getTime() !== itemStart;
+                    const itemEnd = item.end.getTime();
+                    const isEndChanged = item.old_end.getTime() !== itemEnd;
                     const isCodeChanged = item.old_code != item.patient.type;
                     const isStatusChanged = item.status != item.old_status;
                     if (isSpecialistChanged || isPatientChanged || isStartChanged || isEndChanged || isCodeChanged || isStatusChanged) {
                         status = 'replace';
+                    }
+                    let isOffSchedule = true;
+                    for ( const interval of workSchedule.intervals ) {
+                        if ( interval.start.getTime() <= itemStart && interval.end.getTime() >= itemEnd ) {
+                            isOffSchedule = false;
+                        }
+                    }
+                    if ( isOffSchedule ) {
+                        status = 'skip';
                     }
                     return status;
                 }
             }
             return 'na';
         },
-        [schedule, id, status, specialistId]
+        [schedule, id, status, specialistId, workSchedule]
     );
 
     const patients = useChildrenContext();
@@ -91,12 +103,11 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
                     paddingLeft: '0.5rem'
                 }}
             >
-                <div style={patientName ? { marginRight: 'auto' } : { margin: 'auto' }}>{getIntervalTimeString(startDt, endDt)}</div>
+                <div style={patientName ? { marginRight: 'auto' } : { margin: 'auto' }}>
+                    {getIntervalTimeString(startDt, endDt)}
+                </div>
                 {patientId &&
-                    <div
-                        className={'fw-bold'}
-                        style={{ marginLeft: 'auto' }}
-                    >
+                    <div className={'fw-bold'} style={{ marginLeft: 'auto' }}>
                         {patientName} {patientType}
                     </div>
                 }

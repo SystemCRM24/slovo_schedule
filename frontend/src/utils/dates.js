@@ -200,7 +200,6 @@ export function areScheduleIntervalsOverlapping(interval1, interval2) {
     const startDate = interval2.start.getTime(); // 10:00
     const endD = interval1.end.getTime(); // 10:00
     const endDate = interval2.end.getTime(); // 10:15
-    console.log('[debug]', interval1, interval2);
     return (startD >= startDate && startD <= endDate) ||
         (startDate >= startD && startDate <= endD);
 }

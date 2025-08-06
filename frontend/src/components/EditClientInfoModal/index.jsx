@@ -215,7 +215,7 @@ const EditClientInfoModal = ({ id, show, setShow }) => {
         [specialistScheduleOfDay, end, start, spesialistAppointmentsOfDay, setDurationsIsInvalid]
     );
 
-    const { dates, setDates } = useContext(AppContext);
+    const { reloadSchedule } = useContext(AppContext);
     const onSubmit = async () => {
         const currentSpecialistId = specialist.specialistId;
         const updatedAppointment = structuredClone(appointment);
@@ -232,7 +232,7 @@ const EditClientInfoModal = ({ id, show, setShow }) => {
         };
         const result = await apiClient.updateAppointment(updatedAppointment.id, data);
         setShow(false);
-        setDates({ fromDate: new Date(dates.fromDate), toDate: new Date(dates.toDate) });
+        reloadSchedule();
     };
 
     return (

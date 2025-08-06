@@ -205,6 +205,18 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
         [id, reloadSchedule, setShow, decreaseModalCount]
     )
 
+    const isOffSchedule = useMemo(
+        () => {
+            for ( const interval of workSchedule.intervals ) {
+                if ( interval.start.getTime() <= startDt.getTime() && interval.end.getTime() >= endDt.getTime() ) {
+                    return false;
+                }
+            }
+            return true;
+        },
+        [schedule, startDt, endDt]
+    );
+
     return (
         <CustomModal
             show={show}
@@ -296,6 +308,9 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                             </svg>
                         </Button>
                     </div>
+                </Alert>
+                <Alert variant="danger" show={isOffSchedule}>
+                    Занятие не попадает во временные рамки графика.
                 </Alert>
             </div>
             <div className="d-flex align-items-center w-100 h-100 gap-2 mt-3">
