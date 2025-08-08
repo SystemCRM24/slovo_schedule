@@ -76,8 +76,7 @@ async def update_schedule(id: int, schedule: Schedule, bt: BackgroundTasks) -> S
 @router.put('/massive/{id}', status_code=200)
 async def update_schedule_massive(id: int, schedule: Schedule, bt: BackgroundTasks):
     """Массовое обновление графиков."""
-    start = datetime.fromisoformat(schedule.date)
-    print(start)
+    start = datetime.fromisoformat(schedule.date).replace(tzinfo=Settings.TIMEZONE)
     end = start + timedelta(days=365)
     schedules = await BitrixClient.get_specialists_schedules(
         start.isoformat(),
@@ -94,6 +93,7 @@ async def update_schedule_massive(id: int, schedule: Schedule, bt: BackgroundTas
         schedule_date = datetime.fromisoformat(schedule_date)
         if schedule_date.weekday() != start.weekday():
             continue
+        print('im HERE')
         schedule_intervals = []
         for i in template:
             interval_start = i.start.replace(
@@ -116,7 +116,6 @@ async def update_schedule_massive(id: int, schedule: Schedule, bt: BackgroundTas
             "fields": fields
         }
         batches[s.get('id')] = builder.build()
-    print(batches)
     result = await BitrixClient.call_batch(batches)
     default = {}
     if isinstance(result, list):
