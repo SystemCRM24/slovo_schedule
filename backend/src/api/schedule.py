@@ -83,6 +83,7 @@ async def update_schedule_massive(id: int, schedule: Schedule, bt: BackgroundTas
         end.isoformat(),
         (schedule.specialist, )
     )
+    print(schedules)
     template = list(map(lambda i: Interval.from_js_timestamp(*(i.split(':'))), schedule.intervals))
     builder = BatchBuilder('crm.item.update')
     batches = {}
@@ -117,7 +118,9 @@ async def update_schedule_massive(id: int, schedule: Schedule, bt: BackgroundTas
         batches[s.get('id')] = builder.build()
     result = await BitrixClient.call_batch(batches)
     default = {}
-    return [BXSchedule.model_validate(i.get('item', default)) for i in result]
+    if isinstance(result, list):
+        return result
+    return [BXSchedule.model_validate(i.get('item', default)) for i in result.values()]
 
 
 @router.delete("/{id}", status_code=204)
