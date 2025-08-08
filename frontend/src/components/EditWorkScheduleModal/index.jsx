@@ -8,7 +8,7 @@ import {
     getTimeStringFromDate, areIntervalsOverlapping,
     isIntervalValid, isNewScheduleValid, isNewScheduleIntervalValid, isNewWorkScheduleValid
 } from "../../utils/dates.js";
-import { Button, FormControl, FormSelect, InputGroup, Spinner } from "react-bootstrap";
+import { Button, FormControl, FormSelect, InputGroup, Form } from "react-bootstrap";
 import useSpecialist from "../../hooks/useSpecialist.js";
 import { useChildrenContext } from "../../contexts/Children/provider.jsx";
 import apiClient, { constants } from "../../api/index.js";
@@ -116,7 +116,7 @@ const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
         return isNewWorkScheduleValidModify(workInterval, newSchedules, schedule, workScheduleWithoutCurrentInterval);
     }, [newSchedules, realIntervalIndex, schedule, workInterval, workSchedule.intervals]);
 
-    const {decreaseModalCount} = useContext(AppContext);
+    const {decreaseModalCount, reloadSchedule} = useContext(AppContext);
 
     const handleDelete = async () => {
         const newWorkScheduleIntervals = workSchedule.intervals.filter(
@@ -160,32 +160,18 @@ const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
                 specialist: specialistId,
             }
         });
-        if (
-            realInterval.start.getTime() !== workInterval.start.getTime()
-            || realInterval.end.getTime() !== realInterval.end.getTime()
-        ) {
-            const newWorkIntervals = workSchedule.intervals.map((value, index) => {
-                if (index === realIntervalIndex) {
-                    return workInterval;
-                } else {
-                    return value;
-                }
-            });
-            const result = await apiClient.updateWorkSchedule(workSchedule.id, {
-                specialist: specialistId, date: date, intervals: newWorkIntervals
-            });
-            if (result) {
-                setGeneralWorkSchedule({
-                    ...generalWorkSchedule,
-                    [specialistId]: {
-                        ...generalWorkSchedule[specialistId],
-                        [date]: {
-                            id: workSchedule.id,
-                            intervals: newWorkIntervals
-                        }
-                    }
-                });
+        const newWorkIntervals = workSchedule.intervals.map((value, index) => {
+            if (index === realIntervalIndex) {
+                return workInterval;
+            } else {
+                return value;
             }
+        });
+        const response = {specialist: specialistId, date: date, intervals: newWorkIntervals};
+        if ( checkbox ) {
+            const result = await apiClient.updateWorkScheduleMassive(workSchedule.id, response);
+        } else {
+            const result = await apiClient.updateWorkSchedule(workSchedule.id, response);
         }
         let tasks = [];
         for (const appointment of transformedNewSchedules) {
@@ -200,14 +186,8 @@ const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
             sched.old_end = new Date(sched.old_end);
             transformedNewSchedules[index] = sched;
         }
-        console.log(transformedNewSchedules);
-        setGeneralSchedule({
-            ...generalSchedule,
-            [specialistId]: {
-                ...generalSchedule[specialistId],
-                [date]: [...schedule, ...transformedNewSchedules],
-            }
-        });
+        reloadSchedule();
+        decreaseModalCount();
         setLoading(false);
         setShow(false);
     }
@@ -249,6 +229,8 @@ const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
         },
         [newSchedules]
     );
+
+    const [checkbox, setCheckbox] = useState(false);
 
     return (
         <CustomModal
@@ -292,6 +274,14 @@ const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
                         }
                     />
                 </InputGroup>
+                <Form.Group className="me-0">
+                    <Form.Check
+                        type="checkbox"
+                        label="Массовое добавление (на 48 недель)"
+                        checked={checkbox}
+                        onChange={e => setCheckbox(e.target.checked)}
+                    />
+                </Form.Group>
                 <Button variant={'danger'} onClick={handleDelete} disabled={!canDelete}>
                     Удалить рабочий промежуток
                 </Button>
