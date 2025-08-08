@@ -35,16 +35,25 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
                 return status;
             }
             if ( id && schedule.length > 0 ) {
+                const [wiStart, wiEnd] = [startDt.getTime(), endDt.getTime()];
+                let status = null;
                 for ( const item of schedule ) {
+                    const [itemStart, itemEnd] = [item.start.getTime(), item.end.getTime()];
                     if ( item.id !== id ) {
+                        const isStartOverlaping = itemStart >= wiStart && itemStart < wiEnd;
+                        const isEndOverlaping = itemEnd <= wiEnd && itemEnd > wiStart;
+                        if ( isStartOverlaping || isEndOverlaping ) {
+                            status = 'overlap';
+                        }
                         continue;
                     }
-                    let status = item.status === 'Единичное' ? 'single' : 'multiple';
+                    if ( status !== null ) {
+                        return status;
+                    }
+                    status = item.status === 'Единичное' ? 'single' : 'multiple';
                     const isSpecialistChanged = item.old_specialist != specialistId;
                     const isPatientChanged = item.old_patient != item.patient.id;
-                    const itemStart = item.start.getTime();
                     const isStartChanged = item.old_start.getTime() !== itemStart;
-                    const itemEnd = item.end.getTime();
                     const isEndChanged = item.old_end.getTime() !== itemEnd;
                     const isCodeChanged = item.old_code != item.patient.type;
                     const isStatusChanged = item.status != item.old_status;
@@ -60,12 +69,12 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
                     if ( isOffSchedule ) {
                         status = 'skip';
                     }
-                    return status;
                 }
+                return status;
             }
             return 'na';
         },
-        [schedule, id, status, specialistId, workSchedule]
+        [schedule, id, status, specialistId, workSchedule, startDt, endDt]
     );
 
     const patients = useChildrenContext();
@@ -118,7 +127,7 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
             {intervalStatus === "free" &&
                 <EditWorkScheduleModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt} />
             }
-            {(intervalStatus === "single" || intervalStatus === 'multiple' || intervalStatus === 'skip' || intervalStatus === 'replace') &&
+            {(["single", 'multiple', 'skip', 'replace', 'overlap'].includes(intervalStatus) &&
                 <>
                     <EditAppointmentModal
                         id={id}
@@ -135,8 +144,7 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
                     />
                     <EditClientInfoModal show={showModalEdit} setShow={setShowModalEdit} id={id} />
                 </>
-
-            }
+            )}
         </div>
     );
 };

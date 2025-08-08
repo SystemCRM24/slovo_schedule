@@ -32,8 +32,9 @@ const WorkingIntervals = () => {
                         index = -1;
                         break;
                     }
-                    if ( appointment.start.getTime() >= interval.start.getTime() ) {
-                        index = i;
+                    const appStart = appointment.start.getTime();
+                    if ( interval.end.getTime()  <= appStart ) {
+                        index = i + 1;
                     }
                 }
                 if ( index === -1 ) {
@@ -51,11 +52,11 @@ const WorkingIntervals = () => {
             const result = [];
             const keys = new Set();
             for ( const interval of intervals ) {
-                const key = `${interval.start}_${interval.end}_${specialistId}_working_interval_elem`;
+                const key = `${interval?.id}_${interval.start}_${interval.end}_${specialistId}_working_interval_elem`;
                 if ( keys.has(key) ) {
                     continue;
                 } else {
-                    keys.add(key)
+                    keys.add(key);
                 }
                 const intervalDuration = getDatesDiffInMinutes(interval.start, interval.end);
                 const percentOfWorkingDay = intervalDuration / workingDayDurationMinutes * 100;
@@ -68,7 +69,7 @@ const WorkingIntervals = () => {
                         patientId={interval?.patient?.id}
                         patientType={interval?.patient?.type}
                         status={interval.status}
-                        key={`${interval.start}_${interval.end}_${specialistId}_working_interval_elem`}
+                        key={key}
                     />
                 );
             }

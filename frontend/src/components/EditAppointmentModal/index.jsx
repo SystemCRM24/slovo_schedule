@@ -312,6 +312,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                 <Alert variant="danger" show={isOffSchedule}>
                     Занятие не попадает во временные рамки графика.
                 </Alert>
+                <Alert variant="danger" show={status == 'overlap'}>Занятие накладывается на другое занятие</Alert>
             </div>
             <div className="d-flex align-items-center w-100 h-100 gap-2 mt-3">
                 <Button

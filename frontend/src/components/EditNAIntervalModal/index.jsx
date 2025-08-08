@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import CustomModal from "../ui/Modal/index.jsx";
 import {
     areIntervalsOverlapping,
+    areScheduleIntervalsOverlapping,
     getDateWithTime,
     getTimeStringFromDate,
     isIntervalValid,
@@ -204,12 +205,12 @@ const EditNAInterval = ({ show, setShow, startDt, endDt }) => {
 
     const isNewIntervalValid = useCallback((interval, index) => {
         if (interval.start !== undefined && interval.end !== undefined) {
-            if (interval.start.getTime() < startDt.getTime() || interval.end.getTime() > endDt.getTime()) {
+            if (interval.start.getTime() <= startDt.getTime() || interval.end.getTime() >= endDt.getTime()) {
                 return false;
             }
             const intervalsWithoutCurrent = workIntervals.filter((value, idx) => idx !== index);
             for (const interv of intervalsWithoutCurrent) {
-                if (isIntervalValid(interv) && areIntervalsOverlapping(interval, interv)) {
+                if (isIntervalValid(interv) && areScheduleIntervalsOverlapping(interval, interv)) {
                     console.log(interval, 'overlapping', interv);
                     return false;
                 }
