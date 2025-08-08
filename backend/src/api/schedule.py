@@ -76,11 +76,10 @@ async def update_schedule(id: int, schedule: Schedule, bt: BackgroundTasks) -> S
 @router.put('/massive/{id}', status_code=200)
 async def update_schedule_massive(id: int, schedule: Schedule, bt: BackgroundTasks):
     """Массовое обновление графиков."""
-    print(datetime.fromisoformat(schedule.date))
     start = datetime.fromisoformat(schedule.date).replace(tzinfo=Settings.TIMEZONE)
-    end = start
+    end = start + timedelta(days=365)
     schedules = await BitrixClient.get_specialists_schedules(
-        (start - timedelta(days=1)).isoformat(),
+        start.isoformat(),
         end.isoformat(),
         (schedule.specialist, )
     )
