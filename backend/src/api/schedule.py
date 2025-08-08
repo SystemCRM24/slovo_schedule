@@ -83,7 +83,6 @@ async def update_schedule_massive(id: int, schedule: Schedule, bt: BackgroundTas
         end.isoformat(),
         (schedule.specialist, )
     )
-    print(schedules)
     template = list(map(lambda i: Interval.from_js_timestamp(*(i.split(':'))), schedule.intervals))
     builder = BatchBuilder('crm.item.update')
     batches = {}
@@ -116,6 +115,7 @@ async def update_schedule_massive(id: int, schedule: Schedule, bt: BackgroundTas
             "fields": fields
         }
         batches[s.get('id')] = builder.build()
+    print(batches)
     result = await BitrixClient.call_batch(batches)
     default = {}
     if isinstance(result, list):
