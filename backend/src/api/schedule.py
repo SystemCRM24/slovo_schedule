@@ -77,6 +77,7 @@ async def update_schedule(id: int, schedule: Schedule, bt: BackgroundTasks) -> S
 async def update_schedule_massive(id: int, schedule: Schedule, bt: BackgroundTasks):
     """Массовое обновление графиков."""
     start = datetime.fromisoformat(schedule.date)
+    print(start)
     end = start + timedelta(days=365)
     schedules = await BitrixClient.get_specialists_schedules(
         start.isoformat(),
