@@ -90,7 +90,8 @@ async def update_schedule_massive(id: int, schedule: Schedule, bt: BackgroundTas
         schedule_date = s.get(BXConstants.schedule.uf.date, None)
         if not schedule_date:
             continue
-        schedule_date = datetime.fromisoformat(schedule_date)
+        print('NOnE is skipping')
+        schedule_date = datetime.fromisoformat(schedule_date).replace(tzinfo=Settings.TIMEZONE)
         if schedule_date.weekday() != start.weekday():
             continue
         print('im HERE')
