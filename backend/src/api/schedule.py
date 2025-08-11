@@ -91,10 +91,8 @@ async def update_schedule_massive(id: int, schedule: Schedule, bt: BackgroundTas
         if not schedule_date:
             continue
         schedule_date = datetime.fromisoformat(schedule_date).replace(tzinfo=Settings.TIMEZONE)
-        print(start, schedule_date, start.weekday(), schedule_date.weekday())
         if schedule_date.weekday() != start.weekday():
             continue
-        print('im HERE')
         schedule_intervals = []
         for i in template:
             interval_start = i.start.replace(
@@ -131,3 +129,20 @@ async def delete_schedule(id: int, bt: BackgroundTasks):
     if not result:
         raise HTTPException(404, f'Schedule id={id} not found.')
     bt.add_task(logger.debug, f'Schedule id={id} was deleted.')
+
+
+# @router.delete('/massive/{id}', status_code=204)
+# async def delete_schedule_massive(id: int, bt: BackgroundTasks):
+#     seti = BXConstants.schedule.entityTypeId
+#     schedule_data = await BitrixClient.get_crm_item(seti, id)
+#     date = schedule_data.get(BXConstants.schedule.uf.date, None)
+#     specialist = schedule_data.get(BXConstants.schedule.uf.specialist, None)
+#     if date is None or specialist is None:
+#         return
+#     start = datetime.fromisoformat(date).replace(tzinfo=Settings.TIMEZONE)
+#     end = start + timedelta(days=365)
+#     schedules = await BitrixClient.get_specialists_schedules(
+#         start.isoformat(),
+#         end.isoformat(),
+#         (specialist, )
+#     )

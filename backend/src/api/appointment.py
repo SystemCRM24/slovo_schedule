@@ -3,7 +3,7 @@ from fastapi.exceptions import HTTPException
 from datetime import datetime, timedelta
 import asyncio
 
-from src.core import BitrixClient, BXConstants
+from src.core import BitrixClient, BXConstants, Settings
 from src.schemas.api import Appointment, BXAppointment
 from src.logger import logger
 from src.utils import BatchBuilder
@@ -53,6 +53,67 @@ async def update_appointment(id: int, appointment: Appointment, bt: BackgroundTa
     appointment.parse_last_comment(comment)
     bt.add_task(logger.debug, f"Appointment id={id} was updated.")
     return appointment
+
+
+@router.put('/massive/{id}', status_code=200)
+async def update_appointment_massive(id: int, template: Appointment):
+    """Массовый перенос занятий по шаблону"""
+
+    def get_date(raw_appointment):
+        return (
+            datetime.fromisoformat(raw_appointment.get('ufCrm3StartDate')).replace(tzinfo=Settings.TIMEZONE),
+            datetime.fromisoformat(raw_appointment.get('ufCrm3EndDate')).replace(tzinfo=Settings.TIMEZONE)
+        )
+    
+    new_start = datetime.fromisoformat(template.start)
+    new_end = datetime.fromisoformat(template.end)
+
+    aety = BXConstants.appointment.entityTypeId
+    data = await BitrixClient.get_crm_item(aety, id)
+    tstart, tend = get_date(data)
+    all_appointments = await BitrixClient.get_specialists_appointments(
+        tstart.replace(hour=0, minute=0, second=0).isoformat(),
+        (tstart + timedelta(days=365)).isoformat(),
+        (data.get('assignedById'), )
+    )
+    tpatient = data.get('ufCrm3Children')
+    tstatus = data.get('ufCrm3Status')
+    tcode = data.get('ufCrm3Code')
+    tdeal = data.get('ufCrm3Dealid')
+    tweekday = tstart.weekday()
+    tstart_time, tend_time = tstart.time(), tend.time()
+    start_delta, end_delta = new_start - tstart, new_end - tend
+    to_update = {}
+    builder = BatchBuilder('crm.item.update')
+    for raw_app in all_appointments:
+        # СУПЕР ГОВНОКОД ФИЛЬТРАЦИИ
+        if tpatient != raw_app.get('ufCrm3Children'):
+            continue
+        if tstatus != raw_app.get('ufCrm3Status'):
+            continue
+        if tcode != raw_app.get('ufCrm3Code'):
+            continue
+        if tdeal != raw_app.get('ufCrm3Dealid'):
+            continue
+        start, end = get_date(raw_app)
+        if tweekday != start.weekday():
+            continue
+        if tstart_time != start.time():
+            continue
+        if tend_time != end.time():
+            continue
+        # И наконец, мы получаем нужные занятия
+        fields = {
+            BXConstants.appointment.uf.specialist: template.specialist,
+            BXConstants.appointment.uf.patient: template.patient,
+            BXConstants.appointment.uf.start: (start + start_delta).isoformat(),
+            BXConstants.appointment.uf.end: (end + end_delta).isoformat()
+        }
+        raw_app_id = raw_app.get('id')
+        builder.params = {"entityTypeId": aety, 'id': raw_app_id, 'fields': fields}
+        to_update[raw_app_id] = builder.build()
+    await BitrixClient.init_bizporc(*to_update)
+    return await BitrixClient.call_batch(to_update)
 
 
 @router.put("/rollback/{id}", status_code=200)
