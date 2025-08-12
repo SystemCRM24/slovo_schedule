@@ -1,12 +1,18 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import CustomModal from "../ui/Modal/index.jsx";
-import { Alert, FormControl, FormSelect, InputGroup } from "react-bootstrap";
+import { Alert, FormControl, FormSelect, InputGroup, Form } from "react-bootstrap";
 
 import { AppContext } from "../../contexts/App/context.js";
 import { useAllSpecialistsContext } from "../../contexts/AllSpecialists/provider.jsx";
 import useSchedules from "../../hooks/useSchedules.js";
 import useSpecialist from "../../hooks/useSpecialist.js";
-import { getDateWithTime, getISODate, getTimeStringFromDate, isIntervalValid, isNewScheduleIntervalValid } from "../../utils/dates.js";
+import { 
+    getDateWithTime, 
+    getISODate, 
+    getTimeStringFromDate, 
+    isIntervalValid, 
+    isNewScheduleIntervalValid 
+} from "../../utils/dates.js";
 import apiClient from "../../api/index.js";
 
 const EditClientInfoModal = ({ id, show, setShow }) => {
@@ -216,7 +222,12 @@ const EditClientInfoModal = ({ id, show, setShow }) => {
     );
 
     const { reloadSchedule } = useContext(AppContext);
+    const [checkbox, setCheckbox] = useState(false);
+
+    const [isLoading, setIsLoading] = useState(false);
+
     const onSubmit = async () => {
+        setIsLoading(true);
         const currentSpecialistId = specialist.specialistId;
         const updatedAppointment = structuredClone(appointment);
         updatedAppointment.start = start;
@@ -228,9 +239,14 @@ const EditClientInfoModal = ({ id, show, setShow }) => {
             start: updatedAppointment.start,
             end: updatedAppointment.end,
             code: updatedAppointment.patient.type,
-            old_patient: updatedAppointment.old_patient
+            status: updatedAppointment.status,
         };
-        const result = await apiClient.updateAppointment(updatedAppointment.id, data);
+        if ( checkbox ) {
+            const result = await apiClient.updateAppointmentMassive(updatedAppointment.id, data);
+        } else {
+            const result = await apiClient.updateAppointment(updatedAppointment.id, data);
+        }
+        setIsLoading(false);
         setShow(false);
         reloadSchedule();
     };
@@ -296,7 +312,17 @@ const EditClientInfoModal = ({ id, show, setShow }) => {
                         </FormControl>
                     </InputGroup>
                 </div>
-                
+            <Form.Group className="me-0">
+                <Form.Check
+                    type="checkbox"
+                    label="Массовый перенос"
+                    checked={checkbox}
+                    onChange={e => setCheckbox(e.target.checked)}
+                />
+            </Form.Group>
+            <div className={'text-danger opacity-75'} hidden={!isLoading}>
+                Дождитесь окончания обработки запроса. По его завершению окно закроется автоматически.
+            </div>
             </div>
             <Alert 
                 variant="danger" 

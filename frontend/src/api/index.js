@@ -290,6 +290,20 @@ class APIClient {
         return response;
     }
 
+    async updateAppointmentMassive(id, data) {
+        const url = `${this.serverUrl}appointment/massive/${id}`;
+        const body = {
+            specialist: data.specialist,
+            patient: data.patient,
+            start: data.start.toISOString(),
+            end: data.end.toISOString(),
+            code: data.code,
+            status: data.status,
+        };
+        const response = await this.update(url, body);
+        return response;
+    }
+
     /**
      * Удаляет запись о приеме
      * @param {string} id - ид записи (Расписания)

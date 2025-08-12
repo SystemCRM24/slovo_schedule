@@ -274,14 +274,14 @@ const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
                         }
                     />
                 </InputGroup>
-                <Form.Group className="me-0">
+                {/* <Form.Group className="me-0">
                     <Form.Check
                         type="checkbox"
-                        label="Массовое добавление (на 48 недель)"
+                        label="Массовое редактирование"
                         checked={checkbox}
                         onChange={e => setCheckbox(e.target.checked)}
                     />
-                </Form.Group>
+                </Form.Group> */}
                 <Button variant={'danger'} onClick={handleDelete} disabled={!canDelete}>
                     Удалить рабочий промежуток
                 </Button>
