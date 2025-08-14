@@ -106,6 +106,7 @@ const Schedule = ({ }) => {
     const rows = useMemo(() => {
         const rows = [];
         let currentDate = new Date(fromDate);
+        const sortedSpecialistIds = Object.keys(specialists).sort((a, b) => specialists[a].sort_index - specialists[b].sort_index);
         while (currentDate <= toDate) {
             const row = [];
             const dayOfWeek = currentDate.toLocaleString('ru-RU', { weekday: 'long' });
@@ -119,7 +120,6 @@ const Schedule = ({ }) => {
                 </th>
             ));
             const scheduleDate = new Date(currentDate);
-            const sortedSpecialistIds = Object.keys(specialists).sort((a, b) => specialists[a].sort_index - specialists[b].sort_index);
             for (const specialistId of sortedSpecialistIds) {
                 const cell = (
                     <SpecialistContextProvider key={`${specialistId}_${date}_ctx`} specialist={specialistId}>
