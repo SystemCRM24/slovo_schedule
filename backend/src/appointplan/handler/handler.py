@@ -1,7 +1,7 @@
 import traceback
 import asyncio
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 
 from src.core import Settings, BitrixClient, BXConstants
 from src.logger import logger
@@ -18,6 +18,7 @@ class Handler:
 
     def __init__(self, request: str):
         self.request = request                          # Сырой запрос
+        self.preffered_time: list[time] = []            # Предпочитаемое время посещения 
         self.deal: Deal = None                          # Инфа по сделке
         self.users = [Settings.DEFAULT_USER]            # Cписок пользвателей, кому будет отправлены уведомления
         self.stages: list[Stage] = []                   # Стадии, занятия в которых нужно распланировать
@@ -56,7 +57,7 @@ class Handler:
         department = self.departments[app_set.type]
         set_qty = app_set.quantity
         start = stage.start
-        validator = AppointmentValidator(self.appointments)
+        validator = AppointmentValidator(self)
         while set_qty > 0:
             days = department.get_slots(start, app_set.duration)
             is_find = None
@@ -206,9 +207,23 @@ class Context:
 
     async def fill(self):
         self.data = json.loads(self.handler.request)
+        self.fill_preffered_time()
         self.fill_user_id()
         self.fill_stages()
         await asyncio.gather(self.fill_deal_info(), self.fill_departments_info())
+
+    @staticmethod
+    def _parse_time(time_string: str) -> time:
+        """Парсит строку и преобразует ее во объект времени"""
+        hour, minute = map(int, time_string.split(':'))
+        return time(hour=hour, minute=minute, tzinfo=Settings.TIMEZONE)
+    
+    def fill_preffered_time(self):
+        time_string: str = self.data.get('time', None)
+        if time_string is None:
+            return
+        parsed_time = map(self._parse_time, time_string.split(' - '))
+        self.handler.preffered_time.extend(parsed_time)
             
     def fill_user_id(self):
         """Заполняет обработчик инфой о пользвателе, которому нужно отправить сообщение."""
@@ -219,7 +234,9 @@ class Context:
     def fill_stages(self):
         """Заполняет обработчик стадиями. Фильтрует их и занятия внутри."""
         try:
-            start = datetime.fromisoformat(self.data.get('start_date', None))
+            date_string = self.data.get('start_date', None)
+            start = datetime.strptime(date_string, r"%d.%m.%Y %H:%M:%S")
+            start = start.replace(tzinfo=Settings.TIMEZONE)
         except ValueError:
             logger.warning("Failed to retrieve start_date from the request. Using tommorrow's date instead.")
             start = datetime.now(Settings.TIMEZONE) + timedelta(days=1)

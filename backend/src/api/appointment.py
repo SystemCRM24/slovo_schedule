@@ -42,7 +42,7 @@ async def get_appointment(id: int, bt: BackgroundTasks) -> BXAppointment:
 @router.put("/{id}", status_code=200)
 async def update_appointment(id: int, appointment: Appointment, bt: BackgroundTasks) -> BXAppointment:
     """Обновление элемента смарт-процесса расписание"""
-    await BitrixClient.init_bizporc(id)
+    await BitrixClient.fill_comment(id)
     aety = BXConstants.appointment.entityTypeId
     fields = appointment.to_bx()
     data, comment = await asyncio.gather(
@@ -52,6 +52,7 @@ async def update_appointment(id: int, appointment: Appointment, bt: BackgroundTa
     appointment: BXAppointment = BXAppointment.model_validate(data)
     appointment.parse_last_comment(comment)
     bt.add_task(logger.debug, f"Appointment id={id} was updated.")
+    asyncio.create_task(BitrixClient.run_abonnement_control(id))
     return appointment
 
 
@@ -112,8 +113,10 @@ async def update_appointment_massive(id: int, template: Appointment):
         raw_app_id = raw_app.get('id')
         builder.params = {"entityTypeId": aety, 'id': raw_app_id, 'fields': fields}
         to_update[raw_app_id] = builder.build()
-    await BitrixClient.init_bizporc(*to_update)
-    return await BitrixClient.call_batch(to_update)
+    await BitrixClient.fill_comment(*to_update)
+    result = await BitrixClient.call_batch(to_update)
+    asyncio.current_task(BitrixClient.run_abonnement_control(*to_update))
+    return result
 
 
 @router.put("/rollback/{id}", status_code=200)
@@ -141,6 +144,7 @@ async def rollback_appointment(id: int, bt: BackgroundTasks) -> BXAppointment:
         comment = comments.pop(0)
         await BitrixClient.delete_comment(comment)
         appointment.parse_last_comment(comments)
+    asyncio.create_task(BitrixClient.run_abonnement_control(id))
     return appointment
 
 

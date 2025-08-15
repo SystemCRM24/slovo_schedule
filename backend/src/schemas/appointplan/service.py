@@ -57,4 +57,4 @@ class BXAppointment(BaseModel):
         return Interval(self.start, self.end)
 
     def is_valid(self) -> bool:
-        return all((self.code, self.start, self.end, self.old_patient))
+        return all((self.code, self.start, self.end))

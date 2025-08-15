@@ -168,16 +168,26 @@ class BitrixClient:
         return await BITRIX.get_all("crm.item.list", params)
     
     @staticmethod
-    async def init_bizporc(*sp_ids):
+    async def fill_comment(*sp_ids):
         """Запускает бизнес-процесс для указанных элементов смарт-процесса - расписания"""
-        batches = {}
-        docs = ['crm', 'Bitrix\\Crm\\Integration\\BizProc\\Document\\Dynamic']
-        for smartp_id in sp_ids:
-            document_id = docs.copy()
-            document_id.append(f'DYNAMIC_{BXConstants.appointment.entityTypeId}_{smartp_id}')
-            params = {'TEMPLATE_ID': 60, 'DOCUMENT_ID': document_id}
-            batches[smartp_id] = await BITRIX.call('bizproc.workflow.start', params)
-        return batches
+        for sp_id in sp_ids:
+            await BitrixClient.run_business_porcess(60, sp_id)
+    
+    @staticmethod
+    async def run_abonnement_control(*sp_ids):
+        """Запускает бизнес-процесс для контроля списаний с абонемента."""
+        for sp_id in sp_ids:
+            await BitrixClient.run_business_porcess(57, sp_id)
+    
+    @staticmethod
+    async def run_business_porcess(bp_id, sp_id):
+        docs = [
+            'crm',
+            'Bitrix\\Crm\\Integration\\BizProc\\Document\\Dynamic',
+            f'DYNAMIC_{BXConstants.appointment.entityTypeId}_{sp_id}'
+        ]
+        params = {'TEMPLATE_ID': bp_id, 'DOCUMENT_ID': docs}
+        return await BITRIX.call('bizproc.workflow.start', params)
 
     @staticmethod
     async def add_comment_to_deal(deal_id: int, comment: str):

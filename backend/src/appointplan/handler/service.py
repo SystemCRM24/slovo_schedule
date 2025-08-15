@@ -1,5 +1,5 @@
 from typing import Generator
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta, datetime, time
 
 from src.schemas.api import BXSpecialist
 from src.schemas.appointplan import BXSchedule, BXAppointment
@@ -42,7 +42,7 @@ class Department:
     def __init__(self):
         self.specialists: list[Specialist] = []
     
-    def get_slots(self, start: datetime, set_duration: timedelta) -> list[DaySlots]:
+    def get_slots(self, start: datetime, set_duration: timedelta):
         """Выдает свободный слот"""
         start_date = start.date()
         dates = set()
@@ -63,7 +63,7 @@ class Department:
                         continue
                     slot_start = start if start > interval.start else interval.start
                     slot_end = slot_start + set_duration
-                    while slot_end < interval.end:
+                    while slot_end <= interval.end:
                         slot.intervals.append(Interval(slot_start, slot_end))
                         slot_start = slot_end
                         slot_end = slot_start + set_duration
@@ -122,10 +122,11 @@ class Specialist:
 class AppointmentValidator:
     """Валидирует возможное занятие"""
 
-    __slots__ = ('other', 'appointment')
+    __slots__ = ('other', 'appointment', 'preffered_time')
 
-    def __init__(self, other: list[BXAppointment]):
-        self.other = other
+    def __init__(self, handler):
+        self.other: list[BXAppointment] = handler.appointments
+        self.preffered_time: list[time] = handler.preffered_time
         self.appointment: BXAppointment = None
 
     def check(self, appointment: BXAppointment) -> bool:
@@ -136,10 +137,11 @@ class AppointmentValidator:
     def _validate(self) -> Generator[bool]:
         """Непосредственно, валидирует занятия."""
         # Если список пустой, то можно сразу True возвращать для всего. Сравнивать не с чем
+        yield self.check_appointment_type()
+        yield self.check_preffered_time()
         if len(self.other) == 0:
             yield True
             return
-        yield self.check_appointment_type()
         yield self.check_type_limit()
         yield self.check_day_limit()
         yield self.check_same_time()
@@ -147,6 +149,15 @@ class AppointmentValidator:
     
     def check_appointment_type(self) -> bool:
         return isinstance(self.appointment, BXAppointment)
+    
+    def check_preffered_time(self) -> bool:
+        if not self.preffered_time:
+            return True
+        preffered_start = self.preffered_time[0]
+        preffered_end = self.preffered_time[1]
+        appointment_start = self.appointment.start.time()
+        appointment_end = self.appointment.end.time()
+        return (preffered_start <= appointment_start) and (preffered_end >= appointment_end)
 
     def check_type_limit(self) -> bool:
         dct = {self.appointment.start.date(): {self.appointment.code: 1}}
@@ -190,5 +201,5 @@ class AppointmentValidator:
         if last.end.date() != self.appointment.end.date():
             return True
         break_duration = self.appointment.start - last.end
-        return break_duration < timedelta(minutes=45)
+        return break_duration <= timedelta(minutes=45)
         
