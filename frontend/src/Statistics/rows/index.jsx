@@ -29,7 +29,10 @@ function Rows({ dates, specialists }) {
             const result = [];
             let currentDate = new Date(dates.fromDate);
             while ( currentDate <= dates.toDate ) {
-                result.push(getRow(currentDate));
+                const dayOfWeek = currentDate.getDay();
+                if ( dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    result.push(getRow(currentDate));
+                }
                 currentDate = new Date(currentDate);
                 currentDate.setDate(currentDate.getDate() + 1);
             }

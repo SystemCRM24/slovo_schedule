@@ -108,29 +108,32 @@ const Schedule = ({ }) => {
         let currentDate = new Date(fromDate);
         const sortedSpecialistIds = Object.keys(specialists).sort((a, b) => specialists[a].sort_index - specialists[b].sort_index);
         while (currentDate <= toDate) {
-            const row = [];
-            const dayOfWeek = currentDate.toLocaleString('ru-RU', { weekday: 'long' });
-            const date = currentDate.toLocaleDateString();
-            row.push((
-                <th
-                    key={date}
-                    style={{ minHeight: '100px', height: 'auto' }}
-                >
-                    {dayOfWeek}<br />{date}
-                </th>
-            ));
-            const scheduleDate = new Date(currentDate);
-            for (const specialistId of sortedSpecialistIds) {
-                const cell = (
-                    <SpecialistContextProvider key={`${specialistId}_${date}_ctx`} specialist={specialistId}>
-                        <DayContextProvider day={scheduleDate} key={`${date}_ctx`}>
-                            <DaySchedule key={`${specialistId}_${date}_schedule`} />
-                        </DayContextProvider>
-                    </SpecialistContextProvider>
-                );
-                row.push(cell);
+            const dayNumber = currentDate.getDay();
+            if ( dayNumber !== 0 && dayNumber !== 6 ) {
+                const row = [];
+                const dayOfWeek = currentDate.toLocaleString('ru-RU', { weekday: 'long' });
+                const date = currentDate.toLocaleDateString();
+                row.push((
+                    <th
+                        key={date}
+                        style={{ minHeight: '100px', height: 'auto' }}
+                    >
+                        {dayOfWeek}<br />{date}
+                    </th>
+                ));
+                const scheduleDate = new Date(currentDate);
+                for (const specialistId of sortedSpecialistIds) {
+                    const cell = (
+                        <SpecialistContextProvider key={`${specialistId}_${date}_ctx`} specialist={specialistId}>
+                            <DayContextProvider day={scheduleDate} key={`${date}_ctx`}>
+                                <DaySchedule key={`${specialistId}_${date}_schedule`} />
+                            </DayContextProvider>
+                        </SpecialistContextProvider>
+                    );
+                    row.push(cell);
+                }
+                rows.push(<tr key={`row_${date}`}>{row}</tr>);
             }
-            rows.push(<tr key={`row_${date}`}>{row}</tr>);
             currentDate.setDate(currentDate.getDate() + 1);
         }
         return rows;
@@ -140,11 +143,7 @@ const Schedule = ({ }) => {
         <Suspense fallback={<Spinner animation={"grow"} />}>
             <AllSpecialistsContextProvider specialists={specialists}>
                 <ChildrenContextProvider childrenElements={children}>
-                    <Table
-                        id='schedule-table'
-                        bordered
-                        responsive
-                    >
+                    <Table id='schedule-table' bordered responsive>
                         <thead>
                             <tr>
                                 <th class="sticky-corner" scope="col" />
