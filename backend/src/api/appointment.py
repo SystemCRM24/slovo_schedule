@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import asyncio
 
 from src.core import BitrixClient, BXConstants, Settings
-from src.schemas.api import Appointment, BXAppointment
+from src.schemas.api import Appointment, BXAppointment, AbonnementCancelDate
 from src.logger import logger
 from src.utils import BatchBuilder
 
@@ -53,6 +53,23 @@ async def update_appointment(id: int, appointment: Appointment, bt: BackgroundTa
     appointment.parse_last_comment(comment)
     bt.add_task(logger.debug, f"Appointment id={id} was updated.")
     asyncio.create_task(BitrixClient.run_abonnement_control(id))
+    return appointment
+
+
+@router.put('/cancel_abonnement/{id}', status_code=200)
+async def cancel_abonnement(
+    id: int, 
+    cancel_date: AbonnementCancelDate, 
+    bt: BackgroundTasks
+) -> BXAppointment:
+    fields = {BXConstants.appointment.uf.abonnement: cancel_date.date}
+    data, comment = await asyncio.gather(
+        BitrixClient.update_crm_item(BXConstants.appointment.entityTypeId, id, fields),
+        BitrixClient.get_comments_list(id)
+    )
+    appointment: BXAppointment = BXAppointment.model_validate(data)
+    appointment.parse_last_comment(comment)
+    bt.add_task(logger.debug, f"Appointment id={id} cancel date was updated")
     return appointment
 
 

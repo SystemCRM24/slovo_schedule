@@ -9,6 +9,7 @@ class appointment:
         code = "ufCrm3Code"
         status = "ufCrm3Status"
         deal_id = "ufCrm3Dealid"
+        abonnement = "ufCrm3_1755268035495"   # ПО факту, дата отмены абонемента.
 
     class lfv:          # Обновится при запуске приложения
         idByCode = {}   # {"L": "52"}

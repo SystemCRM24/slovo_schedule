@@ -42,6 +42,7 @@ class BXAppointment(BaseModel):
     end: str | None = Field(validation_alias=BXConstants.appointment.uf.end)
     code: str | None = Field(validation_alias=BXConstants.appointment.uf.code)
     status: str | None = Field(validation_alias=BXConstants.appointment.uf.status)
+    abonnement: str | None = Field(validation_alias=BXConstants.appointment.uf.abonnement)
 
     # Значения для истории
     old_specialist: int | None = None
@@ -113,3 +114,7 @@ class BXAppointment(BaseModel):
         template = r'%d.%m.%Y %H:%M:%S'
         date_obj = datetime.strptime(date, template).replace(tzinfo=Settings.TIMEZONE)
         return date_obj.isoformat()
+
+
+class AbonnementCancelDate(BaseModel):
+    date: str

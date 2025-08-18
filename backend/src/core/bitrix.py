@@ -1,9 +1,10 @@
 from typing import Iterable
 from fast_bitrix24 import BitrixAsync
-# from aiocache import cached
+from aiocache import cached
 
 from .settings import Settings
 from .bxconstants import BXConstants
+from src.schemas.api import BXSpecialist
 from src.utils import BatchBuilder
 
 
@@ -90,7 +91,8 @@ class BitrixClient:
 
     # Методы для фронта
     @staticmethod
-    async def get_all_specialist() -> list[dict]:
+    @cached(ttl=60*60, namespace="bx_dpecialists")
+    async def get_all_specialist() -> list[BXSpecialist]:
         params = {
             '@UF_DEPARTMENT': list(BXConstants.departments.keys()),
             'ACTIVE': 'Y',
@@ -98,7 +100,7 @@ class BitrixClient:
             'ORDER': 'asc'
         }
         result = await BITRIX.call('user.get', params, raw=True)
-        return result['result']
+        return [BXSpecialist.model_validate(s) for s in result['result']]
     
     @staticmethod
     async def get_all_clients() -> list[dict]:
