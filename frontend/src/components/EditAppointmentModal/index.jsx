@@ -217,6 +217,52 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
         [schedule, startDt, endDt]
     );
 
+    // Тута все про списание абонемента
+
+    
+
+    const cancallable = useMemo(
+        () => {
+            let result = true;
+            for ( const item of schedule ) {
+                if ( item.id === id && item.abonnement ) {
+                    result = false;
+                    break
+                }
+            }
+            return result;
+        },
+        [schedule, id]
+    );
+
+    const [showCancelInput, setShowCancelInput] = useState(false);
+
+    const [cancelDate, setCancelDate] = useState();
+
+    const onCancelDateChange = useCallback(
+        (e) => {
+            let value = e.target.value;
+            if ( value ) {
+                value = new Date(value);
+            }
+            setCancelDate(value);
+        },
+        [setCancelDate]
+    );
+
+    const onCancelBtnClick = async () => {
+        const result = await apiClient.cancelAnonnement(id, cancelDate);
+        const newGeneralSchedule = structuredClone(generalSchedule);
+        const appointments = newGeneralSchedule[specialistId][day];
+        for ( const appointment of appointments ) {
+            if ( appointment.id === id ) {
+                appointment.abonnement = result.abonnement;
+                break;
+            }
+        }
+        setGeneralSchedule(newGeneralSchedule);
+    }
+
     return (
         <CustomModal
             show={show}
@@ -314,6 +360,31 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                 </Alert>
                 <Alert variant="danger" show={status == 'overlap'}>Занятие накладывается на другое занятие</Alert>
             </div>
+            {cancallable && (
+                <div className="d-flex gap-2">
+                    <Button variant="warning" onClick={() => setShowCancelInput(!showCancelInput)}>
+                        Списать абонемент
+                    </Button>
+                    <Form hidden={!showCancelInput}>
+                        <div className="d-flex gap-2">
+                            <Form.Control
+                                type='datetime-local'
+                                name='fromDate'
+                                id='fromDate'
+                                required
+                                onChange={onCancelDateChange}
+                            />
+                            <Button 
+                                variant='success' 
+                                disabled={!cancelDate}
+                                onClick={onCancelBtnClick}
+                            >
+                                Списать
+                            </Button>
+                        </div>
+                    </Form>
+                </div>
+            )}
             <div className="d-flex align-items-center w-100 h-100 gap-2 mt-3">
                 <Button
                     variant="warning"

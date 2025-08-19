@@ -3,7 +3,8 @@ import StatisticsContext from "./context";
 
 
 class Point{
-    constructor() {
+    constructor(specialist) {
+        this.specialist = specialist;
         this.scheduleDuration = 0;
         this.appointmentDuration = 0;
     }
@@ -34,11 +35,11 @@ export function StatisticsContextProvider({ children, schedules, appointments })
                             duration += interval.end.getTime() - interval.start.getTime();
                         }
                         // Обновляем Тоталс
-                        const specDataTotal = totals[specialist] ??= new Point();
+                        const specDataTotal = totals[specialist] ??= new Point(specialist);
                         specDataTotal.scheduleDuration += duration;
                         // Обновляем байДейс
                         const specDataByDays = byDays[specialist] ??= {};
-                        const dayData = specDataByDays[date] ??= new Point();
+                        const dayData = specDataByDays[date] ??= new Point(specialist);
                         dayData.scheduleDuration += duration;
                     }
                 }
@@ -50,11 +51,11 @@ export function StatisticsContextProvider({ children, schedules, appointments })
                             duration += appointment.end.getTime() - appointment.start.getTime();
                         }
                         // Обновляем Тоталс
-                        const specDataTotal = totals[specialist] ??= new Point();
+                        const specDataTotal = totals[specialist] ??= new Point(specialist);
                         specDataTotal.appointmentDuration += duration;
                         // Обновляем байДейс
                         const specDataByDays = byDays[specialist] ??= {};
-                        const dayData = specDataByDays[date] ??= new Point();
+                        const dayData = specDataByDays[date] ??= new Point(specialist);
                         dayData.appointmentDuration += duration;
                     }
                 }

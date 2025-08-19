@@ -30,3 +30,7 @@
 .status-skip, .status-overlap {
     background-color: #eb533c;
 }
+
+.status-cancel {
+    background-color: rgb(165, 95, 19);
+}

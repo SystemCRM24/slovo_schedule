@@ -50,6 +50,7 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
                     if ( status !== null ) {
                         return status;
                     }
+                    console.log(item);
                     status = item.status === 'Единичное' ? 'single' : 'multiple';
                     const isSpecialistChanged = item.old_specialist != specialistId;
                     const isPatientChanged = item.old_patient != item.patient.id;
@@ -59,6 +60,9 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
                     const isStatusChanged = item.status != item.old_status;
                     if (isSpecialistChanged || isPatientChanged || isStartChanged || isEndChanged || isCodeChanged || isStatusChanged) {
                         status = 'replace';
+                    }
+                    if ( item.abonnement ) {
+                        status = 'cancel';
                     }
                     let isOffSchedule = true;
                     for ( const interval of workSchedule.intervals ) {
@@ -127,7 +131,7 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
             {intervalStatus === "free" &&
                 <EditWorkScheduleModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt} />
             }
-            {(["single", 'multiple', 'skip', 'replace', 'overlap'].includes(intervalStatus) &&
+            {(["single", 'multiple', 'skip', 'replace', 'overlap', 'cancel'].includes(intervalStatus) &&
                 <>
                     <EditAppointmentModal
                         id={id}

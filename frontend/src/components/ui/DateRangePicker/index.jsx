@@ -41,7 +41,9 @@ const DateRangePicker = () => {
         () => {
             if ( start && end ) {
                 if ( start >= end ) {
-                    setEnd(start);
+                    const date = new Date(start);
+                    date.setHours(23, 59, 59, 999);
+                    setEnd(date);
                 }
             }
         },
@@ -53,6 +55,17 @@ const DateRangePicker = () => {
         e.preventDefault();
         setDates({fromDate: start, toDate: end});
     }
+
+    const onChangeSetEnd = useCallback(
+        (e) => {
+            let value = e.target.valueAsDate;
+            if ( value ) {
+                value.setHours(23, 59, 59, 999);
+            }
+            setEnd(value);
+        },
+        [setEnd]
+    );
 
     return (
         <Form onSubmit={onSubmit}>
@@ -72,16 +85,15 @@ const DateRangePicker = () => {
                     <label htmlFor="toDate" className={'mb-1'}>До:</label>
                     <Form.Control
                         type='date'
-                        name='fromDate'
-                        id='fromDate'
+                        name='toDate'
+                        id='toDate'
                         required
                         value={endISO}
-                        onChange={e => setEnd(e.target.valueAsDate)}
+                        onChange={onChangeSetEnd}
                     />
                 </div>
                 <Button variant='success' type='submit'>Принять</Button>
             </div>
-
         </Form>
     );
 };

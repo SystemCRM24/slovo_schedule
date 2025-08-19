@@ -140,7 +140,7 @@ class APIClient {
      */
     async getSchedules(from, to) {
         const endOfTo = new Date(to);
-        endOfTo.setDate(endOfTo.getDate() + 1)
+        console.log('[DEBUG]', from, to);
         const url = this.getUrl('get_schedules', {start: from.toISOString(), end: endOfTo.toISOString()});
         const response = await this.get(url);
         const data = {};
@@ -155,11 +155,9 @@ class APIClient {
                 id: appointment.id,
                 start,
                 end,
-                patient: {
-                    id: appointment.patient, 
-                    type: appointment.code
-                },
+                patient: {id: appointment.patient, type: appointment.code},
                 status: appointment.status,
+                abonnement: appointment.abonnement,
                 old_specialist: appointment.old_specialist,
                 old_start: appointment.old_start !== null ? new Date(appointment.old_start) : null,
                 old_end: appointment.old_end !== null ? new Date(appointment.old_end) : null,
@@ -450,6 +448,14 @@ class APIClient {
         if ( idByCode ) {
             constants.listFieldValues.appointment.idByCode = idByCode;
         }
+    }
+
+    async cancelAnonnement(id, date) {
+        const url = `${this.serverUrl}appointment/cancel_abonnement/${id}`;
+        const params = {date: date.toISOString()}
+        const response = await this.update(url, params);
+        console.log(response);
+        return response;
     }
 }
 
