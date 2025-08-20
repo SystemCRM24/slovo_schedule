@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import CustomModal from "../ui/Modal";
-import { Button, FormControl, FormSelect, InputGroup, Alert, Form, Fade } from "react-bootstrap";
+import { Button, FormControl, FormSelect, InputGroup, Alert, Form } from "react-bootstrap";
 
 import { useDayContext } from "../../contexts/Day/provider";
 import useSchedules from "../../hooks/useSchedules";
@@ -363,7 +363,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
             {cancallable && (
                 <div className="d-flex gap-2">
                     <Button variant="warning" onClick={() => setShowCancelInput(!showCancelInput)}>
-                        Списать абонемент
+                        Отмена абонемента
                     </Button>
                     <Form hidden={!showCancelInput}>
                         <div className="d-flex gap-2">
@@ -379,7 +379,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                                 disabled={!cancelDate}
                                 onClick={onCancelBtnClick}
                             >
-                                Списать
+                                Применить
                             </Button>
                         </div>
                     </Form>
