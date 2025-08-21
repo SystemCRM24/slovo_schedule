@@ -142,7 +142,7 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
             {intervalStatus === "na" &&
                 <EditNAIntervalModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt} />
             }
-            {intervalStatus === "free" || intervalStatus === 'free-overlap' &&
+            {(intervalStatus === "free" || intervalStatus === 'free-overlap') &&
                 <EditWorkScheduleModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt} />
             }
             {(["single", 'multiple', 'skip', 'replace', 'overlap', 'cancel'].includes(intervalStatus) &&
