@@ -27,7 +27,7 @@
     background-color: yellow;
 }
 
-.status-skip, .status-overlap {
+.status-skip, .status-overlap, .status-free-overlap {
     background-color: #eb533c;
 }
 

@@ -55,7 +55,6 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
         (async () => {
             if (checkbox) {
                 await apiClient.deleteAppointmentMassive(id);
-
             } else {
                 await apiClient.deleteAppointment(id);
             }

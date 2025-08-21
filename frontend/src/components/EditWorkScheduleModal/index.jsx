@@ -274,20 +274,21 @@ const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
                         }
                     />
                 </InputGroup>
-                {/* <Form.Group className="me-0">
-                    <Form.Check
-                        type="checkbox"
-                        label="Массовое редактирование"
-                        checked={checkbox}
-                        onChange={e => setCheckbox(e.target.checked)}
-                    />
-                </Form.Group> */}
-                <Button variant={'danger'} onClick={handleDelete} disabled={!canDelete}>
+                <Button 
+                    variant={'danger'} 
+                    onClick={handleDelete} 
+                    // disabled={!canDelete}
+                >
                     Удалить рабочий промежуток
                 </Button>
-                {
-                    !canDelete && <div className={'text-danger opacity-50'}>
+                {!canDelete && 
+                    <div className={'text-danger opacity-50'}>
                         Удалите или перенесите занятия внутри рабочего промежутка для его удаления
+                    </div>
+                }
+                {(!isIntervalValid(workInterval) || !isWorkScheduleValid)&& 
+                    <div className={'text-danger opacity-50'}>
+                        Промежутки рабочего времени наслаиваются друг на друга.
                     </div>
                 }
                 <Button variant={'success'} onClick={onAddButtonClick}>Добавить занятие</Button>

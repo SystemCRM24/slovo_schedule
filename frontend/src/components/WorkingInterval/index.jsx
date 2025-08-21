@@ -32,6 +32,21 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
     const intervalStatus = useMemo(
         () => {
             if ( status === 'free' ) {
+                if ( workSchedule.intervals.length > 1 ) {
+                    let isOverlap = false;
+                    for ( let i = 1; i < workSchedule.intervals.length; i++) {
+                        const prev = workSchedule.intervals[i-1];
+                        const current = workSchedule.intervals[i];
+                        if ( current.start.getTime() <= prev.end.getTime() ) {
+                            isOverlap = true;
+                            break;
+                        }
+                    }
+                    if ( isOverlap ) {
+                        console.log('[DEBUG]', id, workSchedule);
+                        return 'free-overlap';
+                    }
+                }
                 return status;
             }
             if ( id && schedule.length > 0 ) {
@@ -50,7 +65,6 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
                     if ( status !== null ) {
                         return status;
                     }
-                    console.log(item);
                     status = item.status === 'Единичное' ? 'single' : 'multiple';
                     const isSpecialistChanged = item.old_specialist != specialistId;
                     const isPatientChanged = item.old_patient != item.patient.id;
@@ -128,7 +142,7 @@ const WorkingInterval = ({ id, startDt, endDt, percentOfWorkingDay, status, pati
             {intervalStatus === "na" &&
                 <EditNAIntervalModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt} />
             }
-            {intervalStatus === "free" &&
+            {intervalStatus === "free" || intervalStatus === 'free-overlap' &&
                 <EditWorkScheduleModal show={showModal} setShow={setShowModal} startDt={startDt} endDt={endDt} />
             }
             {(["single", 'multiple', 'skip', 'replace', 'overlap', 'cancel'].includes(intervalStatus) &&
