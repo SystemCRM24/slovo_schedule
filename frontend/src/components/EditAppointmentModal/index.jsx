@@ -360,12 +360,12 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                 <Alert variant="danger" show={status == 'overlap'}>Занятие накладывается на другое занятие</Alert>
             </div>
             {cancallable && (
-                <div className="d-flex gap-2">
+                <div className="d-flex gap-2 mt-3">
                     <Button variant="warning" onClick={() => setShowCancelInput(!showCancelInput)}>
-                        Отмена абонемента
+                        Отмена занятия
                     </Button>
                     <Form hidden={!showCancelInput}>
-                        <div className="d-flex gap-2">
+                        <div className="d-flex gap-2 ">
                             <Form.Control
                                 type='datetime-local'
                                 name='fromDate'

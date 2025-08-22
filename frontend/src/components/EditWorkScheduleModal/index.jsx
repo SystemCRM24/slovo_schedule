@@ -14,6 +14,8 @@ import { useChildrenContext } from "../../contexts/Children/provider.jsx";
 import apiClient, { constants } from "../../api/index.js";
 import AutoCompleteInput from "../../components/ui/AutoCompleteInput/index.jsx";
 import { AppContext } from '../../contexts/App/context.js';
+import { Right, Left} from './icons.jsx';
+
 
 
 const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
@@ -232,6 +234,8 @@ const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
 
     const [checkbox, setCheckbox] = useState(false);
 
+    const [showTimeInput, setShowTimeInput] = useState(false);
+
     return (
         <CustomModal
             show={show}
@@ -243,37 +247,54 @@ const EditWorkScheduleModal = ({ show, setShow, startDt, endDt }) => {
             primaryBtnDisabled={!areNewSchedulesValid || !isWorkScheduleValid || loading}
         >
             <div className="d-flex flex-column align-items-center justify-content-center w-100 h-100 gap-2">
-                <InputGroup hasValidation>
-                    <FormControl
-                        type={'time'}
-                        key={`${date}_interval_${realIntervalIndex}_start`}
-                        value={getTimeStringFromDate(workInterval.start)}
-                        name={'start'}
-                        onChange={handleIntervalChange}
-                        style={{ textAlign: "center" }}
-                        required
-                        isInvalid={
-                            !workInterval.start || !isWorkScheduleValid
+                <div className="d-flex gap-2 flex-end mb-4" style={{width: '100%'}}>
+                    <div 
+                        className="d-flex align-items-center justify-content-center" 
+                        style={{width: '100%'}}
+                    >
+                        {showTimeInput && 
+                            <>
+                                <InputGroup hasValidation>
+                                    <FormControl
+                                        type={'time'}
+                                        key={`${date}_interval_${realIntervalIndex}_start`}
+                                        value={getTimeStringFromDate(workInterval.start)}
+                                        name={'start'}
+                                        onChange={handleIntervalChange}
+                                        style={{ textAlign: "center" }}
+                                        required
+                                        isInvalid={
+                                            !workInterval.start || !isWorkScheduleValid
+                                        }
+                                    />
+                                </InputGroup>
+                                <span>-</span>
+                                <InputGroup hasValidation>
+                                    <FormControl
+                                        type={'time'}
+                                        key={`${date}_interval_${realIntervalIndex}_end`}
+                                        value={getTimeStringFromDate(workInterval.end)}
+                                        name={'end'}
+                                        onChange={handleIntervalChange}
+                                        style={{ textAlign: "center", }}
+                                        disabled={!workInterval.start}
+                                        min={getTimeStringFromDate(workInterval.start)}
+                                        required
+                                        isInvalid={
+                                            workInterval.start !== undefined && (!isIntervalValid(workInterval) || !isWorkScheduleValid)
+                                        }
+                                    />
+                                </InputGroup>
+                            </>
                         }
-                    />
-                </InputGroup>
-                <span>-</span>
-                <InputGroup hasValidation className={'mb-4'}>
-                    <FormControl
-                        type={'time'}
-                        key={`${date}_interval_${realIntervalIndex}_end`}
-                        value={getTimeStringFromDate(workInterval.end)}
-                        name={'end'}
-                        onChange={handleIntervalChange}
-                        style={{ textAlign: "center", }}
-                        disabled={!workInterval.start}
-                        min={getTimeStringFromDate(workInterval.start)}
-                        required
-                        isInvalid={
-                            workInterval.start !== undefined && (!isIntervalValid(workInterval) || !isWorkScheduleValid)
-                        }
-                    />
-                </InputGroup>
+                    </div>
+                    <Button
+                        variant='warning'
+                        onClick={() => setShowTimeInput(!showTimeInput)}
+                    >
+                        {showTimeInput ? <Right/> : <Left/>}
+                    </Button>
+                </div>
                 <Button 
                     variant={'danger'} 
                     onClick={handleDelete} 
