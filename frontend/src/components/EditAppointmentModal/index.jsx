@@ -217,8 +217,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
     );
 
     // Тута все про списание абонемента
-
-    
+    const [showCancelInput, setShowCancelInput] = useState(false);
 
     const cancallable = useMemo(
         () => {
@@ -234,8 +233,6 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
         [schedule, id]
     );
 
-    const [showCancelInput, setShowCancelInput] = useState(false);
-
     const [cancelDate, setCancelDate] = useState();
 
     const onCancelDateChange = useCallback(
@@ -250,7 +247,15 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
     );
 
     const onCancelBtnClick = async () => {
-        const result = await apiClient.cancelAnonnement(id, cancelDate);
+        console.log(cancelDate);
+        let date = cancelDate;
+        if ( !date ) {
+            date = "";
+        } 
+        const result = await apiClient.cancelAnonnement(id, date);
+        if ( result.abonnement === 'N' ) {
+            result.abonnement = "";
+        }
         const newGeneralSchedule = structuredClone(generalSchedule);
         const appointments = newGeneralSchedule[specialistId][day];
         for ( const appointment of appointments ) {
@@ -260,6 +265,8 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
             }
         }
         setGeneralSchedule(newGeneralSchedule);
+        setCancelDate(undefined);
+        setShowCancelInput(false);
     }
 
     return (
@@ -359,31 +366,34 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                 </Alert>
                 <Alert variant="danger" show={status == 'overlap'}>Занятие накладывается на другое занятие</Alert>
             </div>
-            {cancallable && (
-                <div className="d-flex gap-2 mt-3">
-                    <Button variant="warning" onClick={() => setShowCancelInput(!showCancelInput)}>
-                        Отмена занятия
-                    </Button>
-                    <Form hidden={!showCancelInput}>
-                        <div className="d-flex gap-2 ">
-                            <Form.Control
-                                type='datetime-local'
-                                name='fromDate'
-                                id='fromDate'
-                                required
-                                onChange={onCancelDateChange}
-                            />
-                            <Button 
-                                variant='success' 
-                                disabled={!cancelDate}
-                                onClick={onCancelBtnClick}
-                            >
-                                Применить
-                            </Button>
-                        </div>
-                    </Form>
-                </div>
-            )}
+            <div className="d-flex gap-2 mt-3">
+                <Button variant="warning" onClick={() => setShowCancelInput(!showCancelInput)}>
+                    Отмена занятия
+                </Button>
+                {showCancelInput && (
+                    cancallable ?
+                        <Form>
+                            <div className="d-flex gap-2 ">
+                                <Form.Control
+                                    type='datetime-local'
+                                    name='fromDate'
+                                    id='fromDate'
+                                    required
+                                    onChange={onCancelDateChange}
+                                />
+                                <Button 
+                                    variant='success' 
+                                    disabled={!cancelDate}
+                                    onClick={onCancelBtnClick}
+                                >
+                                    Применить
+                                </Button>
+                            </div>
+                        </Form>
+                    :
+                    <Button variant='success' onClick={onCancelBtnClick}>Вернуть</Button>
+                )}
+            </div>
             <div className="d-flex align-items-center w-100 h-100 gap-2 mt-3">
                 <Button
                     variant="warning"

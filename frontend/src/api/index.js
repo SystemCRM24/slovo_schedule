@@ -452,9 +452,8 @@ class APIClient {
 
     async cancelAnonnement(id, date) {
         const url = `${this.serverUrl}appointment/cancel_abonnement/${id}`;
-        const params = {date: date.toISOString()}
+        const params = date ? {date: date.toISOString()} : {date: date}
         const response = await this.update(url, params);
-        console.log(response);
         return response;
     }
 }

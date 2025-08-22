@@ -70,6 +70,7 @@ async def cancel_abonnement(
     appointment: BXAppointment = BXAppointment.model_validate(data)
     appointment.parse_last_comment(comment)
     bt.add_task(logger.debug, f"Appointment id={id} cancel date was updated")
+    asyncio.create_task(BitrixClient.run_abonnement_control(id))
     return appointment
 
 
