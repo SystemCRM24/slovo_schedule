@@ -71,7 +71,7 @@ class BXAppointment(BaseModel):
     
     @field_validator('abonnement', mode='before')
     @classmethod
-    def status_validator(cls, value) -> str:
+    def abonnement_validator(cls, value) -> str:
         if value is None:
             return ""
         return value
