@@ -169,7 +169,7 @@ class Handler:
             BitrixClient.get_all_specialist(),
             BitrixClient.get_all_clients()
         )
-        specialists = {int(s.get('ID', '0')): s for s in specialists_lst}
+        specialists = {s.id: s for s in specialists_lst}
         patient = str(self.deal.patient)
         for c in patients_lst:
             if c.get('ID', '0') == patient:
@@ -184,7 +184,7 @@ class Handler:
             template = "[*] {0} - {1}, {2}, {3}, {4} минут."
             for app in self.appointments:
                 specialist = specialists[app.specialist]
-                spec_fio = specialist.get('LAST_NAME', '') + ' ' + specialist.get('NAME', '')[0]    # type:ignore
+                spec_fio = specialist.name                      # type:ignore
                 date = app.start.strftime(r'%d.%m.%Y %H:%M')    #type:ignore
                 duration = app.end - app.start                  #type:ignore
                 duration = int(duration.total_seconds() // 60)  #type:ignore

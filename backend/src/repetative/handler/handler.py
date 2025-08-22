@@ -90,12 +90,12 @@ class Handler:
         if not self.repetatives:
             return
         specialists = await BitrixClient.get_all_specialist()
-        specialist = str(self.data.specialist_id)
+        specialist = int(self.data.specialist_id)
         for spec in specialists:
-            if spec.get('ID', '0') == specialist:
+            if spec.id == specialist:
                 specialist = spec
                 break
-        spec_fio = specialist.get('LAST_NAME', '') + ' ' + specialist.get('NAME', '')[0]    # type:ignore
+        spec_fio = specialist.name    # type:ignore
         template = f"[*] {spec_fio} - {self.patient.full_name}, {self.data.code}, " + "{0}, {1} минут."
 
         def iterator():
