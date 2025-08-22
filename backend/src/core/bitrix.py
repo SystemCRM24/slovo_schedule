@@ -23,8 +23,21 @@ class BitrixClient:
     @staticmethod
     async def call_batch(cmd: dict) -> dict:
         """Делает батч запрос"""
-        return await BITRIX.call_batch(params={'halt': 0, 'cmd': cmd})
-
+        if len(cmd) <= 50:
+            return await BITRIX.call_batch(params={'halt': 0, 'cmd': cmd})
+        requests = []
+        dct = {}
+        for i, k in enumerate(cmd):
+            if i > 0 and i % 50 == 0:
+                requests.append(dct)
+                dct = {}
+            dct[k] = cmd[k]
+        if dct:
+            requests.append(dct)
+        result = {}
+        for request in requests:
+            result |= await BITRIX.call_batch({'halt': 0, 'cmd': request})
+        return result
 
     # Методы для CRUD-функционала
     @staticmethod
@@ -159,15 +172,33 @@ class BitrixClient:
     
     @staticmethod
     async def get_specialists_appointments(start, end, spec_ids) -> list[dict]:
-        params = {
-            "entityTypeId": BXConstants.appointment.entityTypeId,
-            'filter': {
-                f"@{BXConstants.appointment.uf.specialist}": spec_ids,
-                f">={BXConstants.appointment.uf.start}": start,
-                f"<={BXConstants.appointment.uf.end}": end,
+        def get_params(page=0): 
+            return {
+                "entityTypeId": BXConstants.appointment.entityTypeId,
+                'filter': {
+                    f"@{BXConstants.appointment.uf.specialist}": spec_ids,
+                    f">={BXConstants.appointment.uf.start}": start,
+                    f"<={BXConstants.appointment.uf.end}": end,
+                },
+                'order': {'id': 'ASC'},
+                'start': page
             }
-        }
-        return await BITRIX.get_all("crm.item.list", params)
+        
+        first_response = await BITRIX.call("crm.item.list", get_params(), raw=True)
+        result = first_response.get('result', {}).get('items', [])
+        next, total = len(result), first_response.get('total', 0)
+        batches = {}
+        builder = BatchBuilder("crm.item.list")
+        while next < total:
+            builder.params = get_params(next)
+            batches[next] = builder.build()
+            next += 50
+        if batches:
+            batch_response = await BitrixClient.call_batch(batches)
+            for v in batch_response.values():
+                items = v.get('items', [])
+                result.extend(items)
+        return result
     
     @staticmethod
     async def fill_comment(*sp_ids):
