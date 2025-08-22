@@ -68,6 +68,13 @@ class BXAppointment(BaseModel):
         if isinstance(value, int):
             return BXConstants.appointment.lfv.statusById.get(value, None)
         return None
+    
+    @field_validator('abonnement', mode='before')
+    @classmethod
+    def status_validator(cls, value) -> str:
+        if value is None:
+            return ""
+        return value
 
     def is_valid(self) -> bool:
         return all((self.code, self.start, self.end, self.specialist, self.patient))
