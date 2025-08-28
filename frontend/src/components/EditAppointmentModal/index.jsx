@@ -132,7 +132,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
         }
     };
 
-    const defaultSelectValues = useMemo(() => [15, 30, 45, 60, 90, 120, 130], []);
+    const defaultSelectValues = useMemo(() => [30, 40, 60, 90], []);
 
     const selectOptions = useMemo(() => {
         return defaultSelectValues.map((value) => (
