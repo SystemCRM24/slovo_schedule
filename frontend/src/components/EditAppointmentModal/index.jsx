@@ -269,6 +269,43 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
         setShowCancelInput(false);
     }
 
+    const cancelAppointmentWidget = useMemo(
+        () => {
+            if ( cancallable ) {
+                return (
+                    <>
+                        <Button variant="warning" onClick={() => setShowCancelInput(!showCancelInput)}>
+                            Отмена занятия
+                        </Button>
+                        {showCancelInput && 
+                            <Form>
+                                <div className="d-flex gap-2 ">
+                                    <Form.Control
+                                        type='datetime-local'
+                                        name='fromDate'
+                                        id='fromDate'
+                                        required
+                                        onChange={onCancelDateChange}
+                                    />
+                                    <Button 
+                                        variant='success' 
+                                        disabled={!cancelDate}
+                                        onClick={onCancelBtnClick}
+                                    >
+                                        Применить
+                                    </Button>
+                                </div>
+                            </Form>
+                        }
+                    </>
+                );
+            } else {
+                return <Button variant='success' onClick={onCancelBtnClick}>Вернуть занятие</Button>;
+            }
+        },
+        [cancallable, onCancelBtnClick, showCancelInput, setShowCancelInput, onCancelDateChange, cancelDate]
+    );
+
     return (
         <CustomModal
             show={show}
@@ -366,34 +403,7 @@ const EditAppointmentModal = ({ id, show, setShow, startDt, endDt, patientId, pa
                 </Alert>
                 <Alert variant="danger" show={status == 'overlap'}>Занятие накладывается на другое занятие</Alert>
             </div>
-            <div className="d-flex gap-2 mt-3">
-                <Button variant="warning" onClick={() => setShowCancelInput(!showCancelInput)}>
-                    Отмена занятия
-                </Button>
-                {showCancelInput && (
-                    cancallable ?
-                        <Form>
-                            <div className="d-flex gap-2 ">
-                                <Form.Control
-                                    type='datetime-local'
-                                    name='fromDate'
-                                    id='fromDate'
-                                    required
-                                    onChange={onCancelDateChange}
-                                />
-                                <Button 
-                                    variant='success' 
-                                    disabled={!cancelDate}
-                                    onClick={onCancelBtnClick}
-                                >
-                                    Применить
-                                </Button>
-                            </div>
-                        </Form>
-                    :
-                    <Button variant='success' onClick={onCancelBtnClick}>Вернуть</Button>
-                )}
-            </div>
+            <div className="d-flex gap-2 mt-3">{cancelAppointmentWidget}</div>
             <div className="d-flex align-items-center w-100 h-100 gap-2 mt-3">
                 <Button
                     variant="warning"
