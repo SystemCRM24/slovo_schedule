@@ -35,13 +35,14 @@ class BitrixClient:
             dct[k] = cmd[k]
         if dct:
             requests.append(dct)
-        result = {}
+        list_result, dict_result = [], {}
         for request in requests:
-            print('---multiple batch send---' + '-' * 50)
             middle_result = await BITRIX.call_batch({'halt': 0, 'cmd': request})
-            print(middle_result)
-            result |= middle_result
-        return result
+            if isinstance(middle_result, list):
+                list_result.extend(middle_result)
+            if isinstance(middle_result, dict):
+                dict_result |= middle_result
+        return list_result if list_result else dict_result
 
     # Методы для CRUD-функционала
     @staticmethod
