@@ -163,7 +163,7 @@ class BitrixClient:
         params = {
             "entityTypeId": BXConstants.schedule.entityTypeId,
             'filter': {
-                f"@{BXConstants.schedule.uf.specialist}": spec_ids,
+                f"@{BXConstants.schedule.uf.specialist}": list(spec_ids),
                 f">={BXConstants.schedule.uf.date}": start,
                 f"<={BXConstants.schedule.uf.date}": end,
             }
@@ -172,33 +172,15 @@ class BitrixClient:
     
     @staticmethod
     async def get_specialists_appointments(start, end, spec_ids) -> list[dict]:
-        def get_params(page=0): 
-            return {
-                "entityTypeId": BXConstants.appointment.entityTypeId,
-                'filter': {
-                    f"@{BXConstants.appointment.uf.specialist}": spec_ids,
-                    f">={BXConstants.appointment.uf.start}": start,
-                    f"<={BXConstants.appointment.uf.end}": end,
-                },
-                'order': {'id': 'ASC'},
-                'start': page
+        params = {
+            "entityTypeId": BXConstants.appointment.entityTypeId,
+            'filter': {
+                f"@{BXConstants.appointment.uf.specialist}": list(spec_ids),
+                f">={BXConstants.appointment.uf.start}": start,
+                f"<={BXConstants.appointment.uf.end}": end,
             }
-        
-        first_response = await BITRIX.call("crm.item.list", get_params(), raw=True)
-        result = first_response.get('result', {}).get('items', [])
-        next, total = len(result), first_response.get('total', 0)
-        batches = {}
-        builder = BatchBuilder("crm.item.list")
-        while next < total:
-            builder.params = get_params(next)
-            batches[next] = builder.build()
-            next += 50
-        if batches:
-            batch_response = await BitrixClient.call_batch(batches)
-            for v in batch_response.values():
-                items = v.get('items', [])
-                result.extend(items)
-        return result
+        }
+        return await BITRIX.get_all("crm.item.list", params)
     
     @staticmethod
     async def fill_comment(*sp_ids):

@@ -21,6 +21,9 @@ samples = parse_mock_data()
 def test_data(request, test_client):
     url = f'/test_repetative?data={request.param}'
     result = test_client.post(url).json()
+    print('-' * 20)
+    print(result)
+    print('-' * 20)
     yield result
 
 
