@@ -43,7 +43,8 @@ class Handler:
                 end = start + timedelta(minutes=self.data.duration)
                 if start in interval and end in interval:
                     appointment = self.build_appointment(start, end)
-                    self.repetatives.append(appointment)
+                    if repetative_qty:
+                        self.repetatives.append(appointment)
                     repetative_qty -= 1
         if repetative_qty > 0 or repetative_qty == -1:
             self.messages.append(f'{repetative_qty} занятий не было проставлено в расписание.')

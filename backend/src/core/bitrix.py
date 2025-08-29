@@ -12,6 +12,7 @@ BITRIX = BitrixAsync(Settings.BITRIX_WEBHOOK, verbose=False)
 
 
 class BitrixClient:
+    BATCH_SIZE = 50
 
     # Методы для приложения
     @staticmethod
@@ -23,12 +24,12 @@ class BitrixClient:
     @staticmethod
     async def call_batch(cmd: dict) -> dict:
         """Делает батч запрос"""
-        if len(cmd) <= 50:
+        if len(cmd) <= BitrixClient.BATCH_SIZE:
             return await BITRIX.call_batch(params={'halt': 0, 'cmd': cmd})
         requests = []
         dct = {}
         for i, k in enumerate(cmd):
-            if i > 0 and i % 50 == 0:
+            if i > 0 and i % BitrixClient.BATCH_SIZE == 0:
                 requests.append(dct)
                 dct = {}
             dct[k] = cmd[k]
@@ -36,7 +37,10 @@ class BitrixClient:
             requests.append(dct)
         result = {}
         for request in requests:
-            result |= await BITRIX.call_batch({'halt': 0, 'cmd': request})
+            print('---multiple batch send---' + '-' * 50)
+            middle_result = await BITRIX.call_batch({'halt': 0, 'cmd': request})
+            print(middle_result)
+            result |= middle_result
         return result
 
     # Методы для CRUD-функционала

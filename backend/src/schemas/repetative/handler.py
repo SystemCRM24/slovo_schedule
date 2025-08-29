@@ -25,7 +25,7 @@ class RequestSchema(BaseModel):
     @classmethod
     def parse_qty(cls, value: str) -> int:
         if not value:
-            value = '-1'
+            value = -1
         return int(value)
 
     @cached_property
