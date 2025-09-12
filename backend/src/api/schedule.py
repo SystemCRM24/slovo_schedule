@@ -15,7 +15,7 @@ router = APIRouter(prefix="/schedule")
 
 @router.post("/", status_code=201)
 async def create_schedule(schedule: Schedule, bt: BackgroundTasks) -> Schedule :
-    """Создание графика. Если указан query-massive = True, то создаются графики на 1 год."""
+    """Создание графика."""
     seti = BXConstants.schedule.entityTypeId
     fields = schedule.to_bx()
     data = await BitrixClient.create_crm_item(seti, fields)
