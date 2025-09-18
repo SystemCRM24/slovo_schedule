@@ -26,7 +26,9 @@ class BXSpecialist(BaseModel):
     @computed_field
     def name(self) -> str:
         """Возвращает полное имя"""
-        return f'{self.last_name.strip()} {self.first_name[0]}.'
+        last_name = self.last_name.strip() if self.last_name else ""
+        first_name = f' {self.first_name[0]}.' if self.first_name else ""
+        return f'{last_name}{first_name}'
 
 
 class BXClient(BaseModel):
