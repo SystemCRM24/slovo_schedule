@@ -19,7 +19,7 @@ function Headers({specialists}) {
                         key={`specialist_${s.id}_header`}
                     >   
                         <div className="d-flex justify-content-evenly align-items-center">
-                            <span>{s.name + '\n' + codes}</span>
+                            <span>{s.name}</span>
                             {stat !== null && <span>{stat}</span>}
                         </div>
                     </th>

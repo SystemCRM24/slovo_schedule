@@ -22,6 +22,13 @@ class BXSpecialist(BaseModel):
             if code is not None:
                 codes.append(code)
         return codes
+    
+    @field_validator('sort_index', mode='before')
+    @classmethod
+    def sort_index_validator(cls, value: int | None) -> int:
+        if not isinstance(value, int):
+            return 666_666_666
+        return int(value)
 
     @computed_field
     def name(self) -> str:

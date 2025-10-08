@@ -59,7 +59,7 @@ const Schedule = ({ }) => {
                     style={{ minWidth: '220px', whiteSpace: 'pre-wrap' }}
                     key={`specialist_${specialist.id}_header`}
                 >
-                    {specialist.name + '\n' + codes}
+                    {specialist.name}
                 </th>
             ));
         }

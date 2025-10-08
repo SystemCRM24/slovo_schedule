@@ -109,7 +109,6 @@ class BitrixClient:
 
     # Методы для фронта
     @staticmethod
-    @cached(ttl=60*60, namespace="bx_dpecialists")
     async def get_all_specialist() -> list[BXSpecialist]:
         params = {
             '@UF_DEPARTMENT': list(BXConstants.departments.keys()),

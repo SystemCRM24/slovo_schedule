@@ -25,6 +25,10 @@
     z-index: 99;
 }
 
+#schedule-table thead th {
+    height: 63px;
+}
+
 #schedule-table tbody th {
     left: -1px;
     z-index: 95;
