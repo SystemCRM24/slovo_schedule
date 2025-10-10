@@ -8,7 +8,7 @@ class BXSpecialist(BaseModel):
     first_name: str = Field(validation_alias='NAME', exclude=True)
     last_name: str = Field(validation_alias='LAST_NAME', exclude=True)
     departments: list[str] = Field(validation_alias='UF_DEPARTMENT')
-    sort_index: int = Field(validation_alias='UF_USR_1750081359137')
+    sort_index: int = Field(validation_alias='UF_USR_1750081359137', default=999_999_999)
 
     model_config = ConfigDict(extra='ignore')
 
@@ -22,13 +22,6 @@ class BXSpecialist(BaseModel):
             if code is not None:
                 codes.append(code)
         return codes
-    
-    @field_validator('sort_index', mode='before')
-    @classmethod
-    def sort_index_validator(cls, value: int | None) -> int:
-        if not isinstance(value, int):
-            return 666_666_666
-        return int(value)
 
     @computed_field
     def name(self) -> str:
