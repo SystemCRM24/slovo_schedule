@@ -155,6 +155,12 @@ class BitrixClient:
     async def get_deal_info(id: int) -> dict:
         response = await BITRIX.call('crm.deal.get', {'id': id}, raw=True)
         return response.get('result')
+    
+    @staticmethod
+    async def get_deal_info_universal(id: int) -> dict:
+        items = {'entityTypeId': 2, 'id': id}
+        response = await BITRIX.call('crm.item.get', items=items, raw=True)
+        return response
 
     @staticmethod
     async def get_specialists_by_department(names: Iterable) -> list[dict[str, str]]:

@@ -149,11 +149,12 @@ class Context:
 
     async def fill_patient(self):
         """Получает из сделки информацию по пациенту"""
+        deal = await BitrixClient.get_deal_info_universal(self.handler.data.deal_id)
+        logger.info(str(deal))
         deal = await BitrixClient.get_deal_info(self.handler.data.deal_id)
         clients = await BitrixClient.get_all_clients()
         patient = deal.get('CONTACT_ID', None)
         contacts = deal.get('CONTACT_IDS', None)
-        logger.info(str(deal))
         print('[DEBUG]')
         print(contacts)
         print('[DEBUG]')
