@@ -155,14 +155,12 @@ class Context:
         contacts = deal.get('contactIds', [])
         if isinstance(contacts, list):
             contacts_set.update(contacts)
-        
-        logger.info(f"{contacts = }")
-        logger.info(f"{contacts_set = }")
-
         if contacts_set:
             for client in clients:
                 client_id = client.get('ID', None)
-                if client_id in contacts_set:
-                    self.handler.patient = BXClient.model_validate(client)
-                    return
+                if isinstance(client_id, str) and client_id.isdigit():
+                    client_id = int(client_id)
+                    if client_id in contacts_set:
+                        self.handler.patient = BXClient.model_validate(client)
+                        return
         raise Exception('В сделке не установлен клиент или у клиента неподходящий тип')
