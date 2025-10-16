@@ -153,7 +153,7 @@ class Context:
         clients = await BitrixClient.get_all_clients()
         patient = deal.get('CONTACT_ID', None)
         contacts = deal.get('CONTACT_IDS', None)
-        logger.info(str(patient))
+        logger.info(str(contacts))
         print('[DEBUG]')
         print(contacts)
         print('[DEBUG]')
