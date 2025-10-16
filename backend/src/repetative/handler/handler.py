@@ -149,18 +149,16 @@ class Context:
 
     async def fill_patient(self):
         """Получает из сделки информацию по пациенту"""
-        deal = await BitrixClient.get_deal_info_universal(self.handler.data.deal_id)
-        logger.info(str(deal))
-        deal = await BitrixClient.get_deal_info(self.handler.data.deal_id)
         clients = await BitrixClient.get_all_clients()
-        patient = deal.get('CONTACT_ID', None)
-        contacts = deal.get('CONTACT_IDS', None)
-        print('[DEBUG]')
-        print(contacts)
-        print('[DEBUG]')
-        if patient:
+        deal = await BitrixClient.get_deal_info_universal(self.handler.data.deal_id)
+        contacts_set = set()
+        contacts = deal.get('contactIds', [])
+        if isinstance(contacts, list):
+            contacts_set.update(contacts)
+        if contacts_set:
             for client in clients:
-                if client.get('ID', None) == patient:
+                client_id = client.get('ID', None)
+                if client_id in contacts_set:
                     self.handler.patient = BXClient.model_validate(client)
                     return
         raise Exception('В сделке не установлен клиент или у клиента неподходящий тип')
