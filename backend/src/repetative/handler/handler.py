@@ -86,7 +86,8 @@ class Handler:
                 {'entityTypeId': BXConstants.appointment.entityTypeId, 'fields': appointment}
             )
             batches[index] = batch.build()
-        return await BitrixClient.call_batch(batches)
+        if batches:
+            return await BitrixClient.call_batch(batches)
     
     async def send_comment(self):
         """Создает коммент к сделке"""
