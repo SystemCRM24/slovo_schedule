@@ -36,6 +36,7 @@ class Handler:
     def create_repetatives(self):
         """Создает повторяющиеся занятия"""
         repetative_qty = self.data.qty
+        flag = True
         hour, minute = self.data.time
         for schedule in self.schedules:
             for interval in schedule.intervals:
@@ -45,10 +46,13 @@ class Handler:
                 end = start + timedelta(minutes=self.data.duration)
                 if start in interval and end in interval:
                     appointment = self.build_appointment(start, end)
-                    if repetative_qty > 0:
+                    if repetative_qty == 0:
+                        flag = False
+                    else:
+                        repetative_qty -= 1
+                    if flag:
                         self.repetatives.append(appointment)
-                    repetative_qty -= 1
-        if repetative_qty > 0 or repetative_qty == -1:
+        if repetative_qty > 0:
             self.messages.append(f'{repetative_qty} занятий не было проставлено в расписание.')
     
     def build_appointment(self, start: datetime, end: datetime) -> dict:
