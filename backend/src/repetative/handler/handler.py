@@ -155,6 +155,10 @@ class Context:
         contacts = deal.get('contactIds', [])
         if isinstance(contacts, list):
             contacts_set.update(contacts)
+        
+        logger.info(f"{contacts = }")
+        logger.info(f"{contacts_set = }")
+
         if contacts_set:
             for client in clients:
                 client_id = client.get('ID', None)
