@@ -43,7 +43,7 @@ class Handler:
                 end = start + timedelta(minutes=self.data.duration)
                 if start in interval and end in interval:
                     appointment = self.build_appointment(start, end)
-                    if repetative_qty:
+                    if repetative_qty > 0:
                         self.repetatives.append(appointment)
                     repetative_qty -= 1
         if repetative_qty > 0 or repetative_qty == -1:
@@ -145,6 +145,9 @@ class Context:
         deal = await BitrixClient.get_deal_info(self.handler.data.deal_id)
         clients = await BitrixClient.get_all_clients()
         patient = deal.get('CONTACT_ID', None)
+        print('[DEBUG]')
+        print(patient)
+        print('[DEBUG]')
         if patient:
             for client in clients:
                 if client.get('ID', None) == patient:
