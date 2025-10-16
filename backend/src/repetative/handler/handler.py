@@ -7,6 +7,8 @@ from src.schemas.repetative import RequestSchema
 from src.schemas.appointplan import BXSchedule
 from src.schemas.api import BXClient
 
+from src.logger import logger
+
 
 class Handler:
 
@@ -145,6 +147,7 @@ class Context:
         deal = await BitrixClient.get_deal_info(self.handler.data.deal_id)
         clients = await BitrixClient.get_all_clients()
         patient = deal.get('CONTACT_ID', None)
+        logger.info(str(patient))
         print('[DEBUG]')
         print(patient)
         print('[DEBUG]')
