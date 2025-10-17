@@ -38,6 +38,7 @@ class BitrixClient:
         list_result, dict_result = [], {}
         for request in requests:
             middle_result = await BITRIX.call_batch({'halt': 0, 'cmd': request})
+            print('[DEBUG]', middle_result)
             if isinstance(middle_result, list):
                 list_result.extend(middle_result)
             if isinstance(middle_result, dict):
