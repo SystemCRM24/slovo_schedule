@@ -35,7 +35,8 @@ async def get_schedules(query: QueryDateRange = Depends()) -> list[BXAppointment
     response = list(filter(lambda a: a.is_valid(), bx_appintments))
     comments = await BitrixClient.get_comments_from_appointments_by_id(a.id for a in response)
     # print('[DEBUG]', len(response), len(comments))
-    for appointment, comment in zip(response, comments):
+    comment_values = (v for v in comments.values())
+    for appointment, comment in zip(response, comment_values):
         appointment.parse_last_comment(comment)
     return response
 
