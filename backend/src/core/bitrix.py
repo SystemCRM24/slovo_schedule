@@ -1,6 +1,5 @@
 from typing import Iterable
 from fast_bitrix24 import BitrixAsync
-from aiocache import cached
 
 from .settings import Settings
 from .bxconstants import BXConstants
@@ -95,6 +94,15 @@ class BitrixClient:
         for i, id in enumerate(apps):
             builder.params = BitrixClient.get_comment_request_params(id)
             batches[i] = builder.build()
+        return await BitrixClient.call_batch(batches)
+    
+    @staticmethod
+    async def get_comments_from_appointments_by_id(apps):
+        batches = {}
+        builder = BatchBuilder('crm.timeline.comment.list')
+        for _id in apps:
+            builder.params = BitrixClient.get_comment_request_params(_id)
+            batches[_id] = builder.build()
         return await BitrixClient.call_batch(batches)
     
     @staticmethod
