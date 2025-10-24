@@ -7,6 +7,8 @@ x-app_environment: &app_env
     - VITE_API_URL
     - VITE_BASE_PATH
     - NODE_ENV
+    - FRONTEND_PORT
+    - BACKEND_PORT
 
 
 services:
@@ -15,7 +17,7 @@ services:
     build:
       context: frontend/.
     ports: 
-    - "8010:8010"
+    - "${FRONTEND_PORT}:8010"
     <<: *app_env
     command: sh -c "npm run build && npm install -g serve && serve -s dist -l 8010"
   
@@ -24,6 +26,6 @@ services:
     build:
       context: backend/.
     ports: 
-    - "8011:8000"
+    - "${BACKEND_PORT}:8000"
     <<: *app_env
     command: uv run uvicorn main:app --host 0.0.0.0 --port 8000
