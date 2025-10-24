@@ -12,7 +12,7 @@ from src.repetative import repetative_router
 
 from os import environ
 
-app = FastAPI(title="AppointPlan", description=description, root_path=environ.get("FASTAPI_ROOT_PATH", "/"))
+app = FastAPI(title="AppointPlan", description=description, root_path=environ.get("FASTAPI_ROOT_PATH", "/"), openapi_url=f'/schedule_api/openapi.json')
 
 app.add_middleware(
     CORSMiddleware,
