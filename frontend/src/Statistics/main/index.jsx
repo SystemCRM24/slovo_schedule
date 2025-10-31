@@ -31,6 +31,7 @@ function Statistics() {
             if (fromDate && toDate) {
                 setAppointments(null);
                 setSchedule(null);
+                setHolidays(null);
                 const [scheduleData, workScheduleData, holidaysData] = await Promise.all([
                     apiClient.getSchedules(fromDate, toDate),
                     apiClient.getWorkSchedules(fromDate, toDate),

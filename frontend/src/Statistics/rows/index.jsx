@@ -5,9 +5,7 @@ import { AppContext } from "../../contexts/App/context";
 function Rows({ dates, specialists }) {
 
     const { holidays } = useContext(AppContext);
-
-    console.log('[DEBUG - holidays]', holidays);
-
+    
     const getRow = useCallback(
         (day) => {
             const dayOfWeek = day.toLocaleString('ru-RU', { weekday: 'long' });
@@ -32,6 +30,9 @@ function Rows({ dates, specialists }) {
     const rows = useMemo(
         () => {
             const result = [];
+            if ( holidays === null ) {
+                return result;
+            }
             let currentDate = new Date(dates.fromDate);
             while ( currentDate <= dates.toDate ) {
                 const currentDateIso = currentDate.toISOString().split('T')[0];

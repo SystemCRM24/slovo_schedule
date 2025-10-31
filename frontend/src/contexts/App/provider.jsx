@@ -14,7 +14,7 @@ export const AppContextProvider = ({ children }) => {
     const increaseModalCount = () => setModalWindowCount(modalWindowCount + 1);
     const decreaseModalCount = () => setModalWindowCount(modalWindowCount - 1);
 
-    const [holidays, setHolidays] = useState(new Set());
+    const [holidays, setHolidays] = useState(null);
 
     return (
         <AppContext.Provider 

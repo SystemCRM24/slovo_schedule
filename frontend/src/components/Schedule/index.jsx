@@ -37,6 +37,7 @@ const Schedule = ({ }) => {
     useEffect(() => {
         (async () => {
             if (fromDate && toDate) {
+                setHolidays(null);
                 const [scheduleData, workScheduleData, holidaysData] = await Promise.all([
                     apiClient.getSchedules(fromDate, toDate),
                     apiClient.getWorkSchedules(fromDate, toDate),
@@ -70,6 +71,9 @@ const Schedule = ({ }) => {
 
     const rows = useMemo(() => {
         const rows = [];
+        if ( holidays === null ) {
+            return rows;
+        }
         let currentDate = new Date(fromDate);
         const sortedSpecialistIds = Object.keys(specialists).sort((a, b) => specialists[a].sort_index - specialists[b].sort_index);
         while (currentDate <= toDate) {
