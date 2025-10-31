@@ -5,6 +5,7 @@ from .settings import Settings
 from .bxconstants import BXConstants
 from src.schemas.api import BXSpecialist
 from src.utils import BatchBuilder
+from aiocache import cached
 
 
 BITRIX = BitrixAsync(Settings.BITRIX_WEBHOOK, verbose=False)
@@ -235,3 +236,11 @@ class BitrixClient:
             }
         }
         return await BITRIX.call('crm.timeline.comment.add', items)
+
+    @staticmethod
+    @cached(ttl=60*60, namespace="timeman")
+    async def get_production_calendar(id=3) -> dict:
+        """Метод для получения производственного календаря."""
+        items = {'id': id}
+        result = await BITRIX.call('timeman.schedule.get', items, raw=True)
+        return result.get('result', {})
