@@ -151,7 +151,7 @@ class APIClient {
      */
     async getSchedules(from, to) {
         const endOfTo = new Date(to);
-        console.log('[DEBUG]', from, to);
+        // console.log('[DEBUG]', from, to);
         const url = this.getUrl('get_schedules', {start: from.toISOString(), end: endOfTo.toISOString()});
         const response = await this.get(url);
         const data = {};
@@ -465,6 +465,15 @@ class APIClient {
         const url = `${this.serverUrl}appointment/cancel_abonnement/${id}`;
         const params = date ? {date: date.toISOString()} : {date: date}
         const response = await this.update(url, params);
+        return response;
+    }
+
+    async getHolidays(start, end) {
+        const uri = this.getUrl('get_holidays', {
+            start: start.toISOString().split('T')[0], 
+            end: end.toISOString().split('T')[0]
+        });
+        const response = await this.get(uri);
         return response;
     }
 }

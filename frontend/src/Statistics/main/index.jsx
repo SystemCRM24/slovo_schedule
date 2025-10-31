@@ -10,7 +10,7 @@ import Rows from "../rows";
 
 
 function Statistics() {
-    const { dates } = useContext(AppContext);
+    const { dates, setHolidays } = useContext(AppContext);
     const [specialists, setSpecialists] = useState(null);
     const [schedules, setSchedule] = useState(null);
     const [appointments, setAppointments] = useState(null);
@@ -31,12 +31,14 @@ function Statistics() {
             if (fromDate && toDate) {
                 setAppointments(null);
                 setSchedule(null);
-                const [scheduleData, workScheduleData] = await Promise.all([
+                const [scheduleData, workScheduleData, holidaysData] = await Promise.all([
                     apiClient.getSchedules(fromDate, toDate),
-                    apiClient.getWorkSchedules(fromDate, toDate)
+                    apiClient.getWorkSchedules(fromDate, toDate),
+                    apiClient.getHolidays(fromDate, toDate)
                 ]);
                 setAppointments(scheduleData);
                 setSchedule(workScheduleData);
+                setHolidays(new Set(holidaysData));
             }
         })();
     }, [dates, setSchedule, setAppointments]);

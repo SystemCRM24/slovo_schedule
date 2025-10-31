@@ -15,7 +15,7 @@ import "./Schedule.css"
 
 
 const Schedule = ({ }) => {
-    const { dates } = useContext(AppContext);
+    const { dates, holidays, setHolidays } = useContext(AppContext);
     const { fromDate, toDate } = dates;
     const [specialists, setSpecialists] = useState({});
     const [children, setChildren] = useState({});
@@ -37,12 +37,14 @@ const Schedule = ({ }) => {
     useEffect(() => {
         (async () => {
             if (fromDate && toDate) {
-                const [scheduleData, workScheduleData] = await Promise.all([
+                const [scheduleData, workScheduleData, holidaysData] = await Promise.all([
                     apiClient.getSchedules(fromDate, toDate),
-                    apiClient.getWorkSchedules(fromDate, toDate)
+                    apiClient.getWorkSchedules(fromDate, toDate),
+                    apiClient.getHolidays(fromDate, toDate)
                 ]);
                 setSchedule(scheduleData);
                 setWorkSchedule(workScheduleData);
+                setHolidays(new Set(holidaysData));
             }
         })();
     }, [fromDate, setSchedule, setWorkSchedule, toDate]);
@@ -71,8 +73,8 @@ const Schedule = ({ }) => {
         let currentDate = new Date(fromDate);
         const sortedSpecialistIds = Object.keys(specialists).sort((a, b) => specialists[a].sort_index - specialists[b].sort_index);
         while (currentDate <= toDate) {
-            const dayNumber = currentDate.getDay();
-            if ( dayNumber !== 0 && dayNumber !== 6 ) {
+            const currentDateIso = currentDate.toISOString().split('T')[0];
+            if ( !holidays.has(currentDateIso) ) {
                 const row = [];
                 const dayOfWeek = currentDate.toLocaleString('ru-RU', { weekday: 'long' });
                 const date = currentDate.toLocaleDateString();
@@ -100,7 +102,7 @@ const Schedule = ({ }) => {
             currentDate.setDate(currentDate.getDate() + 1);
         }
         return rows;
-    }, [fromDate, toDate, specialists]);
+    }, [fromDate, toDate, specialists, holidays]);
 
     return (fromDate && toDate) && (
         <Suspense fallback={<Spinner animation={"grow"} />}>

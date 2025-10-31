@@ -1,7 +1,12 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useContext, useMemo } from "react";
 import Cell from "../cell";
+import { AppContext } from "../../contexts/App/context";
 
 function Rows({ dates, specialists }) {
+
+    const { holidays } = useContext(AppContext);
+
+    console.log('[DEBUG - holidays]', holidays);
 
     const getRow = useCallback(
         (day) => {
@@ -29,8 +34,8 @@ function Rows({ dates, specialists }) {
             const result = [];
             let currentDate = new Date(dates.fromDate);
             while ( currentDate <= dates.toDate ) {
-                const dayOfWeek = currentDate.getDay();
-                if ( dayOfWeek !== 0 && dayOfWeek !== 6) {
+                const currentDateIso = currentDate.toISOString().split('T')[0];
+                if ( !holidays.has(currentDateIso) ) {
                     result.push(getRow(currentDate));
                 }
                 currentDate = new Date(currentDate);
@@ -38,7 +43,7 @@ function Rows({ dates, specialists }) {
             }
             return result;
         },
-        [dates]
+        [dates, holidays]
     );
 
     return (<tbody>{rows}</tbody>);

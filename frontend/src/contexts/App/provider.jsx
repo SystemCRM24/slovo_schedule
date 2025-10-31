@@ -14,6 +14,8 @@ export const AppContextProvider = ({ children }) => {
     const increaseModalCount = () => setModalWindowCount(modalWindowCount + 1);
     const decreaseModalCount = () => setModalWindowCount(modalWindowCount - 1);
 
+    const [holidays, setHolidays] = useState(new Set());
+
     return (
         <AppContext.Provider 
             value={{
@@ -23,6 +25,8 @@ export const AppContextProvider = ({ children }) => {
                 modalWindowCount,
                 increaseModalCount,
                 decreaseModalCount,
+                holidays,
+                setHolidays
             }}
         >
             {children}
