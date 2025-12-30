@@ -1,12 +1,13 @@
 from fastapi import APIRouter, BackgroundTasks
 from fastapi.exceptions import HTTPException
-import holidays
 from datetime import datetime, timedelta
 
 from src.core import BXConstants, BitrixClient, Settings
 from src.schemas.api import Schedule, BXSchedule
 from src.logger import logger
 from src.utils import BatchBuilder, Interval
+
+from .service import create_schedule_massive as _create_schedule_massive
 
 
 
@@ -27,30 +28,7 @@ async def create_schedule(schedule: Schedule, bt: BackgroundTasks) -> Schedule :
 @router.post("/massive/", status_code=201)
 async def create_schedule_massive(schedule: Schedule) -> list[BXSchedule]:
     """Создание графика на 1 год по шаблону schedule"""
-    get_params = lambda f: {"entityTypeId": BXConstants.schedule.entityTypeId, "fields": f}
-    builder = BatchBuilder('crm.item.add', get_params(schedule.to_bx()))
-    batches = {0: builder.build()}
-    ru_holidays = holidays.country_holidays('RU', years=[2025, 2026])
-    date = datetime.fromisoformat(schedule.date)
-    date.replace(tzinfo=Settings.TIMEZONE)
-    intervals = list(map(lambda x: list(map(int, x.split(':'))), schedule.intervals))
-    for q in range(1, 52):
-        date += timedelta(weeks=1)
-        for interval in intervals:
-            interval[0] += 604800000
-            interval[1] += 604800000
-        if date in ru_holidays:
-            continue
-        s = Schedule(
-            specialist=schedule.specialist,
-            date=date.isoformat(),
-            intervals=[':'.join(map(str, i)) for i in intervals]
-        )
-        builder.params = get_params(s.to_bx())
-        batches[q] = builder.build()
-    result: dict[str, dict] = await BitrixClient.call_batch(batches)     # type:ignore
-    default = {}
-    return [BXSchedule.model_validate(i.get('item', default)) for i in result.values()]
+    return await _create_schedule_massive(schedule)
 
 
 @router.get("/{id}", status_code=200)
